@@ -37,7 +37,7 @@ impl User {
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "data/nickserv/".into_string();
-        let _ = mkdir_recursive(&Path::new(path[]), FilePermission::all());
+        try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
         path.push_str(self.nickname[]);
         path.push_str(".json");
         let mut f = File::create(&Path::new(path[]));
