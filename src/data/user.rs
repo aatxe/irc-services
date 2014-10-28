@@ -19,7 +19,7 @@ impl User {
     }
 
     pub fn exists(&self) -> bool {
-        Path::new(format!("data/nickserv/{}", self.nickname)[]).exists()
+        Path::new(format!("data/nickserv/{}.json", self.nickname)[]).exists()
     }
 
     pub fn load(nickname: &str) -> IoResult<User> {
@@ -48,6 +48,7 @@ impl User {
 #[cfg(test)]
 mod test {
     use super::User;
+    use std::io::fs::unlink;
 
     #[test]
     fn new() {
@@ -66,6 +67,7 @@ mod test {
     #[test]
     fn exists() {
         let u = User::new("test", "test", None);
+        assert!(unlink(&Path::new("data/nickserv/test.json")).is_ok());
         assert!(!u.exists());
         assert!(u.save().is_ok());
         assert!(u.exists());

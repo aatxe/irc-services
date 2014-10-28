@@ -9,6 +9,7 @@ use irc::bot::IrcBot;
 mod data;
 mod func;
 
+#[cfg(not(test))]
 fn main() {
     let mut bot = IrcBot::new(func::process).unwrap();
     bot.identify().unwrap();
