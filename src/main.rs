@@ -7,11 +7,10 @@ use irc::Bot;
 use irc::bot::IrcBot;
 
 mod data;
+mod func;
 
 fn main() {
-    let mut bot = IrcBot::new(|_, _, _, _| {
-        Ok(())
-    }).unwrap();
+    let mut bot = IrcBot::new(func::process).unwrap();
     bot.identify().unwrap();
     bot.output().unwrap();
 }
