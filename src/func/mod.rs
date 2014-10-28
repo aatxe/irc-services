@@ -1,6 +1,7 @@
 extern crate irc;
 
 use std::io::IoResult;
+use data::BotResult;
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -19,4 +20,8 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         }
     }
     Ok(())
+}
+
+pub trait Functionality {
+    fn do_func(&mut self) -> BotResult<()>;
 }
