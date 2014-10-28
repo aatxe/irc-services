@@ -37,3 +37,25 @@ impl Functionality for Register {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::io::fs::unlink;
+    use data::user::User;
+    use func::test::test_helper;
+
+    #[test]
+    fn register_success() {
+        let _ = unlink(&Path::new("data/nickserv/test4.json"));
+        let data = test_helper(":test4!test@test PRIVMSG test :REGISTER test");
+        assert_eq!(data[], "PRIVMSG test4 :test4 has been registered. Don't forget your password!\r\n");
+    }
+
+    #[test]
+    fn register_failed_user_exists() {
+        let u = User::new("test", "test", None);
+        assert!(u.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :REGISTER test");
+        assert_eq!(data[], "PRIVMSG test :test is already registered!\r\n");
+    }
+}

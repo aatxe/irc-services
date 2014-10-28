@@ -66,8 +66,8 @@ mod test {
 
     #[test]
     fn exists() {
-        let u = User::new("test", "test", None);
-        let _ = unlink(&Path::new("data/nickserv/test.json"));
+        let u = User::new("test2", "test", None);
+        let _ = unlink(&Path::new("data/nickserv/test2.json"));
         assert!(!u.exists());
         assert!(u.save().is_ok());
         assert!(u.exists());
@@ -75,7 +75,7 @@ mod test {
 
     #[test]
     fn save() {
-        let u = User::new("test2", "test", None);
+        let u = User::new("test", "test", None);
         assert!(u.save().is_ok());
     }
 

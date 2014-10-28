@@ -29,3 +29,22 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
 pub trait Functionality {
     fn do_func(&self) -> String;
 }
+
+#[cfg(test)]
+mod test {
+    use std::io::{MemReader, MemWriter};
+    use irc::Bot;
+    use irc::bot::IrcBot;
+    use irc::conn::Connection;
+
+    pub fn test_helper(input: &str) -> String {
+        let mut bot = IrcBot::from_connection(
+            Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())).unwrap(),
+            |bot, source, command, args| {
+                super::process(bot, source, command, args)
+            }
+        ).unwrap();
+        bot.output().unwrap();
+        String::from_utf8(bot.conn.writer().deref().get_ref().to_vec()).unwrap()
+    }
+}
