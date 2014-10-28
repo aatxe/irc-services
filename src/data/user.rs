@@ -1,4 +1,4 @@
-use std::io::fs::{File, mkdir_recursive};
+use std::io::fs::{File, PathExtensions, mkdir_recursive};
 use std::io::{FilePermission, InvalidInput, IoError, IoResult};
 use serialize::json::{decode, encode};
 
@@ -14,12 +14,12 @@ impl User {
         User {
             nickname: nickname.into_string(),
             password: password.into_string(),
-            email: if let Some(address) = email {
-                Some(address.into_string())
-            } else {
-                None
-            },
+            email: email.map(|s| s.into_string()),
         }
+    }
+
+    pub fn exists(&self) -> bool {
+        Path::new(format!("data/nickserv/{}", self.nickname)[]).exists()
     }
 
     pub fn load(nickname: &str) -> IoResult<User> {
@@ -64,19 +64,27 @@ mod test {
     }
 
     #[test]
-    fn save() {
+    fn exists() {
         let u = User::new("test", "test", None);
+        assert!(!u.exists());
+        assert!(u.save().is_ok());
+        assert!(u.exists());
+    }
+
+    #[test]
+    fn save() {
+        let u = User::new("test2", "test", None);
         assert!(u.save().is_ok());
     }
 
     #[test]
     fn load() {
-        let u = User::new("test2", "test", None);
+        let u = User::new("test3", "test", None);
         assert!(u.save().is_ok());
-        let v = User::load("test2");
+        let v = User::load("test3");
         assert!(v.is_ok());
         assert_eq!(v.unwrap(), User {
-            nickname: "test2".into_string(),
+            nickname: "test3".into_string(),
             password: "test".into_string(),
             email: None,
         });
