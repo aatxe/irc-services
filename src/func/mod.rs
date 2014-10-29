@@ -1,7 +1,7 @@
 extern crate irc;
 
 use std::io::IoResult;
-use std::io::fs::{PathExtensions, walk_dir};
+use std::io::fs::walk_dir;
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -53,14 +53,29 @@ pub trait Functionality {
 fn start_up<T, U>(bot: &IrcBot<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     try!(bot.send_oper(bot.config().nickname[],
                       bot.config().options.get_copy(&format!("oper-pass"))[]));
+    let mut chans: Vec<String> = Vec::new();
     for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
-        if path.is_file() {
-            let chan = path.as_str().unwrap().find('.').map_or("", |i| path.as_str().unwrap()[14..i]);
-            if chan != "" {
-                try!(bot.send_join(chan));
-                try!(bot.send_samode(chan, format!("+a {}", bot.config().nickname)[]));
-            }
+        let path_str = path.as_str().unwrap().into_string();
+        let chan = path_str[].find('.').map_or("".into_string(), |i| path_str[14..i].into_string());
+        if chan[] != "" {
+            chans.push(chan);
         }
+    }
+    let mut join_line = String::new();
+    for chan in chans.iter() {
+        if join_line.len() < 40 && join_line.len() > 0 {
+            join_line.push_str(",");
+            join_line.push_str(chan[]);
+        } else if join_line.len() == 0 {
+            join_line.push_str(chan[]);
+        } else {
+            try!(bot.send_join(join_line[]));
+            join_line = chan.clone();
+        }
+    }
+    try!(bot.send_join(join_line[]));
+    for chan in chans.iter() {
+        try!(bot.send_samode(chan[], format!("+a {}", bot.config().nickname)[]));
     }
     Ok(())
 }
