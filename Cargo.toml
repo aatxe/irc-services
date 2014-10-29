@@ -7,3 +7,7 @@ authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 [dependencies.irc]
 
 git = "https://github.com/aaronweiss74/irc.git"
+
+[dependencies.crypto]
+
+git = "https://github.com/seb-m/crypto.rs.git"

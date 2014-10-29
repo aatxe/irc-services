@@ -31,7 +31,9 @@ impl<'a> Register<'a> {
 
 impl<'a> Functionality for Register<'a> {
     fn do_func(&self) -> IoResult<()> {
-        let user = User::new(self.nickname[], self.password[], self.email.as_ref().map(|s| s[]));
+        let user = try!(
+            User::new(self.nickname[], self.password[], self.email.as_ref().map(|s| s[]))
+        );
         let msg = if User::exists(self.nickname[]) {
             format!("Nickname {} is already registered!", user.nickname)
         } else if user.save().is_ok() {
@@ -67,7 +69,7 @@ impl<'a> Functionality for Identify<'a> {
         let msg = if !User::exists(self.nickname[]) {
             "Your nick isn't registered."
         } else if let Ok(user) = User::load(self.nickname[]) {
-            if user.is_password(self.password[]) {
+            if try!(user.is_password(self.password[])) {
                 try!(self.bot.send_samode(self.nickname[], "+r"));
                 "Password accepted - you are now recognized."
             } else {
@@ -106,7 +108,7 @@ impl<'a> Functionality for Ghost<'a> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be ghosted."
         } else if let Ok(user) = User::load(self.nickname[]) {
-            if user.is_password(self.password[]) {
+            if try!(user.is_password(self.password[])) {
                 try!(self.bot.send_kill(self.nickname[],
                      format!("Ghosted by {}.", self.current_nick)[]));
                 try!(self.bot.send_sanick(self.current_nick[], self.nickname[]));
@@ -141,7 +143,7 @@ mod test {
 
     #[test]
     fn register_failed_user_exists() {
-        let u = User::new("test", "test", None);
+        let u = User::new("test", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :REGISTER test");
         assert_eq!(data[], "PRIVMSG test :Nickname test is already registered!\r\n");
@@ -149,7 +151,7 @@ mod test {
 
     #[test]
     fn identify_succeeded() {
-        let u = User::new("test5", "test", None);
+        let u = User::new("test5", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test5!test@test PRIVMSG test :IDENTIFY test");
         let mut exp = "SAMODE test5 :+r\r\n".into_string();
@@ -159,7 +161,7 @@ mod test {
 
     #[test]
     fn identify_failed_password_incorrect() {
-        let u = User::new("test", "test", None);
+        let u = User::new("test", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :IDENTIFY tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
@@ -173,7 +175,7 @@ mod test {
 
     #[test]
     fn ghost_succeeded() {
-        let u = User::new("test6", "test", None);
+        let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 test");
         let mut exp = "KILL test6 :Ghosted by test.\r\n".into_string();
@@ -185,7 +187,7 @@ mod test {
 
     #[test]
     fn ghost_failed_password_incorrect() {
-        let u = User::new("test6", "test", None);
+        let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
