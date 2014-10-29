@@ -23,6 +23,16 @@ impl Channel {
         })
     }
 
+    #[cfg(test)]
+    pub fn new_test(name: &str, password: &str, owner: &str) -> IoResult<Channel> {
+        Ok(Channel {
+            name: name.into_string(),
+            password: password.into_string(),
+            owner: owner.into_string(),
+            admins: Vec::new(), opers: Vec::new(), voice: Vec::new()
+        })
+    }
+
     pub fn is_password(&self, password: &str) -> IoResult<bool> {
         Ok(self.password == try!(password_hash(password)))
     }
@@ -72,7 +82,7 @@ mod test {
 
     #[test]
     fn exists() {
-        let ch = Channel::new("#test2", "test", "test").unwrap();
+        let ch = Channel::new_test("#test2", "test", "test").unwrap();
         let _ = unlink(&Path::new("data/chanserv/#test2.json"));
         assert!(!Channel::exists("#test2"));
         assert!(ch.save().is_ok());
@@ -81,13 +91,13 @@ mod test {
 
     #[test]
     fn save() {
-        let ch = Channel::new("#test", "test", "test").unwrap();
+        let ch = Channel::new_test("#test", "test", "test").unwrap();
         assert!(ch.save().is_ok());
     }
 
     #[test]
     fn load() {
-        let ch = Channel::new("#test3", "test", "test").unwrap();
+        let ch = Channel::new_test("#test3", "test", "test").unwrap();
         assert!(ch.save().is_ok());
         let ld = Channel::load("#test3");
         assert!(ld.is_ok());

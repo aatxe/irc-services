@@ -19,6 +19,15 @@ impl User {
         })
     }
 
+    #[cfg(test)]
+    pub fn new_test(nickname: &str, password: &str, email: Option<&str>) -> IoResult<User> {
+        Ok(User {
+            nickname: nickname.into_string(),
+            password: password.into_string(),
+            email: email.map(|s| s.into_string()),
+        })
+    }
+
     pub fn is_password(&self, password: &str) -> IoResult<bool> {
         Ok(self.password == try!(password_hash(password)))
     }
@@ -72,7 +81,7 @@ mod test {
 
     #[test]
     fn exists() {
-        let u = User::new("test2", "test", None).unwrap();
+        let u = User::new_test("test2", "test", None).unwrap();
         let _ = unlink(&Path::new("data/nickserv/test2.json"));
         assert!(!User::exists("test2"));
         assert!(u.save().is_ok());
@@ -81,13 +90,13 @@ mod test {
 
     #[test]
     fn save() {
-        let u = User::new("test", "test", None).unwrap();
+        let u = User::new_test("test", "test", None).unwrap();
         assert!(u.save().is_ok());
     }
 
     #[test]
     fn load() {
-        let u = User::new("test3", "test", None).unwrap();
+        let u = User::new_test("test3", "test", None).unwrap();
         assert!(u.save().is_ok());
         let v = User::load("test3");
         assert!(v.is_ok());
