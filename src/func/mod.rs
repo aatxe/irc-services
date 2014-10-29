@@ -5,6 +5,7 @@ use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
 
+mod chanserv;
 mod nickserv;
 
 pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
@@ -23,7 +24,11 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
                 _ => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {
-            Err(format!("{} is not a valid command.", tokens[1]))
+            let cmd: String = upper_case(tokens[1]);
+            match cmd[] {
+                "REGISTER" => chanserv::Register::new(bot, user, tokens),
+                _ => Err(format!("{} is not a valid command.", tokens[1])),
+            }
         } else {
             Err("Commands must be prefixed by CS or NS.".into_string())
         };
