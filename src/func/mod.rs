@@ -1,6 +1,7 @@
 extern crate irc;
 
 use std::io::IoResult;
+use std::io::fs::{PathExtensions, walk_dir};
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -38,17 +39,30 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
             try!(res.unwrap().do_func())
         }
     } else if let ("376", _) = (command, args) {
-        try!(bot.send_oper(bot.config().nickname[],
-                      bot.config().options.get_copy(&format!("oper-pass"))[]));
+        try!(start_up(bot));
     } else if let ("422", _) = (command, args) {
-        try!(bot.send_oper(bot.config().nickname[],
-                      bot.config().options.get_copy(&format!("oper-pass"))[]));
+        try!(start_up(bot));
     }
     Ok(())
 }
 
 pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
+}
+
+fn start_up<T, U>(bot: &IrcBot<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+    try!(bot.send_oper(bot.config().nickname[],
+                      bot.config().options.get_copy(&format!("oper-pass"))[]));
+    for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
+        if path.is_file() {
+            let chan = path.as_str().unwrap().find('.').map_or("", |i| path.as_str().unwrap()[14..i]);
+            if chan != "" {
+                try!(bot.send_join(chan));
+                try!(bot.send_samode(chan, format!("+a {}", bot.config().nickname)[]));
+            }
+        }
+    }
+    Ok(())
 }
 
 fn upper_case(string: &str) -> String {
