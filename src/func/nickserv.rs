@@ -36,8 +36,10 @@ impl<'a> Functionality for Register<'a> {
         );
         let msg = if User::exists(self.nickname[]) {
             format!("Nickname {} is already registered!", user.nickname)
-        } else if user.save().is_ok() {
-            format!("Nickname {} has been registered. Don't forget your password!", user.nickname)
+        } else if user.save().is_ok() {;
+            try!(self.bot.send_samode(self.nickname[], "+r"));
+            format!("Nickname {} has been registered. Don't forget your password!\r\n{}",
+                    user.nickname, "You're now identified.")
         } else {
             format!("Failed to register {} for an unknown reason.", user.nickname)
         };
@@ -136,8 +138,10 @@ mod test {
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/nickserv/test4.json"));
         let data = test_helper(":test4!test@test PRIVMSG test :REGISTER test");
-        let mut exp = "PRIVMSG test4 :Nickname test4 has been registered. ".into_string();
+        let mut exp = "SAMODE test4 :+r\r\n".into_string();
+        exp.push_str("PRIVMSG test4 :Nickname test4 has been registered. ");
         exp.push_str("Don't forget your password!\r\n");
+        exp.push_str("PRIVMSG test4 :You're now identified.\r\n");
         assert_eq!(data[], exp[]);
     }
 
