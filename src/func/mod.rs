@@ -14,6 +14,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         let tokens: Vec<_> = msg.split_str(" ").collect();
         let res = match tokens[0] {
             "REGISTER" => nickserv::Register::new(user, tokens),
+            "IDENTIFY" => nickserv::Identify::new(user, tokens),
             _ => Err(format!("{} is not a valid command.", tokens[0])),
         };
         let msg = if let Err(msg) = res {

@@ -18,8 +18,12 @@ impl User {
         }
     }
 
-    pub fn exists(&self) -> bool {
-        Path::new(format!("data/nickserv/{}.json", self.nickname)[]).exists()
+    pub fn is_password(&self, password: &str) -> bool {
+        self.password[] == password
+    }
+
+    pub fn exists(nickname: &str) -> bool {
+        Path::new(format!("data/nickserv/{}.json", nickname)[]).exists()
     }
 
     pub fn load(nickname: &str) -> IoResult<User> {
@@ -68,9 +72,9 @@ mod test {
     fn exists() {
         let u = User::new("test2", "test", None);
         let _ = unlink(&Path::new("data/nickserv/test2.json"));
-        assert!(!u.exists());
+        assert!(!User::exists("test2"));
         assert!(u.save().is_ok());
-        assert!(u.exists());
+        assert!(User::exists("test2"));
     }
 
     #[test]
