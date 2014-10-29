@@ -13,7 +13,8 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         if chan.starts_with("#") { return Ok(()); }
         let user = source.find('!').map_or("", |i| source[..i]);
         let tokens: Vec<_> = msg.split_str(" ").collect();
-        let res = match tokens[0] {
+        let cmd: String = tokens[0].chars().map(|c| c.to_uppercase()).collect();
+        let res = match cmd[] {
             "REGISTER" => nickserv::Register::new(bot, user, tokens),
             "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
             "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
@@ -53,4 +54,17 @@ mod test {
         bot.output().unwrap();
         String::from_utf8(bot.conn.writer().deref().get_ref().to_vec()).unwrap()
     }
+
+    #[test]
+    fn non_command_message_in_channel() {
+        let data = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n");
+        assert_eq!(data[], "");
+    }
+
+    #[test]
+    fn non_command_message_in_query() {
+        let data = test_helper(":test!test@test PRIVMSG test :Hi there!\r\n");
+        assert_eq!(data[], "PRIVMSG test :Hi is not a valid command.\r\n");
+    }
+
 }
