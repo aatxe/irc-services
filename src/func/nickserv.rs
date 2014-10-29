@@ -179,7 +179,7 @@ mod test {
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/nickserv/test4.json"));
         let data = test_helper(":test4!test@test PRIVMSG test :REGISTER test");
-        let mut exp = "SAMODE test4 :+r\r\n".into_string();
+        let mut exp = "SAMODE test4 +r\r\n".into_string();
         exp.push_str("PRIVMSG test4 :Nickname test4 has been registered. ");
         exp.push_str("Don't forget your password!\r\n");
         exp.push_str("PRIVMSG test4 :You're now identified.\r\n");
@@ -199,7 +199,7 @@ mod test {
         let u = User::new("test5", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test5!test@test PRIVMSG test :IDENTIFY test");
-        let mut exp = "SAMODE test5 :+r\r\n".into_string();
+        let mut exp = "SAMODE test5 +r\r\n".into_string();
         exp.push_str("PRIVMSG test5 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
     }
@@ -251,8 +251,8 @@ mod test {
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :RECLAIM test6 test");
         let mut exp = "KILL test6 :Reclaimed by test.\r\n".into_string();
-        exp.push_str("SANICK test :test6\r\n");
-        exp.push_str("SAMODE test6 :+r\r\n");
+        exp.push_str("SANICK test test6\r\n");
+        exp.push_str("SAMODE test6 +r\r\n");
         exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
     }
