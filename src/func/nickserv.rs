@@ -80,6 +80,50 @@ impl<'a> Functionality for Identify<'a> {
     }
 }
 
+pub struct Ghost<'a> {
+    bot: &'a Bot + 'a,
+    current_nick: String,
+    nickname: String,
+    password: String,
+}
+
+impl<'a> Ghost<'a> {
+    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 3 {
+            return Err("Syntax: GHOST nickname password".into_string())
+        }
+        Ok(box Ghost {
+            bot: bot,
+            current_nick: user.into_string(),
+            nickname: args[1].into_string(),
+            password: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a> Functionality for Ghost<'a> {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !User::exists(self.nickname[]) {
+            "That nick isn't registered, and therefore cannot be ghosted."
+        } else if let Ok(user) = User::load(self.nickname[]) {
+            if user.is_password(self.password[]) {
+                try!(self.bot.send_kill(self.nickname[],
+                     format!("Ghosted by {}.", self.current_nick)[]));
+                try!(self.bot.send_sanick(self.current_nick[], self.nickname[]));
+                try!(self.bot.send_mode(self.nickname[], "+r"));
+                try!(self.bot.send_privmsg(self.nickname[],
+                                           "Password accepted - you are now recognized."));
+                return Ok(());
+            } else {
+                "Password incorrect."
+            }
+        } else {
+            "Failed to ghost for an unknown reason."
+        };
+        self.bot.send_privmsg(self.current_nick[], msg)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::io::fs::unlink;
@@ -90,7 +134,9 @@ mod test {
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/nickserv/test4.json"));
         let data = test_helper(":test4!test@test PRIVMSG test :REGISTER test");
-        assert_eq!(data[], "PRIVMSG test4 :Nickname test4 has been registered. Don't forget your password!\r\n");
+        let mut exp = "PRIVMSG test4 :Nickname test4 has been registered. ".into_string();
+        exp.push_str("Don't forget your password!\r\n");
+        assert_eq!(data[], exp[]);
     }
 
     #[test]
@@ -106,7 +152,9 @@ mod test {
         let u = User::new("test5", "test", None);
         assert!(u.save().is_ok());
         let data = test_helper(":test5!test@test PRIVMSG test :IDENTIFY test");
-        assert_eq!(data[], "MODE test5 :+r\r\nPRIVMSG test5 :Password accepted - you are now recognized.\r\n");
+        let mut exp = "MODE test5 :+r\r\n".into_string();
+        exp.push_str("PRIVMSG test5 :Password accepted - you are now recognized.\r\n");
+        assert_eq!(data[], exp[]);
     }
 
     #[test]
@@ -122,4 +170,33 @@ mod test {
         let data = test_helper(":unregistered!test@test PRIVMSG test :IDENTIFY test");
         assert_eq!(data[], "PRIVMSG unregistered :Your nick isn't registered.\r\n");
     }
+
+    #[test]
+    fn ghost_succeeded() {
+        let u = User::new("test6", "test", None);
+        assert!(u.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 test");
+        let mut exp = "KILL test6 :Ghosted by test.\r\n".into_string();
+        exp.push_str("SANICK test :test6\r\n");
+        exp.push_str("MODE test6 :+r\r\n");
+        exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
+        assert_eq!(data[], exp[]);
+    }
+
+    #[test]
+    fn ghost_failed_password_incorrect() {
+        let u = User::new("test6", "test", None);
+        assert!(u.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 tset");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+    }
+
+    #[test]
+    fn ghost_failed_nickname_unregistered() {
+        let data = test_helper(":test!test@test PRIVMSG test :GHOST unregistered test");
+        let mut exp = "PRIVMSG test :That nick isn't registered, ".into_string();
+        exp.push_str("and therefore cannot be ghosted.\r\n");
+        assert_eq!(data[], exp[]);
+    }
+
 }

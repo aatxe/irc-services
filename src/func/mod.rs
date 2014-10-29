@@ -7,7 +7,8 @@ use irc::data::{IrcReader, IrcWriter};
 
 mod nickserv;
 
-pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
+              where T: IrcWriter, U: IrcReader {
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if chan.starts_with("#") { return Ok(()); }
         let user = source.find('!').map_or("", |i| source[..i]);
@@ -15,6 +16,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         let res = match tokens[0] {
             "REGISTER" => nickserv::Register::new(bot, user, tokens),
             "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
+            "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
             _ => Err(format!("{} is not a valid command.", tokens[0])),
         };
         if let Err(msg) = res {
