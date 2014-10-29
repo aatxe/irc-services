@@ -3,6 +3,7 @@ use crypto::sbuf::StdHeapAllocator;
 use crypto::sha3::{hash, Sha3_512};
 use serialize::hex::ToHex;
 
+pub mod channel;
 pub mod user;
 
 pub type BotResult<T> = Result<T, String>;
