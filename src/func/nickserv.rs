@@ -68,7 +68,7 @@ impl<'a> Functionality for Identify<'a> {
             "Your nick isn't registered."
         } else if let Ok(user) = User::load(self.nickname[]) {
             if user.is_password(self.password[]) {
-                try!(self.bot.send_mode(self.nickname[], "+r"));
+                try!(self.bot.send_samode(self.nickname[], "+r"));
                 "Password accepted - you are now recognized."
             } else {
                 "Password incorrect."
@@ -110,7 +110,7 @@ impl<'a> Functionality for Ghost<'a> {
                 try!(self.bot.send_kill(self.nickname[],
                      format!("Ghosted by {}.", self.current_nick)[]));
                 try!(self.bot.send_sanick(self.current_nick[], self.nickname[]));
-                try!(self.bot.send_mode(self.nickname[], "+r"));
+                try!(self.bot.send_samode(self.nickname[], "+r"));
                 try!(self.bot.send_privmsg(self.nickname[],
                                            "Password accepted - you are now recognized."));
                 return Ok(());
@@ -152,7 +152,7 @@ mod test {
         let u = User::new("test5", "test", None);
         assert!(u.save().is_ok());
         let data = test_helper(":test5!test@test PRIVMSG test :IDENTIFY test");
-        let mut exp = "MODE test5 :+r\r\n".into_string();
+        let mut exp = "SAMODE test5 :+r\r\n".into_string();
         exp.push_str("PRIVMSG test5 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
     }
@@ -178,7 +178,7 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 test");
         let mut exp = "KILL test6 :Ghosted by test.\r\n".into_string();
         exp.push_str("SANICK test :test6\r\n");
-        exp.push_str("MODE test6 :+r\r\n");
+        exp.push_str("SAMODE test6 :+r\r\n");
         exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
     }
