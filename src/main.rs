@@ -1,11 +1,12 @@
 #![feature(if_let)]
 #![feature(slicing_syntax)]
+
 extern crate crypto;
 extern crate irc;
 extern crate serialize;
 
-use irc::Bot;
-use irc::bot::IrcBot;
+#[cfg(not(test))] use irc::Bot;
+#[cfg(not(test))] use irc::bot::IrcBot;
 
 mod data;
 mod func;

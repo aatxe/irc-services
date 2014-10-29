@@ -1,7 +1,7 @@
 use std::io::IoResult;
-use crypto::sbuf::StdHeapAllocator;
-use crypto::sha3::{hash, Sha3_512};
-use serialize::hex::ToHex;
+#[cfg(not(test))] use crypto::sbuf::StdHeapAllocator;
+#[cfg(not(test))] use crypto::sha3::{hash, Sha3_512};
+#[cfg(not(test))] use serialize::hex::ToHex;
 
 pub mod channel;
 pub mod user;

@@ -13,15 +13,15 @@ pub struct Register<'a> {
 
 impl<'a> Register<'a> {
     pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() != 2 && args.len() != 3 {
-            return Err("Syntax: REGISTER password [email]".into_string())
+        if args.len() != 3 && args.len() != 4 {
+            return Err("Syntax: NS REGISTER password [email]".into_string())
         }
         Ok(box Register {
             bot: bot,
             nickname: user.into_string(),
-            password: args[1].into_string(),
-            email: if args.len() == 3 {
-                Some(args[2].into_string())
+            password: args[2].into_string(),
+            email: if args.len() == 4 {
+                Some(args[3].into_string())
             } else {
                 None
             }
@@ -55,13 +55,13 @@ pub struct Identify<'a> {
 
 impl<'a> Identify<'a> {
     pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() != 2 {
-            return Err("Syntax: IDENTIFY password".into_string())
+        if args.len() != 3 {
+            return Err("Syntax: NS IDENTIFY password".into_string())
         }
         Ok(box Identify {
             bot: bot,
             nickname: user.into_string(),
-            password: args[1].into_string(),
+            password: args[2].into_string(),
         } as Box<Functionality>)
     }
 }
@@ -93,14 +93,14 @@ pub struct Ghost<'a> {
 
 impl<'a> Ghost<'a> {
     pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() != 3 {
-            return Err("Syntax: GHOST nickname password".into_string())
+        if args.len() != 4 {
+            return Err("Syntax: NS GHOST nickname password".into_string())
         }
         Ok(box Ghost {
             bot: bot,
             current_nick: user.into_string(),
-            nickname: args[1].into_string(),
-            password: args[2].into_string(),
+            nickname: args[2].into_string(),
+            password: args[3].into_string(),
         } as Box<Functionality>)
     }
 }
@@ -134,14 +134,14 @@ pub struct Reclaim<'a> {
 
 impl<'a> Reclaim<'a> {
     pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
-        if args.len() != 3 {
-            return Err("Syntax: RECLAIM nickname password".into_string())
+        if args.len() != 4 {
+            return Err("Syntax: NS RECLAIM nickname password".into_string())
         }
         Ok(box Reclaim {
             bot: bot,
             current_nick: user.into_string(),
-            nickname: args[1].into_string(),
-            password: args[2].into_string(),
+            nickname: args[2].into_string(),
+            password: args[3].into_string(),
         } as Box<Functionality>)
     }
 }
@@ -178,7 +178,7 @@ mod test {
     #[test]
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/nickserv/test4.json"));
-        let data = test_helper(":test4!test@test PRIVMSG test :REGISTER test");
+        let data = test_helper(":test4!test@test PRIVMSG test :NS REGISTER test");
         let mut exp = "SAMODE test4 +r\r\n".into_string();
         exp.push_str("PRIVMSG test4 :Nickname test4 has been registered. ");
         exp.push_str("Don't forget your password!\r\n");
@@ -190,7 +190,7 @@ mod test {
     fn register_failed_user_exists() {
         let u = User::new("test", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :REGISTER test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS REGISTER test");
         assert_eq!(data[], "PRIVMSG test :Nickname test is already registered!\r\n");
     }
 
@@ -198,7 +198,7 @@ mod test {
     fn identify_succeeded() {
         let u = User::new("test5", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test5!test@test PRIVMSG test :IDENTIFY test");
+        let data = test_helper(":test5!test@test PRIVMSG test :NS IDENTIFY test");
         let mut exp = "SAMODE test5 +r\r\n".into_string();
         exp.push_str("PRIVMSG test5 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
@@ -208,13 +208,13 @@ mod test {
     fn identify_failed_password_incorrect() {
         let u = User::new("test", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :IDENTIFY tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS IDENTIFY tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
     #[test]
     fn identify_failed_nickname_unregistered() {
-        let data = test_helper(":unregistered!test@test PRIVMSG test :IDENTIFY test");
+        let data = test_helper(":unregistered!test@test PRIVMSG test :NS IDENTIFY test");
         assert_eq!(data[], "PRIVMSG unregistered :Your nick isn't registered.\r\n");
     }
 
@@ -222,7 +222,7 @@ mod test {
     fn ghost_succeeded() {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test6 test");
         let mut exp = "KILL test6 :Ghosted by test.\r\n".into_string();
         exp.push_str("PRIVMSG test6 :User has been ghosted.\r\n");
         assert_eq!(data[], exp[]);
@@ -233,13 +233,13 @@ mod test {
     fn ghost_failed_password_incorrect() {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test6 tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
     #[test]
     fn ghost_failed_nickname_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :GHOST unregistered test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST unregistered test");
         let mut exp = "PRIVMSG test :That nick isn't registered, ".into_string();
         exp.push_str("and therefore cannot be ghosted.\r\n");
         assert_eq!(data[], exp[]);
@@ -249,7 +249,7 @@ mod test {
     fn reclaim_succeeded() {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :RECLAIM test6 test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test6 test");
         let mut exp = "KILL test6 :Reclaimed by test.\r\n".into_string();
         exp.push_str("SANICK test test6\r\n");
         exp.push_str("SAMODE test6 +r\r\n");
@@ -261,13 +261,13 @@ mod test {
     fn reclaim_failed_password_incorrect() {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :RECLAIM test6 tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test6 tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
     #[test]
     fn reclaim_failed_nickname_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :RECLAIM unregistered test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM unregistered test");
         let mut exp = "PRIVMSG test :That nick isn't registered, ".into_string();
         exp.push_str("and therefore cannot be reclaimed.\r\n");
         assert_eq!(data[], exp[]);

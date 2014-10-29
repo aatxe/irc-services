@@ -13,13 +13,19 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         if chan.starts_with("#") { return Ok(()); }
         let user = source.find('!').map_or("", |i| source[..i]);
         let tokens: Vec<_> = msg.split_str(" ").collect();
-        let cmd: String = tokens[0].chars().map(|c| c.to_uppercase()).collect();
-        let res = match cmd[] {
-            "REGISTER" => nickserv::Register::new(bot, user, tokens),
-            "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
-            "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
-            "RECLAIM"  => nickserv::Reclaim::new(bot, user, tokens),
-            _ => Err(format!("{} is not a valid command.", tokens[0])),
+        let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
+            let cmd: String = upper_case(tokens[1]);
+            match cmd[] {
+                "REGISTER" => nickserv::Register::new(bot, user, tokens),
+                "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
+                "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
+                "RECLAIM"  => nickserv::Reclaim::new(bot, user, tokens),
+                _ => Err(format!("{} is not a valid command.", tokens[1])),
+            }
+        } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {
+            Err(format!("{} is not a valid command.", tokens[1]))
+        } else {
+            Err("Commands must be prefixed by CS or NS.".into_string())
         };
         if let Err(msg) = res {
             try!(bot.send_privmsg(user, msg[]));
@@ -35,6 +41,10 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
 
 pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
+}
+
+fn upper_case(string: &str) -> String {
+    string.chars().map(|c| c.to_uppercase()).collect()
 }
 
 #[cfg(test)]
@@ -56,6 +66,12 @@ mod test {
     }
 
     #[test]
+    fn commands_must_be_prefxed() {
+        let data = test_helper(":test!test@test PRIVMSG test :IDENTIFY\r\n");
+        assert_eq!(data[], "PRIVMSG test :Commands must be prefixed by CS or NS.\r\n")
+    }
+
+    #[test]
     fn non_command_message_in_channel() {
         let data = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n");
         assert_eq!(data[], "");
@@ -63,8 +79,12 @@ mod test {
 
     #[test]
     fn non_command_message_in_query() {
-        let data = test_helper(":test!test@test PRIVMSG test :Hi there!\r\n");
-        assert_eq!(data[], "PRIVMSG test :Hi is not a valid command.\r\n");
+        let data = test_helper(":test!test@test PRIVMSG test :CS line\r\n");
+        assert_eq!(data[], "PRIVMSG test :line is not a valid command.\r\n");
     }
 
+    #[test]
+    fn upper_case() {
+        assert_eq!(super::upper_case("identify")[], "IDENTIFY")
+    }
 }

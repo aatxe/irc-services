@@ -19,15 +19,6 @@ impl User {
         })
     }
 
-    #[cfg(test)]
-    pub fn new_test(nickname: &str, password: &str, email: Option<&str>) -> IoResult<User> {
-        Ok(User {
-            nickname: nickname.into_string(),
-            password: password.into_string(),
-            email: email.map(|s| s.into_string()),
-        })
-    }
-
     pub fn is_password(&self, password: &str) -> IoResult<bool> {
         Ok(self.password == try!(password_hash(password)))
     }
