@@ -34,7 +34,9 @@ impl<'a> Functionality for Register<'a> {
             format!("Channel {} is already registered!", chan.name)
         } else if chan.save().is_ok() {;
             try!(self.bot.send_samode(self.channel[], "+r"));
-            try!(self.bot.send_samode(self.channel[], format!("+qa {}", self.owner)[]))
+            try!(self.bot.send_samode(self.channel[], format!("+qa {}", self.owner)[]));
+            try!(self.bot.send_join(self.channel[]));
+            try!(self.bot.send_samode(self.channel[], format!("+a {}", self.bot.config().nickname)[]));
             format!("Channel {} has been registered. Don't forget the password!", chan.name)
         } else {
             format!("Failed to register {} for an unknown reason.", chan.name)
@@ -52,10 +54,12 @@ mod test {
     #[test]
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/chanserv/#test4.json"));
-        let data = test_helper(":test!test@test PRIVMSG test :CS REGISTER #test4 test");
+        let data = test_helper(":test2!test@test PRIVMSG test :CS REGISTER #test4 test");
         let mut exp = "SAMODE #test4 +r\r\n".into_string();
-        exp.push_str("SAMODE #test4 +qa test\r\n");
-        exp.push_str("PRIVMSG test :Channel #test4 has been registered. ");
+        exp.push_str("SAMODE #test4 +qa test2\r\n");
+        exp.push_str("JOIN :#test4\r\n");
+        exp.push_str("SAMODE #test4 +a test\r\n");
+        exp.push_str("PRIVMSG test2 :Channel #test4 has been registered. ");
         exp.push_str("Don't forget the password!\r\n");
         assert_eq!(data[], exp[]);
     }
