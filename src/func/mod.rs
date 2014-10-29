@@ -17,6 +17,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
             "REGISTER" => nickserv::Register::new(bot, user, tokens),
             "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
             "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
+            "RECLAIM"  => nickserv::Reclaim::new(bot, user, tokens),
             _ => Err(format!("{} is not a valid command.", tokens[0])),
         };
         if let Err(msg) = res {

@@ -113,6 +113,47 @@ impl<'a> Functionality for Ghost<'a> {
             if try!(user.is_password(self.password[])) {
                 try!(self.bot.send_kill(self.nickname[],
                      format!("Ghosted by {}.", self.current_nick)[]));
+                try!(self.bot.send_privmsg(self.nickname[], "User has been ghosted."));
+                return Ok(());
+            } else {
+                "Password incorrect."
+            }
+        } else {
+            "Failed to ghost nick for an unknown reason."
+        };
+        self.bot.send_privmsg(self.current_nick[], msg)
+    }
+}
+
+pub struct Reclaim<'a> {
+    bot: &'a Bot + 'a,
+    current_nick: String,
+    nickname: String,
+    password: String,
+}
+
+impl<'a> Reclaim<'a> {
+    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 3 {
+            return Err("Syntax: RECLAIM nickname password".into_string())
+        }
+        Ok(box Reclaim {
+            bot: bot,
+            current_nick: user.into_string(),
+            nickname: args[1].into_string(),
+            password: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a> Functionality for Reclaim<'a> {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !User::exists(self.nickname[]) {
+            "That nick isn't registered, and therefore cannot be reclaimed."
+        } else if let Ok(user) = User::load(self.nickname[]) {
+            if try!(user.is_password(self.password[])) {
+                try!(self.bot.send_kill(self.nickname[],
+                     format!("Reclaimed by {}.", self.current_nick)[]));
                 try!(self.bot.send_sanick(self.current_nick[], self.nickname[]));
                 try!(self.bot.send_samode(self.nickname[], "+r"));
                 try!(self.bot.send_privmsg(self.nickname[],
@@ -122,7 +163,7 @@ impl<'a> Functionality for Ghost<'a> {
                 "Password incorrect."
             }
         } else {
-            "Failed to ghost for an unknown reason."
+            "Failed to reclaim nick for an unknown reason."
         };
         self.bot.send_privmsg(self.current_nick[], msg)
     }
@@ -183,11 +224,10 @@ mod test {
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :GHOST test6 test");
         let mut exp = "KILL test6 :Ghosted by test.\r\n".into_string();
-        exp.push_str("SANICK test :test6\r\n");
-        exp.push_str("SAMODE test6 :+r\r\n");
-        exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
+        exp.push_str("PRIVMSG test6 :User has been ghosted.\r\n");
         assert_eq!(data[], exp[]);
     }
+
 
     #[test]
     fn ghost_failed_password_incorrect() {
@@ -205,4 +245,31 @@ mod test {
         assert_eq!(data[], exp[]);
     }
 
+    #[test]
+    fn reclaim_succeeded() {
+        let u = User::new("test6", "test", None).unwrap();
+        assert!(u.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :RECLAIM test6 test");
+        let mut exp = "KILL test6 :Reclaimed by test.\r\n".into_string();
+        exp.push_str("SANICK test :test6\r\n");
+        exp.push_str("SAMODE test6 :+r\r\n");
+        exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
+        assert_eq!(data[], exp[]);
+    }
+
+    #[test]
+    fn reclaim_failed_password_incorrect() {
+        let u = User::new("test6", "test", None).unwrap();
+        assert!(u.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :RECLAIM test6 tset");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+    }
+
+    #[test]
+    fn reclaim_failed_nickname_unregistered() {
+        let data = test_helper(":test!test@test PRIVMSG test :RECLAIM unregistered test");
+        let mut exp = "PRIVMSG test :That nick isn't registered, ".into_string();
+        exp.push_str("and therefore cannot be reclaimed.\r\n");
+        assert_eq!(data[], exp[]);
+    }
 }
