@@ -13,22 +13,21 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         let user = source.find('!').map_or("", |i| source[..i]);
         let tokens: Vec<_> = msg.split_str(" ").collect();
         let res = match tokens[0] {
-            "REGISTER" => nickserv::Register::new(user, tokens),
-            "IDENTIFY" => nickserv::Identify::new(user, tokens),
+            "REGISTER" => nickserv::Register::new(bot, user, tokens),
+            "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
             _ => Err(format!("{} is not a valid command.", tokens[0])),
         };
-        let msg = if let Err(msg) = res {
-            msg
+        if let Err(msg) = res {
+            try!(bot.send_privmsg(user, msg[]));
         } else {
-            res.unwrap().do_func()
-        };
-        try!(bot.send_privmsg(user, msg[]));
+            try!(res.unwrap().do_func())
+        }
     }
     Ok(())
 }
 
 pub trait Functionality {
-    fn do_func(&self) -> String;
+    fn do_func(&self) -> IoResult<()>;
 }
 
 #[cfg(test)]
