@@ -24,7 +24,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         } else {
             try!(res.unwrap().do_func())
         }
-    } else if let ("NOTICE", ["Auth", msg]) = (command, args) {
+    } else if let ("NOTICE", ["Auth", _]) = (command, args) {
         try!(bot.send_oper(bot.config().nickname[],
                       bot.config().options.get_copy(&format!("oper-pass"))[]));
     }
