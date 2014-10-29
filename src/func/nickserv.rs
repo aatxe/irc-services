@@ -103,10 +103,10 @@ mod test {
 
     #[test]
     fn identify_succeeded() {
-        let u = User::new("test", "test", None);
+        let u = User::new("test5", "test", None);
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :IDENTIFY test");
-        assert_eq!(data[], "MODE test :+r\r\nPRIVMSG test :Password accepted - you are now recognized.\r\n");
+        let data = test_helper(":test5!test@test PRIVMSG test :IDENTIFY test");
+        assert_eq!(data[], "MODE test5 :+r\r\nPRIVMSG test5 :Password accepted - you are now recognized.\r\n");
     }
 
     #[test]

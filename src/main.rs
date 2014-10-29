@@ -13,5 +13,7 @@ mod func;
 fn main() {
     let mut bot = IrcBot::new(func::process).unwrap();
     bot.identify().unwrap();
+    bot.send_oper(bot.config().nickname[],
+                  bot.config().options.get_copy(&format!("oper-pass"))[]).unwrap();
     bot.output().unwrap();
 }
