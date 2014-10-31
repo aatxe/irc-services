@@ -9,7 +9,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/common.rs#252ba1a822c5b511624f9c3a312e359ae34e0513"
+source = "git+https://github.com/seb-m/common.rs#c18fcb9bf15f950021fe1a4281f67b1220c274c6"
 
 [[package]]
 name = "crypto"
@@ -23,7 +23,7 @@ dependencies = [
 [[package]]
 name = "curve41417"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/curve41417.rs#721689c10f4168e5d0e3d100474ec816a3703cc5"
+source = "git+https://github.com/seb-m/curve41417.rs#4d05afb1673c8a7762973efba649c365d557a435"
 dependencies = [
  "common 0.0.1 (git+https://github.com/seb-m/common.rs)",
 ]
