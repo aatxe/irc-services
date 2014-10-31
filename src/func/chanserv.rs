@@ -203,11 +203,11 @@ mod test {
 
     #[test]
     fn admin_succeeded() {
-        let ch = Channel::new("#test", "test", "test").unwrap();
+        let ch = Channel::new("#test5", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test test");
-        assert_eq!(Channel::load("#test").unwrap().admins, vec!("test2".into_string()));
-        let mut exp = "SAMODE #test +a test2\r\n".into_string();
+        let data = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test5 test");
+        assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".into_string()));
+        let mut exp = "SAMODE #test5 +a test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now an admin.\r\n");
         assert_eq!(data[], exp[]);
     }
@@ -220,11 +220,11 @@ mod test {
 
     #[test]
     fn oper_succeeded() {
-        let ch = Channel::new("#test", "test", "test").unwrap();
+        let ch = Channel::new("#test6", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test test");
-        assert_eq!(Channel::load("#test").unwrap().opers, vec!("test2".into_string()));
-        let mut exp = "SAMODE #test +o test2\r\n".into_string();
+        let data = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test6 test");
+        assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".into_string()));
+        let mut exp = "SAMODE #test6 +o test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now an oper.\r\n");
         assert_eq!(data[], exp[]);
     }
@@ -237,11 +237,11 @@ mod test {
 
     #[test]
     fn voice_succeeded() {
-        let ch = Channel::new("#test", "test", "test").unwrap();
+        let ch = Channel::new("#test7", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test test");
-        assert_eq!(Channel::load("#test").unwrap().voice, vec!("test2".into_string()));
-        let mut exp = "SAMODE #test +v test2\r\n".into_string();
+        let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test7 test");
+        assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".into_string()));
+        let mut exp = "SAMODE #test7 +v test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now voiced.\r\n");
         assert_eq!(data[], exp[]);
     }
