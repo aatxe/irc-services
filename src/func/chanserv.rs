@@ -174,6 +174,49 @@ impl<'a> Functionality for Voice<'a> {
     }
 }
 
+pub struct Mode<'a> {
+    bot: &'a Bot + 'a,
+    owner: String,
+    channel: String,
+    password: String,
+    mode: String,
+}
+
+impl<'a> Mode<'a> {
+    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 5 {
+            return Err("Syntax: CS MODE mode channel password".into_string())
+        }
+        Ok(box Mode {
+            bot: bot,
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            mode: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a> Functionality for Mode<'a> {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !Channel::exists(self.channel[]) {
+            format!("Channel {} is not registered!", self.channel[])
+        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
+            if try!(chan.is_password(self.password[])) {
+                chan.mode = self.mode.clone();
+                try!(chan.save());
+                try!(self.bot.send_samode(self.channel[], self.mode[]));
+                format!("Channel mode is now {}.", self.mode[])
+            } else {
+                format!("Password incorrect.")
+            }
+        } else {
+            format!("Failed to set channel mode {} due to an I/O issue.", self.mode[])
+        };
+        self.bot.send_privmsg(self.owner[], msg[])
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::io::fs::unlink;
@@ -219,6 +262,14 @@ mod test {
     }
 
     #[test]
+    fn admin_failed_password_incorrect() {
+        let ch = Channel::new("#test12", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test12 wrong");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+    }
+
+    #[test]
     fn oper_succeeded() {
         let ch = Channel::new("#test6", "test", "test").unwrap();
         assert!(ch.save().is_ok());
@@ -236,6 +287,14 @@ mod test {
     }
 
     #[test]
+    fn oper_failed_password_incorrect() {
+        let ch = Channel::new("#test13", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test13 wrong");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+    }
+
+    #[test]
     fn voice_succeeded() {
         let ch = Channel::new("#test7", "test", "test").unwrap();
         assert!(ch.save().is_ok());
@@ -250,5 +309,37 @@ mod test {
     fn voice_failed_channel_unregistered() {
         let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #unregistered test");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
+    }
+
+    #[test]
+    fn voice_failed_password_incorrect() {
+        let ch = Channel::new("#test14", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test14 wrong");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+    }
+
+    #[test]
+    fn mode_succeeded() {
+        let ch = Channel::new("#test15", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test15 test");
+        let mut exp = "SAMODE #test15 +i\r\n".into_string();
+        exp.push_str("PRIVMSG test :Channel mode is now +i.\r\n");
+        assert_eq!(data[], exp[])
+    }
+
+    #[test]
+    fn mode_failed_channel_unregistered() {
+        let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #unregistered test");
+        assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
+    }
+
+    #[test]
+    fn mode_failed_password_incorrect() {
+        let ch = Channel::new("#test16", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test16 wrong");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 }

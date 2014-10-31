@@ -23,7 +23,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
                 "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
                 "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
                 "RECLAIM"  => nickserv::Reclaim::new(bot, user, tokens),
-                _ => Err(format!("{} is not a valid command.", tokens[1])),
+                _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {
             let cmd: String = upper_case(tokens[1]);
@@ -32,7 +32,8 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
                 "ADMIN"    => chanserv::Admin::new(bot, user, tokens),
                 "OPER"     => chanserv::Oper::new(bot, user, tokens),
                 "VOICE"    => chanserv::Voice::new(bot, user, tokens),
-                _ => Err(format!("{} is not a valid command.", tokens[1])),
+                "MODE"     => chanserv::Mode::new(bot, user, tokens),
+                _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else {
             Err("Commands must be prefixed by CS or NS.".into_string())
