@@ -2,6 +2,7 @@ extern crate irc;
 
 use std::io::IoResult;
 use std::io::fs::walk_dir;
+use data::channel::Channel;
 use irc::Bot;
 use irc::bot::IrcBot;
 use irc::data::{IrcReader, IrcWriter};
@@ -11,9 +12,9 @@ mod nickserv;
 
 pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
               where T: IrcWriter, U: IrcReader {
+    let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if chan.starts_with("#") { return Ok(()); }
-        let user = source.find('!').map_or("", |i| source[..i]);
         let tokens: Vec<_> = msg.split_str(" ").collect();
         let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
             let cmd: String = upper_case(tokens[1]);
@@ -45,6 +46,21 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         try!(start_up(bot));
     } else if let ("422", _) = (command, args) {
         try!(start_up(bot));
+    } else if let ("JOIN", [chan]) = (command, args){
+        if let Ok(channel) = Channel::load(chan) {
+            let mode = if channel.admins[].contains(&user.into_string()) {
+                "+a"
+            } else if channel.opers[].contains(&user.into_string()) {
+                "+o"
+            } else if channel.voice[].contains(&user.into_string()) {
+                "+v"
+            } else {
+                ""
+            };
+            if mode.len() > 0 {
+                try!(bot.send_samode(chan, format!("{} {}", mode, user)[]));
+            }
+        }
     }
     Ok(())
 }
@@ -90,6 +106,7 @@ fn upper_case(string: &str) -> String {
 #[cfg(test)]
 mod test {
     use std::io::{MemReader, MemWriter};
+    use data::channel::Channel;
     use irc::Bot;
     use irc::bot::IrcBot;
     use irc::conn::Connection;
@@ -121,6 +138,33 @@ mod test {
     fn non_command_message_in_query() {
         let data = test_helper(":test!test@test PRIVMSG test :CS line\r\n");
         assert_eq!(data[], "PRIVMSG test :line is not a valid command.\r\n");
+    }
+
+    #[test]
+    fn admin_on_join() {
+        let mut ch = Channel::new("#test8", "owner", "test").unwrap();
+        ch.admins.push("test".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test JOIN :#test8\r\n");
+        assert_eq!(data[], "SAMODE #test8 +a test\r\n");
+    }
+
+    #[test]
+    fn oper_on_join() {
+        let mut ch = Channel::new("#test9", "owner", "test").unwrap();
+        ch.opers.push("test".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test JOIN :#test9\r\n");
+        assert_eq!(data[], "SAMODE #test9 +o test\r\n");
+    }
+
+    #[test]
+    fn voice_on_join() {
+        let mut ch = Channel::new("#test10", "owner", "test").unwrap();
+        ch.voice.push("test".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test JOIN :#test10\r\n");
+        assert_eq!(data[], "SAMODE #test10 +v test\r\n");
     }
 
     #[test]
