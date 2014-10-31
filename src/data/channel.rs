@@ -11,6 +11,7 @@ pub struct Channel {
     pub admins: Vec<String>,
     pub opers: Vec<String>,
     pub voice: Vec<String>,
+    pub mode: String,
 }
 
 impl Channel {
@@ -19,7 +20,8 @@ impl Channel {
             name: name.into_string(),
             password: try!(password_hash(password)),
             owner: owner.into_string(),
-            admins: Vec::new(), opers: Vec::new(), voice: Vec::new()
+            admins: Vec::new(), opers: Vec::new(), voice: Vec::new(),
+            mode: String::new(),
         })
     }
 

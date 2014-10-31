@@ -112,7 +112,7 @@ impl<'a> Functionality for Ghost<'a> {
         } else if let Ok(user) = User::load(self.nickname[]) {
             if try!(user.is_password(self.password[])) {
                 try!(self.bot.send_kill(self.nickname[],
-                     format!("Ghosted by {}.", self.current_nick)[]));
+                     format!("Ghosted by {}", self.current_nick)[]));
                 try!(self.bot.send_privmsg(self.nickname[], "User has been ghosted."));
                 return Ok(());
             } else {
@@ -153,7 +153,7 @@ impl<'a> Functionality for Reclaim<'a> {
         } else if let Ok(user) = User::load(self.nickname[]) {
             if try!(user.is_password(self.password[])) {
                 try!(self.bot.send_kill(self.nickname[],
-                     format!("Reclaimed by {}.", self.current_nick)[]));
+                     format!("Reclaimed by {}", self.current_nick)[]));
                 try!(self.bot.send_sanick(self.current_nick[], self.nickname[]));
                 try!(self.bot.send_samode(self.nickname[], "+r"));
                 try!(self.bot.send_privmsg(self.nickname[],
@@ -223,7 +223,7 @@ mod test {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test6 test");
-        let mut exp = "KILL test6 :Ghosted by test.\r\n".into_string();
+        let mut exp = "KILL test6 :Ghosted by test\r\n".into_string();
         exp.push_str("PRIVMSG test6 :User has been ghosted.\r\n");
         assert_eq!(data[], exp[]);
     }
@@ -250,7 +250,7 @@ mod test {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test6 test");
-        let mut exp = "KILL test6 :Reclaimed by test.\r\n".into_string();
+        let mut exp = "KILL test6 :Reclaimed by test\r\n".into_string();
         exp.push_str("SANICK test test6\r\n");
         exp.push_str("SAMODE test6 +r\r\n");
         exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
