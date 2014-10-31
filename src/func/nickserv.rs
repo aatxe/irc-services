@@ -41,7 +41,7 @@ impl<'a> Functionality for Register<'a> {
             format!("Nickname {} has been registered. Don't forget your password!\r\n{}",
                     user.nickname, "You're now identified.")
         } else {
-            format!("Failed to register {} for an unknown reason.", user.nickname)
+            format!("Failed to register {} due to an I/O issue.", user.nickname)
         };
         self.bot.send_privmsg(self.nickname[], msg[])
     }
@@ -78,7 +78,7 @@ impl<'a> Functionality for Identify<'a> {
                 "Password incorrect."
             }
         } else {
-            "Failed to identify for an unknown reason."
+            "Failed to identify due to an I/O issue."
         };
         self.bot.send_privmsg(self.nickname[], msg)
     }
@@ -119,7 +119,7 @@ impl<'a> Functionality for Ghost<'a> {
                 "Password incorrect."
             }
         } else {
-            "Failed to ghost nick for an unknown reason."
+            "Failed to ghost nick due to an I/O issue."
         };
         self.bot.send_privmsg(self.current_nick[], msg)
     }
@@ -163,7 +163,7 @@ impl<'a> Functionality for Reclaim<'a> {
                 "Password incorrect."
             }
         } else {
-            "Failed to reclaim nick for an unknown reason."
+            "Failed to reclaim nick due to an I/O issue."
         };
         self.bot.send_privmsg(self.current_nick[], msg)
     }

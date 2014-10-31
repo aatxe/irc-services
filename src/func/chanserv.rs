@@ -39,7 +39,7 @@ impl<'a> Functionality for Register<'a> {
             try!(self.bot.send_samode(self.channel[], format!("+a {}", self.bot.config().nickname)[]));
             format!("Channel {} has been registered. Don't forget the password!", chan.name)
         } else {
-            format!("Failed to register {} for an unknown reason.", chan.name)
+            format!("Failed to register {} due to an I/O issue.", chan.name)
         };
         self.bot.send_privmsg(self.owner[], msg[])
     }
@@ -82,7 +82,7 @@ impl<'a> Functionality for Admin<'a> {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to admin {} for an unknown reason.", self.target[])
+            format!("Failed to admin {} due to an I/O issue.", self.target[])
         };
         self.bot.send_privmsg(self.owner[], msg[])
     }
@@ -125,7 +125,7 @@ impl<'a> Functionality for Oper<'a> {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to oper {} for an unknown reason.", self.target[])
+            format!("Failed to oper {} due to an I/O issue.", self.target[])
         };
         self.bot.send_privmsg(self.owner[], msg[])
     }
@@ -168,7 +168,7 @@ impl<'a> Functionality for Voice<'a> {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to voice {} for an unknown reason.", self.target[])
+            format!("Failed to voice {} due to an I/O issue.", self.target[])
         };
         self.bot.send_privmsg(self.owner[], msg[])
     }
