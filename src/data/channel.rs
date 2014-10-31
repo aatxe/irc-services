@@ -68,7 +68,8 @@ mod test {
             name: "#test".into_string(),
             password: password_hash("test").unwrap(),
             owner: "test".into_string(),
-            admins: Vec::new(), opers: Vec::new(), voice: Vec::new()
+            admins: Vec::new(), opers: Vec::new(), voice: Vec::new(),
+            mode: "".into_string(),
         });
     }
 

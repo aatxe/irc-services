@@ -28,6 +28,9 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
                 "REGISTER" => chanserv::Register::new(bot, user, tokens),
+                "ADMIN"    => chanserv::Admin::new(bot, user, tokens),
+                "OPER"     => chanserv::Oper::new(bot, user, tokens),
+                "VOICE"    => chanserv::Voice::new(bot, user, tokens),
                 _ => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else {
