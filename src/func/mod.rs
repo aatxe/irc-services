@@ -48,7 +48,9 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         try!(start_up(bot));
     } else if let ("JOIN", [chan]) = (command, args){
         if let Ok(channel) = Channel::load(chan) {
-            let mode = if channel.admins[].contains(&user.into_string()) {
+            let mode = if channel.owner[] == user {
+                "+qa"
+            } else if channel.admins[].contains(&user.into_string()) {
                 "+a"
             } else if channel.opers[].contains(&user.into_string()) {
                 "+o"
@@ -141,8 +143,17 @@ mod test {
     }
 
     #[test]
+    fn owner_on_join() {
+        let mut ch = Channel::new("#test11", "test", "test").unwrap();
+        ch.admins.push("test".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test JOIN :#test11\r\n");
+        assert_eq!(data[], "SAMODE #test11 +qa test\r\n");
+    }
+
+    #[test]
     fn admin_on_join() {
-        let mut ch = Channel::new("#test8", "owner", "test").unwrap();
+        let mut ch = Channel::new("#test8", "test", "owner").unwrap();
         ch.admins.push("test".into_string());
         assert!(ch.save().is_ok());
         let data = test_helper(":test!test@test JOIN :#test8\r\n");
@@ -151,7 +162,7 @@ mod test {
 
     #[test]
     fn oper_on_join() {
-        let mut ch = Channel::new("#test9", "owner", "test").unwrap();
+        let mut ch = Channel::new("#test9", "test", "owner").unwrap();
         ch.opers.push("test".into_string());
         assert!(ch.save().is_ok());
         let data = test_helper(":test!test@test JOIN :#test9\r\n");
@@ -160,7 +171,7 @@ mod test {
 
     #[test]
     fn voice_on_join() {
-        let mut ch = Channel::new("#test10", "owner", "test").unwrap();
+        let mut ch = Channel::new("#test10", "test", "owner").unwrap();
         ch.voice.push("test".into_string());
         assert!(ch.save().is_ok());
         let data = test_helper(":test!test@test JOIN :#test10\r\n");
