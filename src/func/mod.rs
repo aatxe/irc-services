@@ -97,6 +97,10 @@ fn start_up<T, U>(bot: &IrcBot<T, U>) -> IoResult<()> where T: IrcWriter, U: Irc
     try!(bot.send_join(join_line[]));
     for chan in chans.iter() {
         try!(bot.send_samode(chan[], format!("+a {}", bot.config().nickname)[]));
+        let ch = try!(Channel::load(chan[]));
+        if ch.mode.len() != 0 {
+            try!(bot.send_samode(chan[], ch.mode[]));
+        }
     }
     Ok(())
 }
