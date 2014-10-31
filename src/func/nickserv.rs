@@ -209,7 +209,7 @@ mod test {
         let u = User::new("test9", "test", None).unwrap();
         assert!(u.save().is_ok());
         let data = test_helper(":test9!test@test PRIVMSG test :NS IDENTIFY tset");
-        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+        assert_eq!(data[], "PRIVMSG test9 :Password incorrect.\r\n");
     }
 
     #[test]
