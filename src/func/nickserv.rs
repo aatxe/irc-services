@@ -206,9 +206,9 @@ mod test {
 
     #[test]
     fn identify_failed_password_incorrect() {
-        let u = User::new("test", "test", None).unwrap();
+        let u = User::new("test9", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS IDENTIFY tset");
+        let data = test_helper(":test9!test@test PRIVMSG test :NS IDENTIFY tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
@@ -231,9 +231,9 @@ mod test {
 
     #[test]
     fn ghost_failed_password_incorrect() {
-        let u = User::new("test6", "test", None).unwrap();
+        let u = User::new("test8", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test6 tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test8 tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
@@ -247,21 +247,21 @@ mod test {
 
     #[test]
     fn reclaim_succeeded() {
-        let u = User::new("test6", "test", None).unwrap();
+        let u = User::new("test11", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test6 test");
-        let mut exp = "KILL test6 :Reclaimed by test\r\n".into_string();
-        exp.push_str("SANICK test test6\r\n");
-        exp.push_str("SAMODE test6 +r\r\n");
-        exp.push_str("PRIVMSG test6 :Password accepted - you are now recognized.\r\n");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test11 test");
+        let mut exp = "KILL test11 :Reclaimed by test\r\n".into_string();
+        exp.push_str("SANICK test test11\r\n");
+        exp.push_str("SAMODE test11 +r\r\n");
+        exp.push_str("PRIVMSG test11 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
     }
 
     #[test]
     fn reclaim_failed_password_incorrect() {
-        let u = User::new("test6", "test", None).unwrap();
+        let u = User::new("test10", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test6 tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test10 tset");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
