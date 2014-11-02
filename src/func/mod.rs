@@ -33,6 +33,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
                 "OPER"     => chanserv::Oper::new(bot, user, tokens),
                 "VOICE"    => chanserv::Voice::new(bot, user, tokens),
                 "MODE"     => chanserv::Mode::new(bot, user, tokens),
+                "DEADMIN"  => chanserv::DeAdmin::new(bot, user, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else {

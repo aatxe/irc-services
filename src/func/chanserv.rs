@@ -217,6 +217,49 @@ impl<'a> Functionality for Mode<'a> {
     }
 }
 
+pub struct DeAdmin<'a> {
+    bot: &'a Bot + 'a,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
+}
+
+impl<'a> DeAdmin<'a> {
+    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 5 {
+            return Err("Syntax: CS DEADMIN user channel password".into_string())
+        }
+        Ok(box Admin {
+            bot: bot,
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a> Functionality for DeAdmin<'a> {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !Channel::exists(self.channel[]) {
+            format!("Channel {} is not registered!", self.channel[])
+        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
+            if try!(chan.is_password(self.password[])) {
+                chan.admins.retain(|u| u[] != self.target[]);
+                try!(chan.save());
+                try!(self.bot.send_samode(self.channel[], format!("-a {}", self.target[])[]));
+                format!("{} is no longer an admin.", self.target[])
+            } else {
+                format!("Password incorrect.")
+            }
+        } else {
+            format!("Failed to de-admin {} due to an I/O issue.", self.target[])
+        };
+        self.bot.send_privmsg(self.owner[], msg[])
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::io::fs::unlink;
