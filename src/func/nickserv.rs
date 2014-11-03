@@ -13,7 +13,7 @@ pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err("Syntax: NS REGISTER password [email]".into_string())
         }
@@ -55,7 +55,7 @@ pub struct Identify<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Identify<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err("Syntax: NS IDENTIFY password".into_string())
         }
@@ -93,7 +93,7 @@ pub struct Ghost<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Ghost<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS GHOST nickname password".into_string())
         }
@@ -134,7 +134,7 @@ pub struct Reclaim<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Reclaim<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS RECLAIM nickname password".into_string())
         }

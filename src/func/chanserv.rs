@@ -14,7 +14,7 @@ pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: CS REGISTER channel password".into_string())
         }
@@ -54,7 +54,7 @@ pub struct Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS ADMIN user channel password".into_string())
         }
@@ -97,7 +97,7 @@ pub struct Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS OPER user channel password".into_string())
         }
@@ -140,7 +140,7 @@ pub struct Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS VOICE user channel password".into_string())
         }
@@ -183,7 +183,7 @@ pub struct Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS MODE mode channel password".into_string())
         }
@@ -226,7 +226,7 @@ pub struct DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
 }
 
 impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEADMIN user channel password".into_string())
         }
