@@ -120,7 +120,7 @@ mod test {
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
     use data::channel::Channel;
-    use irc::data::config::Config;
+    use irc::data::Config;
     use irc::conn::Connection;
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;

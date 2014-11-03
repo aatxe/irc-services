@@ -31,5 +31,5 @@ dependencies = [
 [[package]]
 name = "irc"
 version = "0.0.1"
-source = "git+https://github.com/aaronweiss74/irc.git#6db71ded01869ff0855d3f2797b5616857d1b9ed"
+source = "git+https://github.com/aaronweiss74/irc.git#1f888281b005a4edb968bef598f11be5acc52ccb"
 
