@@ -117,21 +117,43 @@ fn upper_case(string: &str) -> String {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
     use data::channel::Channel;
-    use irc::Bot;
-    use irc::bot::IrcBot;
+    use irc::data::config::Config;
     use irc::conn::Connection;
+    use irc::server::{IrcServer, Server};
+    use irc::server::utils::Wrapper;
 
     pub fn test_helper(input: &str) -> String {
-        let mut bot = IrcBot::from_connection(
-            Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())).unwrap(),
-            |bot, source, command, args| {
-                super::process(bot, source, command, args)
-            }
+        let server = IrcServer::from_connection(Config {
+                owners: vec!["test".into_string()],
+                nickname: "test".into_string(),
+                username: "test".into_string(),
+                realname: "test".into_string(),
+                password: String::new(),
+                server: "irc.fyrechat.net".into_string(),
+                port: 6667,
+                channels: vec!["#test".into_string(), "#test2".into_string()],
+                options: {
+                    let mut map = HashMap::new();
+                    map.insert("oper-pass".into_string(), "test".into_string());
+                    map
+                }
+            },
+            Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())),
         ).unwrap();
-        bot.output().unwrap();
-        String::from_utf8(bot.conn.writer().deref().get_ref().to_vec()).unwrap()
+        for message in server.iter() {
+            let mut args = Vec::new();
+            let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
+            args.push_all(msg_args[]);
+            if let Some(ref suffix) = message.suffix {
+                args.push(suffix[])
+            }
+            let source = message.prefix.unwrap_or(String::new());
+            super::process(&Wrapper::new(&server), source[], message.command[], args[]).unwrap();
+        }
+        String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap()
     }
 
     #[test]

@@ -274,7 +274,7 @@ mod test {
         let data = test_helper(":test2!test@test PRIVMSG test :CS REGISTER #test4 test");
         let mut exp = "SAMODE #test4 +r\r\n".into_string();
         exp.push_str("SAMODE #test4 +qa test2\r\n");
-        exp.push_str("JOIN :#test4\r\n");
+        exp.push_str("JOIN #test4\r\n");
         exp.push_str("SAMODE #test4 +a test\r\n");
         exp.push_str("PRIVMSG test2 :Channel #test4 has been registered. ");
         exp.push_str("Don't forget the password!\r\n");
