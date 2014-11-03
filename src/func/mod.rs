@@ -3,7 +3,7 @@ extern crate irc;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
-use irc::server::{IrcServer, Server};
+use irc::server::Server;
 use irc::server::utils::Wrapper;
 use irc::data::kinds::{IrcReader, IrcWriter};
 
