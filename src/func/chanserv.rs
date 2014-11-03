@@ -201,14 +201,14 @@ impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
 
 impl<'a, T, U> Functionality for Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !Channel::exists(self.channel) {
+            format!("Channel {} is not registered!", self.channel)
+        } else if let Ok(mut chan) = Channel::load(self.channel) {
+            if try!(chan.is_password(self.password)) {
                 chan.mode = self.mode.into_string();
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], self.mode[], ""));
-                format!("Channel mode is now {}.", self.mode[])
+                try!(self.server.send_samode(self.channel, self.mode, ""));
+                format!("Channel mode is now {}.", self.mode)
             } else {
                 format!("Password incorrect.")
             }

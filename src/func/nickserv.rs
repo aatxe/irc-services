@@ -71,9 +71,9 @@ impl<'a, T, U> Functionality for Identify<'a, T, U> where T: IrcWriter, U: IrcRe
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "Your nick isn't registered."
-        } else if let Ok(user) = User::load(self.nickname[]) {
-            if try!(user.is_password(self.password[])) {
-                try!(self.server.send_samode(self.nickname[], "+r", ""));
+        } else if let Ok(user) = User::load(self.nickname) {
+            if try!(user.is_password(self.password)) {
+                try!(self.server.send_samode(self.nickname, "+r", ""));
                 "Password accepted - you are now recognized."
             } else {
                 "Password incorrect."
@@ -110,11 +110,11 @@ impl<'a, T, U> Functionality for Ghost<'a, T, U> where T: IrcWriter, U: IrcReade
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be ghosted."
-        } else if let Ok(user) = User::load(self.nickname[]) {
-            if try!(user.is_password(self.password[])) {
-                try!(self.server.send_kill(self.nickname[],
+        } else if let Ok(user) = User::load(self.nickname) {
+            if try!(user.is_password(self.password)) {
+                try!(self.server.send_kill(self.nickname,
                      format!("Ghosted by {}", self.current_nick)[]));
-                try!(self.server.send_privmsg(self.nickname[], "User has been ghosted."));
+                try!(self.server.send_privmsg(self.nickname, "User has been ghosted."));
                 return Ok(());
             } else {
                 "Password incorrect."
@@ -122,7 +122,7 @@ impl<'a, T, U> Functionality for Ghost<'a, T, U> where T: IrcWriter, U: IrcReade
         } else {
             "Failed to ghost nick due to an I/O issue."
         };
-        self.server.send_privmsg(self.current_nick[], msg)
+        self.server.send_privmsg(self.current_nick, msg)
     }
 }
 
@@ -151,13 +151,13 @@ impl<'a, T, U> Functionality for Reclaim<'a, T, U> where T: IrcWriter, U: IrcRea
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be reclaimed."
-        } else if let Ok(user) = User::load(self.nickname[]) {
-            if try!(user.is_password(self.password[])) {
-                try!(self.server.send_kill(self.nickname[],
+        } else if let Ok(user) = User::load(self.nickname) {
+            if try!(user.is_password(self.password)) {
+                try!(self.server.send_kill(self.nickname,
                      format!("Reclaimed by {}", self.current_nick)[]));
-                try!(self.server.send_sanick(self.current_nick[], self.nickname[]));
-                try!(self.server.send_samode(self.nickname[], "+r", ""));
-                try!(self.server.send_privmsg(self.nickname[],
+                try!(self.server.send_sanick(self.current_nick, self.nickname));
+                try!(self.server.send_samode(self.nickname, "+r", ""));
+                try!(self.server.send_privmsg(self.nickname,
                                            "Password accepted - you are now recognized."));
                 return Ok(());
             } else {
