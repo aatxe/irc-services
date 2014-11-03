@@ -10,7 +10,7 @@ use irc::data::kinds::{IrcReader, IrcWriter};
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
+pub fn process<'a, T, U>(server: &'a Wrapper<'a, T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
               where T: IrcWriter, U: IrcReader {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
@@ -19,39 +19,39 @@ pub fn process<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &str, command: &str
         let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
-                "REGISTER" => nickserv::Register::new(bot, user, tokens),
-                "IDENTIFY" => nickserv::Identify::new(bot, user, tokens),
-                "GHOST"    => nickserv::Ghost::new(bot, user,tokens),
-                "RECLAIM"  => nickserv::Reclaim::new(bot, user, tokens),
+                "REGISTER" => nickserv::Register::new(server, user, tokens),
+                "IDENTIFY" => nickserv::Identify::new(server, user, tokens),
+                "GHOST"    => nickserv::Ghost::new(server, user,tokens),
+                "RECLAIM"  => nickserv::Reclaim::new(server, user, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
-                "REGISTER" => chanserv::Register::new(bot, user, tokens),
-                "ADMIN"    => chanserv::Admin::new(bot, user, tokens),
-                "OPER"     => chanserv::Oper::new(bot, user, tokens),
-                "VOICE"    => chanserv::Voice::new(bot, user, tokens),
-                "MODE"     => chanserv::Mode::new(bot, user, tokens),
-                "DEADMIN"  => chanserv::DeAdmin::new(bot, user, tokens),
+                "REGISTER" => chanserv::Register::new(server, user, tokens),
+                "ADMIN"    => chanserv::Admin::new(server, user, tokens),
+                "OPER"     => chanserv::Oper::new(server, user, tokens),
+                "VOICE"    => chanserv::Voice::new(server, user, tokens),
+                "MODE"     => chanserv::Mode::new(server, user, tokens),
+                "DEADMIN"  => chanserv::DeAdmin::new(server, user, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else {
             Err("Commands must be prefixed by CS or NS.".into_string())
         };
         if let Err(msg) = res {
-            try!(bot.send_privmsg(user, msg[]));
+            try!(server.send_privmsg(user, msg[]));
         } else {
             try!(res.unwrap().do_func())
         }
     } else if let ("NOTICE", ["AUTH", suffix]) = (command, args) {
         if suffix.starts_with("***") {
-            try!(bot.identify());
+            try!(server.identify());
         }
     } else if let ("376", _) = (command, args) {
-        try!(start_up(bot));
+        try!(start_up(server));
     } else if let ("422", _) = (command, args) {
-        try!(start_up(bot));
+        try!(start_up(server));
     } else if let ("JOIN", [chan]) = (command, args){
         if let Ok(channel) = Channel::load(chan) {
             let mode = if channel.owner[] == user {
@@ -66,7 +66,7 @@ pub fn process<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &str, command: &str
                 ""
             };
             if mode.len() > 0 {
-                try!(bot.send_samode(chan, mode[], user[]));
+                try!(server.send_samode(chan, mode[], user[]));
             }
         }
     }
@@ -77,9 +77,9 @@ pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
 }
 
-fn start_up<T, U>(bot: &Wrapper<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
-    try!(bot.send_oper(bot.config().nickname[],
-                      bot.config().options.get_copy(&format!("oper-pass"))[]));
+fn start_up<T, U>(server: &Wrapper<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+    try!(server.send_oper(server.config().nickname[],
+                      server.config().options.get_copy(&format!("oper-pass"))[]));
     let mut chans: Vec<String> = Vec::new();
     for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
         let path_str = path.as_str().unwrap();
@@ -96,16 +96,16 @@ fn start_up<T, U>(bot: &Wrapper<T, U>) -> IoResult<()> where T: IrcWriter, U: Ir
         } else if join_line.len() == 0 {
             join_line.push_str(chan[]);
         } else {
-            try!(bot.send_join(join_line[]));
+            try!(server.send_join(join_line[]));
             join_line = chan.clone();
         }
     }
-    try!(bot.send_join(join_line[]));
+    try!(server.send_join(join_line[]));
     for chan in chans.iter() {
-        try!(bot.send_samode(chan[], "+a", bot.config().nickname[]));
+        try!(server.send_samode(chan[], "+a", server.config().nickname[]));
         let ch = try!(Channel::load(chan[]));
         if ch.mode.len() != 0 {
-            try!(bot.send_samode(chan[], ch.mode[], ""));
+            try!(server.send_samode(chan[], ch.mode[], ""));
         }
     }
     Ok(())
