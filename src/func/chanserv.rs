@@ -8,9 +8,9 @@ use irc::data::kinds::{IrcReader, IrcWriter};
 
 pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {
     server: &'a Wrapper<'a, T, U>,
-    owner: &'a str,
-    channel: &'a str,
-    password: &'a str,
+    owner: String,
+    channel: String,
+    password: String,
 }
 
 impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
@@ -20,18 +20,16 @@ impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
         }
         Ok(box Register {
             server: server,
-            owner: user,
-            channel: args[2],
-            password: args[3],
+            owner: user.into_string(),
+            channel: args[2].into_string(),
+            password: args[3].into_string(),
         } as Box<Functionality>)
     }
 }
 
 impl<'a, T, U> Functionality for Register<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
-        let chan = try!(
-            Channel::new(self.channel[], self.password[], self.owner[])
-        );
+        let chan = try!(Channel::new(self.channel[], self.password[], self.owner[]));
         let msg = if Channel::exists(self.channel[]) {
             format!("Channel {} is already registered!", chan.name)
         } else if chan.save().is_ok() {;
@@ -49,10 +47,10 @@ impl<'a, T, U> Functionality for Register<'a, T, U> where T: IrcWriter, U: IrcRe
 
 pub struct Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
     server: &'a Wrapper<'a, T, U>,
-    owner: &'a str,
-    channel: &'a str,
-    password: &'a str,
-    target: &'a str,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
 }
 
 impl<'a, T, U> Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
@@ -62,10 +60,10 @@ impl<'a, T, U> Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
         }
         Ok(box Admin {
             server: server,
-            owner: user,
-            channel: args[3],
-            password: args[4],
-            target: args[2],
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
         } as Box<Functionality>)
     }
 }
@@ -76,7 +74,7 @@ impl<'a, T, U> Functionality for Admin<'a, T, U> where T: IrcWriter, U: IrcReade
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.admins.push(self.target.into_string());
+                chan.admins.push(self.target.clone());
                 try!(chan.save());
                 try!(self.server.send_samode(self.channel[], "+a", self.target[]));
                 format!("{} is now an admin.", self.target[])
@@ -92,10 +90,10 @@ impl<'a, T, U> Functionality for Admin<'a, T, U> where T: IrcWriter, U: IrcReade
 
 pub struct Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
     server: &'a Wrapper<'a, T, U>,
-    owner: &'a str,
-    channel: &'a str,
-    password: &'a str,
-    target: &'a str,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
 }
 
 impl<'a, T, U> Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
@@ -105,10 +103,10 @@ impl<'a, T, U> Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
         }
         Ok(box Oper {
             server: server,
-            owner: user,
-            channel: args[3],
-            password: args[4],
-            target: args[2],
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
         } as Box<Functionality>)
     }
 }
@@ -119,7 +117,7 @@ impl<'a, T, U> Functionality for Oper<'a, T, U> where T: IrcWriter, U: IrcReader
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.opers.push(self.target.into_string());
+                chan.opers.push(self.target.clone());
                 try!(chan.save());
                 try!(self.server.send_samode(self.channel[], "+o", self.target[]));
                 format!("{} is now an oper.", self.target[])
@@ -135,10 +133,10 @@ impl<'a, T, U> Functionality for Oper<'a, T, U> where T: IrcWriter, U: IrcReader
 
 pub struct Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
     server: &'a Wrapper<'a, T, U>,
-    owner: &'a str,
-    channel: &'a str,
-    password: &'a str,
-    target: &'a str,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
 }
 
 impl<'a, T, U> Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
@@ -148,10 +146,10 @@ impl<'a, T, U> Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
         }
         Ok(box Voice {
             server: server,
-            owner: user,
-            channel: args[3],
-            password: args[4],
-            target: args[2],
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
         } as Box<Functionality>)
     }
 }
@@ -162,7 +160,7 @@ impl<'a, T, U> Functionality for Voice<'a, T, U> where T: IrcWriter, U: IrcReade
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.voice.push(self.target.into_string());
+                chan.voice.push(self.target.clone());
                 try!(chan.save());
                 try!(self.server.send_samode(self.channel[], "+v", self.target[]));
                 format!("{} is now voiced.", self.target[])
@@ -178,10 +176,10 @@ impl<'a, T, U> Functionality for Voice<'a, T, U> where T: IrcWriter, U: IrcReade
 
 pub struct Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
     server: &'a Wrapper<'a, T, U>,
-    owner: &'a str,
-    channel: &'a str,
-    password: &'a str,
-    mode: &'a str,
+    owner: String,
+    channel: String,
+    password: String,
+    mode: String,
 }
 
 impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
@@ -191,24 +189,24 @@ impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
         }
         Ok(box Mode {
             server: server,
-            owner: user,
-            channel: args[3],
-            password: args[4],
-            mode: args[2],
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            mode: args[2].into_string(),
         } as Box<Functionality>)
     }
 }
 
 impl<'a, T, U> Functionality for Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !Channel::exists(self.channel) {
-            format!("Channel {} is not registered!", self.channel)
-        } else if let Ok(mut chan) = Channel::load(self.channel) {
-            if try!(chan.is_password(self.password)) {
-                chan.mode = self.mode.into_string();
+        let msg = if !Channel::exists(self.channel[]) {
+            format!("Channel {} is not registered!", self.channel[])
+        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
+            if try!(chan.is_password(self.password[])) {
+                chan.mode = self.mode.clone();
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel, self.mode, ""));
-                format!("Channel mode is now {}.", self.mode)
+                try!(self.server.send_samode(self.channel[], self.mode[], ""));
+                format!("Channel mode is now {}.", self.mode[])
             } else {
                 format!("Password incorrect.")
             }
@@ -234,10 +232,10 @@ impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
         }
         Ok(box Admin {
             server: server,
-            owner: user,
-            channel: args[3],
-            password: args[4],
-            target: args[2],
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
         } as Box<Functionality>)
     }
 }
