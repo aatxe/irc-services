@@ -2,26 +2,27 @@ use super::Functionality;
 use std::io::IoResult;
 use data::BotResult;
 use data::user::User;
-use irc::Bot;
+use irc::server::utils::Wrapper;
+use irc::data::kinds::{IrcReader, IrcWriter};
 
-pub struct Register<'a> {
-    bot: &'a Bot + 'a,
-    nickname: String,
-    password: String,
-    email: Option<String>,
+pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    nickname: &'a str,
+    password: &'a str,
+    email: Option<&'a str>,
 }
 
-impl<'a> Register<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err("Syntax: NS REGISTER password [email]".into_string())
         }
         Ok(box Register {
-            bot: bot,
-            nickname: user.into_string(),
-            password: args[2].into_string(),
+            server: server,
+            nickname: user,
+            password: args[2],
             email: if args.len() == 4 {
-                Some(args[3].into_string())
+                Some(args[3])
             } else {
                 None
             }
@@ -29,50 +30,50 @@ impl<'a> Register<'a> {
     }
 }
 
-impl<'a> Functionality for Register<'a> {
+impl<'a, T, U> Functionality for Register<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let user = try!(
-            User::new(self.nickname[], self.password[], self.email.as_ref().map(|s| s[]))
+            User::new(self.nickname[], self.password[], self.email)
         );
         let msg = if User::exists(self.nickname[]) {
             format!("Nickname {} is already registered!", user.nickname)
         } else if user.save().is_ok() {;
-            try!(self.bot.send_samode(self.nickname[], "+r"));
+            try!(self.server.send_samode(self.nickname[], "+r", ""));
             format!("Nickname {} has been registered. Don't forget your password!\r\n{}",
                     user.nickname, "You're now identified.")
         } else {
             format!("Failed to register {} due to an I/O issue.", user.nickname)
         };
-        self.bot.send_privmsg(self.nickname[], msg[])
+        self.server.send_privmsg(self.nickname[], msg[])
     }
 }
 
-pub struct Identify<'a> {
-    bot: &'a Bot + 'a,
-    nickname: String,
-    password: String,
+pub struct Identify<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    nickname: &'a str,
+    password: &'a str,
 }
 
-impl<'a> Identify<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Identify<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err("Syntax: NS IDENTIFY password".into_string())
         }
         Ok(box Identify {
-            bot: bot,
-            nickname: user.into_string(),
-            password: args[2].into_string(),
+            server: server,
+            nickname: user,
+            password: args[2],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Identify<'a> {
+impl<'a, T, U> Functionality for Identify<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "Your nick isn't registered."
         } else if let Ok(user) = User::load(self.nickname[]) {
             if try!(user.is_password(self.password[])) {
-                try!(self.bot.send_samode(self.nickname[], "+r"));
+                try!(self.server.send_samode(self.nickname[], "+r", ""));
                 "Password accepted - you are now recognized."
             } else {
                 "Password incorrect."
@@ -80,40 +81,40 @@ impl<'a> Functionality for Identify<'a> {
         } else {
             "Failed to identify due to an I/O issue."
         };
-        self.bot.send_privmsg(self.nickname[], msg)
+        self.server.send_privmsg(self.nickname[], msg)
     }
 }
 
-pub struct Ghost<'a> {
-    bot: &'a Bot + 'a,
-    current_nick: String,
-    nickname: String,
-    password: String,
+pub struct Ghost<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    current_nick: &'a str,
+    nickname: &'a str,
+    password: &'a str,
 }
 
-impl<'a> Ghost<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Ghost<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS GHOST nickname password".into_string())
         }
         Ok(box Ghost {
-            bot: bot,
-            current_nick: user.into_string(),
-            nickname: args[2].into_string(),
-            password: args[3].into_string(),
+            server: server,
+            current_nick: user,
+            nickname: args[2],
+            password: args[3],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Ghost<'a> {
+impl<'a, T, U> Functionality for Ghost<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be ghosted."
         } else if let Ok(user) = User::load(self.nickname[]) {
             if try!(user.is_password(self.password[])) {
-                try!(self.bot.send_kill(self.nickname[],
+                try!(self.server.send_kill(self.nickname[],
                      format!("Ghosted by {}", self.current_nick)[]));
-                try!(self.bot.send_privmsg(self.nickname[], "User has been ghosted."));
+                try!(self.server.send_privmsg(self.nickname[], "User has been ghosted."));
                 return Ok(());
             } else {
                 "Password incorrect."
@@ -121,42 +122,42 @@ impl<'a> Functionality for Ghost<'a> {
         } else {
             "Failed to ghost nick due to an I/O issue."
         };
-        self.bot.send_privmsg(self.current_nick[], msg)
+        self.server.send_privmsg(self.current_nick[], msg)
     }
 }
 
-pub struct Reclaim<'a> {
-    bot: &'a Bot + 'a,
-    current_nick: String,
-    nickname: String,
-    password: String,
+pub struct Reclaim<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    current_nick: &'a str,
+    nickname: &'a str,
+    password: &'a str,
 }
 
-impl<'a> Reclaim<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Reclaim<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS RECLAIM nickname password".into_string())
         }
         Ok(box Reclaim {
-            bot: bot,
-            current_nick: user.into_string(),
-            nickname: args[2].into_string(),
-            password: args[3].into_string(),
+            server: server,
+            current_nick: user,
+            nickname: args[2],
+            password: args[3],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Reclaim<'a> {
+impl<'a, T, U> Functionality for Reclaim<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be reclaimed."
         } else if let Ok(user) = User::load(self.nickname[]) {
             if try!(user.is_password(self.password[])) {
-                try!(self.bot.send_kill(self.nickname[],
+                try!(self.server.send_kill(self.nickname[],
                      format!("Reclaimed by {}", self.current_nick)[]));
-                try!(self.bot.send_sanick(self.current_nick[], self.nickname[]));
-                try!(self.bot.send_samode(self.nickname[], "+r"));
-                try!(self.bot.send_privmsg(self.nickname[],
+                try!(self.server.send_sanick(self.current_nick[], self.nickname[]));
+                try!(self.server.send_samode(self.nickname[], "+r", ""));
+                try!(self.server.send_privmsg(self.nickname[],
                                            "Password accepted - you are now recognized."));
                 return Ok(());
             } else {
@@ -165,7 +166,7 @@ impl<'a> Functionality for Reclaim<'a> {
         } else {
             "Failed to reclaim nick due to an I/O issue."
         };
-        self.bot.send_privmsg(self.current_nick[], msg)
+        self.server.send_privmsg(self.current_nick[], msg)
     }
 }
 

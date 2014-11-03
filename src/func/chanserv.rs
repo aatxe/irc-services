@@ -2,30 +2,32 @@ use super::Functionality;
 use std::io::IoResult;
 use data::BotResult;
 use data::channel::Channel;
-use irc::Bot;
+use irc::server::Server;
+use irc::server::utils::Wrapper;
+use irc::data::kinds::{IrcReader, IrcWriter};
 
-pub struct Register<'a> {
-    bot: &'a Bot + 'a,
-    owner: String,
-    channel: String,
-    password: String,
+pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: &'a str,
+    channel: &'a str,
+    password: &'a str,
 }
 
-impl<'a> Register<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: CS REGISTER channel password".into_string())
         }
         Ok(box Register {
-            bot: bot,
-            owner: user.into_string(),
-            channel: args[2].into_string(),
-            password: args[3].into_string(),
+            server: server,
+            owner: user,
+            channel: args[2],
+            password: args[3],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Register<'a> {
+impl<'a, T, U> Functionality for Register<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let chan = try!(
             Channel::new(self.channel[], self.password[], self.owner[])
@@ -33,50 +35,50 @@ impl<'a> Functionality for Register<'a> {
         let msg = if Channel::exists(self.channel[]) {
             format!("Channel {} is already registered!", chan.name)
         } else if chan.save().is_ok() {;
-            try!(self.bot.send_samode(self.channel[], "+r"));
-            try!(self.bot.send_samode(self.channel[], format!("+qa {}", self.owner)[]));
-            try!(self.bot.send_join(self.channel[]));
-            try!(self.bot.send_samode(self.channel[], format!("+a {}", self.bot.config().nickname)[]));
+            try!(self.server.send_samode(self.channel[], "+r", ""));
+            try!(self.server.send_samode(self.channel[], "+qa", self.owner[]));
+            try!(self.server.send_join(self.channel[]));
+            try!(self.server.send_samode(self.channel[], "+a", self.server.config().nickname[]));
             format!("Channel {} has been registered. Don't forget the password!", chan.name)
         } else {
             format!("Failed to register {} due to an I/O issue.", chan.name)
         };
-        self.bot.send_privmsg(self.owner[], msg[])
+        self.server.send_privmsg(self.owner[], msg[])
     }
 }
 
-pub struct Admin<'a> {
-    bot: &'a Bot + 'a,
-    owner: String,
-    channel: String,
-    password: String,
-    target: String,
+pub struct Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: &'a str,
+    channel: &'a str,
+    password: &'a str,
+    target: &'a str,
 }
 
-impl<'a> Admin<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS ADMIN user channel password".into_string())
         }
         Ok(box Admin {
-            bot: bot,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            server: server,
+            owner: user,
+            channel: args[3],
+            password: args[4],
+            target: args[2],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Admin<'a> {
+impl<'a, T, U> Functionality for Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.admins.push(self.target.clone());
+                chan.admins.push(self.target.into_string());
                 try!(chan.save());
-                try!(self.bot.send_samode(self.channel[], format!("+a {}", self.target[])[]));
+                try!(self.server.send_samode(self.channel[], "+a", self.target[]));
                 format!("{} is now an admin.", self.target[])
             } else {
                 format!("Password incorrect.")
@@ -84,42 +86,42 @@ impl<'a> Functionality for Admin<'a> {
         } else {
             format!("Failed to admin {} due to an I/O issue.", self.target[])
         };
-        self.bot.send_privmsg(self.owner[], msg[])
+        self.server.send_privmsg(self.owner[], msg[])
     }
 }
 
-pub struct Oper<'a> {
-    bot: &'a Bot + 'a,
-    owner: String,
-    channel: String,
-    password: String,
-    target: String,
+pub struct Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: &'a str,
+    channel: &'a str,
+    password: &'a str,
+    target: &'a str,
 }
 
-impl<'a> Oper<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS OPER user channel password".into_string())
         }
         Ok(box Oper {
-            bot: bot,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            server: server,
+            owner: user,
+            channel: args[3],
+            password: args[4],
+            target: args[2],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Oper<'a> {
+impl<'a, T, U> Functionality for Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.opers.push(self.target.clone());
+                chan.opers.push(self.target.into_string());
                 try!(chan.save());
-                try!(self.bot.send_samode(self.channel[], format!("+o {}", self.target[])[]));
+                try!(self.server.send_samode(self.channel[], "+o", self.target[]));
                 format!("{} is now an oper.", self.target[])
             } else {
                 format!("Password incorrect.")
@@ -127,42 +129,42 @@ impl<'a> Functionality for Oper<'a> {
         } else {
             format!("Failed to oper {} due to an I/O issue.", self.target[])
         };
-        self.bot.send_privmsg(self.owner[], msg[])
+        self.server.send_privmsg(self.owner[], msg[])
     }
 }
 
-pub struct Voice<'a> {
-    bot: &'a Bot + 'a,
-    owner: String,
-    channel: String,
-    password: String,
-    target: String,
+pub struct Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: &'a str,
+    channel: &'a str,
+    password: &'a str,
+    target: &'a str,
 }
 
-impl<'a> Voice<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS VOICE user channel password".into_string())
         }
         Ok(box Voice {
-            bot: bot,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            server: server,
+            owner: user,
+            channel: args[3],
+            password: args[4],
+            target: args[2],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Voice<'a> {
+impl<'a, T, U> Functionality for Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.voice.push(self.target.clone());
+                chan.voice.push(self.target.into_string());
                 try!(chan.save());
-                try!(self.bot.send_samode(self.channel[], format!("+v {}", self.target[])[]));
+                try!(self.server.send_samode(self.channel[], "+v", self.target[]));
                 format!("{} is now voiced.", self.target[])
             } else {
                 format!("Password incorrect.")
@@ -170,42 +172,42 @@ impl<'a> Functionality for Voice<'a> {
         } else {
             format!("Failed to voice {} due to an I/O issue.", self.target[])
         };
-        self.bot.send_privmsg(self.owner[], msg[])
+        self.server.send_privmsg(self.owner[], msg[])
     }
 }
 
-pub struct Mode<'a> {
-    bot: &'a Bot + 'a,
-    owner: String,
-    channel: String,
-    password: String,
-    mode: String,
+pub struct Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: &'a str,
+    channel: &'a str,
+    password: &'a str,
+    mode: &'a str,
 }
 
-impl<'a> Mode<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS MODE mode channel password".into_string())
         }
         Ok(box Mode {
-            bot: bot,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            mode: args[2].into_string(),
+            server: server,
+            owner: user,
+            channel: args[3],
+            password: args[4],
+            mode: args[2],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for Mode<'a> {
+impl<'a, T, U> Functionality for Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
             if try!(chan.is_password(self.password[])) {
-                chan.mode = self.mode.clone();
+                chan.mode = self.mode.into_string();
                 try!(chan.save());
-                try!(self.bot.send_samode(self.channel[], self.mode[]));
+                try!(self.server.send_samode(self.channel[], self.mode[], ""));
                 format!("Channel mode is now {}.", self.mode[])
             } else {
                 format!("Password incorrect.")
@@ -213,34 +215,34 @@ impl<'a> Functionality for Mode<'a> {
         } else {
             format!("Failed to set channel mode {} due to an I/O issue.", self.mode[])
         };
-        self.bot.send_privmsg(self.owner[], msg[])
+        self.server.send_privmsg(self.owner[], msg[])
     }
 }
 
-pub struct DeAdmin<'a> {
-    bot: &'a Bot + 'a,
-    owner: String,
-    channel: String,
-    password: String,
-    target: String,
+pub struct DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: &'a str,
+    channel: &'a str,
+    password: &'a str,
+    target: &'a str,
 }
 
-impl<'a> DeAdmin<'a> {
-    pub fn new(bot: &'a Bot, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &'a str, args: Vec<&'a str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEADMIN user channel password".into_string())
         }
         Ok(box Admin {
-            bot: bot,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            server: server,
+            owner: user,
+            channel: args[3],
+            password: args[4],
+            target: args[2],
         } as Box<Functionality>)
     }
 }
 
-impl<'a> Functionality for DeAdmin<'a> {
+impl<'a, T, U> Functionality for DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -248,7 +250,7 @@ impl<'a> Functionality for DeAdmin<'a> {
             if try!(chan.is_password(self.password[])) {
                 chan.admins.retain(|u| u[] != self.target[]);
                 try!(chan.save());
-                try!(self.bot.send_samode(self.channel[], format!("-a {}", self.target[])[]));
+                try!(self.server.send_samode(self.channel[], "-a", self.target[]));
                 format!("{} is no longer an admin.", self.target[])
             } else {
                 format!("Password incorrect.")
@@ -256,7 +258,7 @@ impl<'a> Functionality for DeAdmin<'a> {
         } else {
             format!("Failed to de-admin {} due to an I/O issue.", self.target[])
         };
-        self.bot.send_privmsg(self.owner[], msg[])
+        self.server.send_privmsg(self.owner[], msg[])
     }
 }
 

@@ -3,14 +3,14 @@ extern crate irc;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
-use irc::Bot;
-use irc::bot::IrcBot;
-use irc::data::{IrcReader, IrcWriter};
+use irc::server::{IrcServer, Server};
+use irc::server::utils::Wrapper;
+use irc::data::kinds::{IrcReader, IrcWriter};
 
 mod chanserv;
 mod nickserv;
 
-pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
+pub fn process<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &'a str, command: &'a str, args: &'a [&'a str]) -> IoResult<()>
               where T: IrcWriter, U: IrcReader {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
@@ -44,6 +44,10 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
         } else {
             try!(res.unwrap().do_func())
         }
+    } else if let ("NOTICE", ["AUTH", suffix]) = (command, args) {
+        if suffix.starts_with("***") {
+            try!(bot.identify());
+        }
     } else if let ("376", _) = (command, args) {
         try!(start_up(bot));
     } else if let ("422", _) = (command, args) {
@@ -62,7 +66,7 @@ pub fn process<T, U>(bot: &IrcBot<T, U>, source: &str, command: &str, args: &[&s
                 ""
             };
             if mode.len() > 0 {
-                try!(bot.send_samode(chan, format!("{} {}", mode, user)[]));
+                try!(bot.send_samode(chan, mode[], user[]));
             }
         }
     }
@@ -73,13 +77,13 @@ pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
 }
 
-fn start_up<T, U>(bot: &IrcBot<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+fn start_up<'a, T, U>(bot: &'a Wrapper<'a, T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     try!(bot.send_oper(bot.config().nickname[],
                       bot.config().options.get_copy(&format!("oper-pass"))[]));
     let mut chans: Vec<String> = Vec::new();
     for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
-        let path_str = path.as_str().unwrap().into_string();
-        let chan = path_str[].find('.').map_or("".into_string(), |i| path_str[14..i].into_string());
+        let path_str = path.as_str().unwrap();
+        let chan = path_str.find('.').map_or(String::new(), |i| path_str[14..i].into_string());
         if chan[] != "" {
             chans.push(chan);
         }
@@ -98,10 +102,10 @@ fn start_up<T, U>(bot: &IrcBot<T, U>) -> IoResult<()> where T: IrcWriter, U: Irc
     }
     try!(bot.send_join(join_line[]));
     for chan in chans.iter() {
-        try!(bot.send_samode(chan[], format!("+a {}", bot.config().nickname)[]));
+        try!(bot.send_samode(chan[], "+a", bot.config().nickname[]));
         let ch = try!(Channel::load(chan[]));
         if ch.mode.len() != 0 {
-            try!(bot.send_samode(chan[], ch.mode[]));
+            try!(bot.send_samode(chan[], ch.mode[], ""));
         }
     }
     Ok(())
