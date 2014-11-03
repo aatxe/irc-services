@@ -179,7 +179,7 @@ mod test {
     #[test]
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/nickserv/test4.json"));
-        let data = test_helper(":test4!test@test PRIVMSG test :NS REGISTER test");
+        let data = test_helper(":test4!test@test PRIVMSG test :NS REGISTER test\r\n");
         let mut exp = "SAMODE test4 +r\r\n".into_string();
         exp.push_str("PRIVMSG test4 :Nickname test4 has been registered. ");
         exp.push_str("Don't forget your password!\r\n");
@@ -191,7 +191,7 @@ mod test {
     fn register_failed_user_exists() {
         let u = User::new("test", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS REGISTER test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS REGISTER test\r\n");
         assert_eq!(data[], "PRIVMSG test :Nickname test is already registered!\r\n");
     }
 
@@ -199,7 +199,7 @@ mod test {
     fn identify_succeeded() {
         let u = User::new("test5", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test5!test@test PRIVMSG test :NS IDENTIFY test");
+        let data = test_helper(":test5!test@test PRIVMSG test :NS IDENTIFY test\r\n");
         let mut exp = "SAMODE test5 +r\r\n".into_string();
         exp.push_str("PRIVMSG test5 :Password accepted - you are now recognized.\r\n");
         assert_eq!(data[], exp[]);
@@ -209,13 +209,13 @@ mod test {
     fn identify_failed_password_incorrect() {
         let u = User::new("test9", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test9!test@test PRIVMSG test :NS IDENTIFY tset");
+        let data = test_helper(":test9!test@test PRIVMSG test :NS IDENTIFY tset\r\n");
         assert_eq!(data[], "PRIVMSG test9 :Password incorrect.\r\n");
     }
 
     #[test]
     fn identify_failed_nickname_unregistered() {
-        let data = test_helper(":unregistered!test@test PRIVMSG test :NS IDENTIFY test");
+        let data = test_helper(":unregistered!test@test PRIVMSG test :NS IDENTIFY test\r\n");
         assert_eq!(data[], "PRIVMSG unregistered :Your nick isn't registered.\r\n");
     }
 
@@ -223,7 +223,7 @@ mod test {
     fn ghost_succeeded() {
         let u = User::new("test6", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test6 test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test6 test\r\n");
         let mut exp = "KILL test6 :Ghosted by test\r\n".into_string();
         exp.push_str("PRIVMSG test6 :User has been ghosted.\r\n");
         assert_eq!(data[], exp[]);
@@ -234,13 +234,13 @@ mod test {
     fn ghost_failed_password_incorrect() {
         let u = User::new("test8", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test8 tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST test8 tset\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
     #[test]
     fn ghost_failed_nickname_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST unregistered test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS GHOST unregistered test\r\n");
         let mut exp = "PRIVMSG test :That nick isn't registered, ".into_string();
         exp.push_str("and therefore cannot be ghosted.\r\n");
         assert_eq!(data[], exp[]);
@@ -250,7 +250,7 @@ mod test {
     fn reclaim_succeeded() {
         let u = User::new("test11", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test11 test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test11 test\r\n");
         let mut exp = "KILL test11 :Reclaimed by test\r\n".into_string();
         exp.push_str("SANICK test test11\r\n");
         exp.push_str("SAMODE test11 +r\r\n");
@@ -262,13 +262,13 @@ mod test {
     fn reclaim_failed_password_incorrect() {
         let u = User::new("test10", "test", None).unwrap();
         assert!(u.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test10 tset");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM test10 tset\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
     #[test]
     fn reclaim_failed_nickname_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM unregistered test");
+        let data = test_helper(":test!test@test PRIVMSG test :NS RECLAIM unregistered test\r\n");
         let mut exp = "PRIVMSG test :That nick isn't registered, ".into_string();
         exp.push_str("and therefore cannot be reclaimed.\r\n");
         assert_eq!(data[], exp[]);
