@@ -44,7 +44,7 @@ pub fn process<'a, T, U>(server: &'a Wrapper<'a, T, U>, source: &str, command: &
         } else {
             try!(res.unwrap().do_func())
         }
-    } else if let ("NOTICE", ["AUTH", suffix]) = (command, args) {
+    } else if let ("NOTICE", [_, suffix]) = (command, args) {
         if suffix.starts_with("***") {
             try!(server.identify());
         }
