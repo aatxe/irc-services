@@ -10,7 +10,7 @@ use irc::data::kinds::{IrcReader, IrcWriter};
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &'a str, command: &'a str, args: &'a [&'a str]) -> IoResult<()>
+pub fn process<'a, T, U>(bot: &'a Wrapper<'a, T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
               where T: IrcWriter, U: IrcReader {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
@@ -77,7 +77,7 @@ pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
 }
 
-fn start_up<'a, T, U>(bot: &'a Wrapper<'a, T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+fn start_up<T, U>(bot: &Wrapper<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
     try!(bot.send_oper(bot.config().nickname[],
                       bot.config().options.get_copy(&format!("oper-pass"))[]));
     let mut chans: Vec<String> = Vec::new();

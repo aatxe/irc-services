@@ -219,10 +219,10 @@ impl<'a, T, U> Functionality for Mode<'a, T, U> where T: IrcWriter, U: IrcReader
 
 pub struct DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
     server: &'a Wrapper<'a, T, U>,
-    owner: &'a str,
-    channel: &'a str,
-    password: &'a str,
-    target: &'a str,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
 }
 
 impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
@@ -230,7 +230,7 @@ impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
         if args.len() != 5 {
             return Err("Syntax: CS DEADMIN user channel password".into_string())
         }
-        Ok(box Admin {
+        Ok(box DeAdmin {
             server: server,
             owner: user.into_string(),
             channel: args[3].into_string(),
