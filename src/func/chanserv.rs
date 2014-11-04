@@ -260,6 +260,92 @@ impl<'a, T, U> Functionality for DeAdmin<'a, T, U> where T: IrcWriter, U: IrcRea
     }
 }
 
+pub struct DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
+}
+
+impl<'a, T, U> DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 5 {
+            return Err("Syntax: CS DEOPER user channel password".into_string())
+        }
+        Ok(box DeOper {
+            server: server,
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a, T, U> Functionality for DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !Channel::exists(self.channel[]) {
+            format!("Channel {} is not registered!", self.channel[])
+        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
+            if try!(chan.is_password(self.password[])) {
+                chan.opers.retain(|u| u[] != self.target[]);
+                try!(chan.save());
+                try!(self.server.send_samode(self.channel[], "-o", self.target[]));
+                format!("{} is no longer an oper.", self.target[])
+            } else {
+                format!("Password incorrect.")
+            }
+        } else {
+            format!("Failed to de-oper {} due to an I/O issue.", self.target[])
+        };
+        self.server.send_privmsg(self.owner[], msg[])
+    }
+}
+
+pub struct DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
+    server: &'a Wrapper<'a, T, U>,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
+}
+
+impl<'a, T, U> DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 5 {
+            return Err("Syntax: CS DEVOICE user channel password".into_string())
+        }
+        Ok(box DeVoice {
+            server: server,
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a, T, U> Functionality for DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !Channel::exists(self.channel[]) {
+            format!("Channel {} is not registered!", self.channel[])
+        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
+            if try!(chan.is_password(self.password[])) {
+                chan.voice.retain(|u| u[] != self.target[]);
+                try!(chan.save());
+                try!(self.server.send_samode(self.channel[], "-v", self.target[]));
+                format!("{} is no longer voiced.", self.target[])
+            } else {
+                format!("Password incorrect.")
+            }
+        } else {
+            format!("Failed to de-voice {} due to an I/O issue.", self.target[])
+        };
+        self.server.send_privmsg(self.owner[], msg[])
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::io::fs::unlink;
@@ -406,10 +492,64 @@ mod test {
 
     #[test]
     fn deadmin_failed_incorrect_password() {
-        let mut ch = Channel::new("#test17", "test", "test").unwrap();
+        let mut ch = Channel::new("#test18", "test", "test").unwrap();
         ch.admins.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 wrong\r\n");
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test18 wrong\r\n");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
+    }
+
+    #[test]
+    fn deoper_succeeded() {
+        let mut ch = Channel::new("#test19", "test", "test").unwrap();
+        ch.opers.push("test2".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test19 test\r\n");
+        assert_eq!(Channel::load("#test19").unwrap().opers, Vec::new())
+        let mut exp = "SAMODE #test19 -o test2\r\n".into_string();
+        exp.push_str("PRIVMSG test :test2 is no longer an oper.\r\n");
+        assert_eq!(data[], exp[])
+    }
+
+    #[test]
+    fn deoper_failed_channel_unregistered() {
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #unregistered test\r\n");
+        assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
+    }
+
+    #[test]
+    fn deoper_failed_incorrect_password() {
+        let mut ch = Channel::new("#test20", "test", "test").unwrap();
+        ch.opers.push("test2".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test20 wrong\r\n");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
+    }
+
+    #[test]
+    fn devoice_succeeded() {
+        let mut ch = Channel::new("#test21", "test", "test").unwrap();
+        ch.voice.push("test2".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test21 test\r\n");
+        assert_eq!(Channel::load("#test21").unwrap().voice, Vec::new())
+        let mut exp = "SAMODE #test21 -v test2\r\n".into_string();
+        exp.push_str("PRIVMSG test :test2 is no longer voiced.\r\n");
+        assert_eq!(data[], exp[])
+    }
+
+    #[test]
+    fn devoice_failed_channel_unregistered() {
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #unregistered test\r\n");
+        assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
+    }
+
+    #[test]
+    fn devoice_failed_incorrect_password() {
+        let mut ch = Channel::new("#test22", "test", "test").unwrap();
+        ch.voice.push("test2".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test22 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
 }

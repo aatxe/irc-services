@@ -34,6 +34,8 @@ pub fn process<'a, T, U>(server: &'a Wrapper<'a, T, U>, source: &str, command: &
                 "VOICE"    => chanserv::Voice::new(server, user, tokens),
                 "MODE"     => chanserv::Mode::new(server, user, tokens),
                 "DEADMIN"  => chanserv::DeAdmin::new(server, user, tokens),
+                "DEOPER"   => chanserv::DeOper::new(server, user, tokens),
+                "DEVOICE"  => chanserv::DeVoice::new(server, user, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else {
