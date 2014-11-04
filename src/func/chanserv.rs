@@ -385,4 +385,31 @@ mod test {
         let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test16 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
+
+    #[test]
+    fn deadmin_succeeded() {
+        let mut ch = Channel::new("#test17", "test", "test").unwrap();
+        ch.admins.push("test2".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 test\r\n");
+        assert_eq!(Channel::load("#test17").unwrap().admins, Vec::new())
+        let mut exp = "SAMODE #test17 -a test2\r\n".into_string();
+        exp.push_str("PRIVMSG test :test2 is no longer an admin.\r\n");
+        assert_eq!(data[], exp[])
+    }
+
+    #[test]
+    fn deadmin_failed_channel_unregistered() {
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #unregistered test\r\n");
+        assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
+    }
+
+    #[test]
+    fn deadmin_failed_incorrect_password() {
+        let mut ch = Channel::new("#test17", "test", "test").unwrap();
+        ch.admins.push("test2".into_string());
+        assert!(ch.save().is_ok());
+        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 wrong\r\n");
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
+    }
 }
