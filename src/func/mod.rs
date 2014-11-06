@@ -144,7 +144,7 @@ mod test {
                 }
             },
             Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())),
-        ).unwrap();
+        );
         for message in server.iter() {
             println!("{}", message);
             let mut args = Vec::new();
