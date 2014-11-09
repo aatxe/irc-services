@@ -4,17 +4,17 @@ use data::BotResult;
 use data::channel::Channel;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
-use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::data::kinds::IrcStream;
 
-pub struct Register<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Register<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
 }
 
-impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> Register<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: CS REGISTER channel password".into_string())
         }
@@ -27,7 +27,7 @@ impl<'a, T, U> Register<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for Register<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for Register<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let chan = try!(Channel::new(self.channel[], self.password[], self.owner[]));
         let msg = if Channel::exists(self.channel[]) {
@@ -45,16 +45,16 @@ impl<'a, T, U> Functionality for Register<'a, T, U> where T: IrcWriter, U: IrcRe
     }
 }
 
-pub struct Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Admin<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     target: String,
 }
 
-impl<'a, T, U> Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> Admin<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS ADMIN user channel password".into_string())
         }
@@ -68,7 +68,7 @@ impl<'a, T, U> Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for Admin<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for Admin<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -88,16 +88,16 @@ impl<'a, T, U> Functionality for Admin<'a, T, U> where T: IrcWriter, U: IrcReade
     }
 }
 
-pub struct Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Oper<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     target: String,
 }
 
-impl<'a, T, U> Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> Oper<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS OPER user channel password".into_string())
         }
@@ -111,7 +111,7 @@ impl<'a, T, U> Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for Oper<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for Oper<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -131,16 +131,16 @@ impl<'a, T, U> Functionality for Oper<'a, T, U> where T: IrcWriter, U: IrcReader
     }
 }
 
-pub struct Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Voice<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     target: String,
 }
 
-impl<'a, T, U> Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> Voice<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS VOICE user channel password".into_string())
         }
@@ -154,7 +154,7 @@ impl<'a, T, U> Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for Voice<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for Voice<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -174,16 +174,16 @@ impl<'a, T, U> Functionality for Voice<'a, T, U> where T: IrcWriter, U: IrcReade
     }
 }
 
-pub struct Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Mode<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     mode: String,
 }
 
-impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> Mode<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS MODE mode channel password".into_string())
         }
@@ -197,7 +197,7 @@ impl<'a, T, U> Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for Mode<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for Mode<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -217,16 +217,16 @@ impl<'a, T, U> Functionality for Mode<'a, T, U> where T: IrcWriter, U: IrcReader
     }
 }
 
-pub struct DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct DeAdmin<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     target: String,
 }
 
-impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> DeAdmin<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEADMIN user channel password".into_string())
         }
@@ -240,7 +240,7 @@ impl<'a, T, U> DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for DeAdmin<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for DeAdmin<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -260,16 +260,16 @@ impl<'a, T, U> Functionality for DeAdmin<'a, T, U> where T: IrcWriter, U: IrcRea
     }
 }
 
-pub struct DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct DeOper<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     target: String,
 }
 
-impl<'a, T, U> DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> DeOper<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEOPER user channel password".into_string())
         }
@@ -283,7 +283,7 @@ impl<'a, T, U> DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for DeOper<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for DeOper<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
@@ -303,16 +303,16 @@ impl<'a, T, U> Functionality for DeOper<'a, T, U> where T: IrcWriter, U: IrcRead
     }
 }
 
-pub struct DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
-    server: &'a Wrapper<'a, T, U>,
+pub struct DeVoice<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
     owner: String,
     channel: String,
     password: String,
     target: String,
 }
 
-impl<'a, T, U> DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
+impl<'a, T> DeVoice<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEVOICE user channel password".into_string())
         }
@@ -326,7 +326,7 @@ impl<'a, T, U> DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
     }
 }
 
-impl<'a, T, U> Functionality for DeVoice<'a, T, U> where T: IrcWriter, U: IrcReader {
+impl<'a, T> Functionality for DeVoice<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])

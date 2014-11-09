@@ -5,13 +5,13 @@ use std::io::fs::walk_dir;
 use data::channel::Channel;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
-use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::data::kinds::IrcStream;
 
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T, U>(server: &'a Wrapper<'a, T, U>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
-              where T: IrcWriter, U: IrcReader {
+pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
+              where T: IrcStream {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if chan.starts_with("#") { return Ok(()); }
@@ -79,7 +79,7 @@ pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
 }
 
-fn start_up<T, U>(server: &Wrapper<T, U>) -> IoResult<()> where T: IrcWriter, U: IrcReader {
+fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
     try!(server.send_oper(server.config().nickname[],
                       server.config().options.get_copy(&format!("oper-pass"))[]));
     let mut chans: Vec<String> = Vec::new();
@@ -122,8 +122,8 @@ mod test {
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
     use data::channel::Channel;
+    use irc::conn::{Connection, IoStream};
     use irc::data::Config;
-    use irc::conn::Connection;
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
 
@@ -136,6 +136,7 @@ mod test {
                 password: String::new(),
                 server: "irc.fyrechat.net".into_string(),
                 port: 6667,
+                use_ssl: false,
                 channels: vec!["#test".into_string(), "#test2".into_string()],
                 options: {
                     let mut map = HashMap::new();
@@ -143,7 +144,7 @@ mod test {
                     map
                 }
             },
-            Connection::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec())),
+            Connection::new(IoStream::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))),
         );
         for message in server.iter() {
             println!("{}", message);
@@ -156,7 +157,7 @@ mod test {
             let source = message.prefix.unwrap_or(String::new());
             super::process(&Wrapper::new(&server), source[], message.command[], args[]).unwrap();
         }
-        String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap()
+        String::from_utf8(server.conn().stream().value()).unwrap()
     }
 
     #[test]
