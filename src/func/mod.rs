@@ -72,6 +72,8 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
                 try!(server.send_samode(chan, mode[], user[]));
             }
         }
+    } else if let ("QUIT", _) = (command, args) {
+        state.remove(user);
     }
     Ok(())
 }
