@@ -13,7 +13,7 @@ impl State {
         self.identified.borrow_mut().push(nick.into_string())
     }
 
-    pub fn contains(&self, nick: &str) -> bool {
+    pub fn is_identified(&self, nick: &str) -> bool {
         self.identified.borrow().contains(&nick.into_string())
     }
 
