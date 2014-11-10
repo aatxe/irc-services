@@ -5,6 +5,7 @@ extern crate crypto;
 extern crate irc;
 extern crate serialize;
 
+#[cfg(not(test))] use data::state::State;
 #[cfg(not(test))] use irc::server::{IrcServer, Server};
 #[cfg(not(test))] use irc::server::utils::Wrapper;
 
@@ -14,6 +15,7 @@ mod func;
 #[cfg(not(test))]
 fn main() {
     let server = IrcServer::new("config.json").unwrap();
+    let mut state = State::new();
     for message in server.iter() {
         println!("{}", message.into_string());
         let mut args = Vec::new();
@@ -23,6 +25,6 @@ fn main() {
             args.push(suffix[])
         }
         let source = message.prefix.unwrap_or(String::new());
-        func::process(&Wrapper::new(&server), source[], message.command[], args[]).unwrap();
+        func::process(&Wrapper::new(&server), source[], message.command[], args[], &mut state).unwrap();
     }
 }

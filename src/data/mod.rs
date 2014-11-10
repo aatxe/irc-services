@@ -4,6 +4,7 @@ use std::io::IoResult;
 #[cfg(not(test))] use serialize::hex::ToHex;
 
 pub mod channel;
+pub mod state;
 pub mod user;
 
 pub type BotResult<T> = Result<T, String>;

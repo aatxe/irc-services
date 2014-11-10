@@ -3,6 +3,7 @@ extern crate irc;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
+use data::state::State;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
 use irc::data::kinds::IrcStream;
@@ -10,7 +11,7 @@ use irc::data::kinds::IrcStream;
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str]) -> IoResult<()>
+pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str], state: &'a mut State) -> IoResult<()>
               where T: IrcStream {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
@@ -19,10 +20,10 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
         let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
-                "REGISTER" => nickserv::Register::new(server, user, tokens),
-                "IDENTIFY" => nickserv::Identify::new(server, user, tokens),
+                "REGISTER" => nickserv::Register::new(server, user, tokens, state),
+                "IDENTIFY" => nickserv::Identify::new(server, user, tokens, state),
                 "GHOST"    => nickserv::Ghost::new(server, user,tokens),
-                "RECLAIM"  => nickserv::Reclaim::new(server, user, tokens),
+                "RECLAIM"  => nickserv::Reclaim::new(server, user, tokens, state),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {
@@ -122,12 +123,13 @@ mod test {
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
     use data::channel::Channel;
+    use data::state::State;
     use irc::conn::{Connection, IoStream};
     use irc::data::Config;
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
 
-    pub fn test_helper(input: &str) -> String {
+    pub fn test_helper(input: &str) -> (String, State) {
         let server = IrcServer::from_connection(Config {
                 owners: vec!["test".into_string()],
                 nickname: "test".into_string(),
@@ -146,6 +148,7 @@ mod test {
             },
             Connection::new(IoStream::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))),
         );
+        let mut state = State::new();
         for message in server.iter() {
             println!("{}", message);
             let mut args = Vec::new();
@@ -155,26 +158,26 @@ mod test {
                 args.push(suffix[])
             }
             let source = message.prefix.unwrap_or(String::new());
-            super::process(&Wrapper::new(&server), source[], message.command[], args[]).unwrap();
+            super::process(&Wrapper::new(&server), source[], message.command[], args[], &mut state).unwrap();
         }
-        String::from_utf8(server.conn().stream().value()).unwrap()
+        (String::from_utf8(server.conn().stream().value()).unwrap(), state)
     }
 
     #[test]
     fn commands_must_be_prefxed() {
-        let data = test_helper(":test!test@test PRIVMSG test :IDENTIFY\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :IDENTIFY\r\n");
         assert_eq!(data[], "PRIVMSG test :Commands must be prefixed by CS or NS.\r\n")
     }
 
     #[test]
     fn non_command_message_in_channel() {
-        let data = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n");
         assert_eq!(data[], "");
     }
 
     #[test]
     fn non_command_message_in_query() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS line\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS line\r\n");
         assert_eq!(data[], "PRIVMSG test :line is not a valid command.\r\n");
     }
 
@@ -183,7 +186,7 @@ mod test {
         let mut ch = Channel::new("#test11", "test", "test").unwrap();
         ch.admins.push("test".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test JOIN :#test11\r\n");
+        let (data, _) = test_helper(":test!test@test JOIN :#test11\r\n");
         assert_eq!(data[], "SAMODE #test11 +qa test\r\n");
     }
 
@@ -192,7 +195,7 @@ mod test {
         let mut ch = Channel::new("#test8", "test", "owner").unwrap();
         ch.admins.push("test".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test JOIN :#test8\r\n");
+        let (data, _) = test_helper(":test!test@test JOIN :#test8\r\n");
         assert_eq!(data[], "SAMODE #test8 +a test\r\n");
     }
 
@@ -201,7 +204,7 @@ mod test {
         let mut ch = Channel::new("#test9", "test", "owner").unwrap();
         ch.opers.push("test".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test JOIN :#test9\r\n");
+        let (data, _) = test_helper(":test!test@test JOIN :#test9\r\n");
         assert_eq!(data[], "SAMODE #test9 +o test\r\n");
     }
 
@@ -210,7 +213,7 @@ mod test {
         let mut ch = Channel::new("#test10", "test", "owner").unwrap();
         ch.voice.push("test".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test JOIN :#test10\r\n");
+        let (data, _) = test_helper(":test!test@test JOIN :#test10\r\n");
         assert_eq!(data[], "SAMODE #test10 +v test\r\n");
     }
 

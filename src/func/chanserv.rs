@@ -355,7 +355,7 @@ mod test {
     #[test]
     fn register_succeeded() {
         let _ = unlink(&Path::new("data/chanserv/#test4.json"));
-        let data = test_helper(":test2!test@test PRIVMSG test :CS REGISTER #test4 test\r\n");
+        let (data, _) = test_helper(":test2!test@test PRIVMSG test :CS REGISTER #test4 test\r\n");
         let mut exp = "SAMODE #test4 +r\r\n".into_string();
         exp.push_str("SAMODE #test4 +qa test2\r\n");
         exp.push_str("JOIN #test4\r\n");
@@ -369,7 +369,7 @@ mod test {
     fn register_failed_channel_exists() {
         let ch = Channel::new("#test", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS REGISTER #test test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS REGISTER #test test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #test is already registered!\r\n");
     }
 
@@ -377,7 +377,7 @@ mod test {
     fn admin_succeeded() {
         let ch = Channel::new("#test5", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test5 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test5 test\r\n");
         assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".into_string()));
         let mut exp = "SAMODE #test5 +a test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now an admin.\r\n");
@@ -386,7 +386,7 @@ mod test {
 
     #[test]
     fn admin_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -394,7 +394,7 @@ mod test {
     fn admin_failed_password_incorrect() {
         let ch = Channel::new("#test12", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test12 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test12 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
@@ -402,7 +402,7 @@ mod test {
     fn oper_succeeded() {
         let ch = Channel::new("#test6", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test6 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test6 test\r\n");
         assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".into_string()));
         let mut exp = "SAMODE #test6 +o test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now an oper.\r\n");
@@ -411,7 +411,7 @@ mod test {
 
     #[test]
     fn oper_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -419,7 +419,7 @@ mod test {
     fn oper_failed_password_incorrect() {
         let ch = Channel::new("#test13", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test13 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test13 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
@@ -427,7 +427,7 @@ mod test {
     fn voice_succeeded() {
         let ch = Channel::new("#test7", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test7 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test7 test\r\n");
         assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".into_string()));
         let mut exp = "SAMODE #test7 +v test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now voiced.\r\n");
@@ -436,7 +436,7 @@ mod test {
 
     #[test]
     fn voice_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -444,7 +444,7 @@ mod test {
     fn voice_failed_password_incorrect() {
         let ch = Channel::new("#test14", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test14 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test14 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
@@ -452,7 +452,7 @@ mod test {
     fn mode_succeeded() {
         let ch = Channel::new("#test15", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test15 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test15 test\r\n");
         let mut exp = "SAMODE #test15 +i\r\n".into_string();
         exp.push_str("PRIVMSG test :Channel mode is now +i.\r\n");
         assert_eq!(data[], exp[])
@@ -460,7 +460,7 @@ mod test {
 
     #[test]
     fn mode_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -468,7 +468,7 @@ mod test {
     fn mode_failed_password_incorrect() {
         let ch = Channel::new("#test16", "test", "test").unwrap();
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test16 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test16 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 
@@ -477,7 +477,7 @@ mod test {
         let mut ch = Channel::new("#test17", "test", "test").unwrap();
         ch.admins.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 test\r\n");
         assert_eq!(Channel::load("#test17").unwrap().admins, Vec::new())
         let mut exp = "SAMODE #test17 -a test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is no longer an admin.\r\n");
@@ -486,7 +486,7 @@ mod test {
 
     #[test]
     fn deadmin_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -495,7 +495,7 @@ mod test {
         let mut ch = Channel::new("#test18", "test", "test").unwrap();
         ch.admins.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test18 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test18 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
 
@@ -504,7 +504,7 @@ mod test {
         let mut ch = Channel::new("#test19", "test", "test").unwrap();
         ch.opers.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test19 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test19 test\r\n");
         assert_eq!(Channel::load("#test19").unwrap().opers, Vec::new())
         let mut exp = "SAMODE #test19 -o test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is no longer an oper.\r\n");
@@ -513,7 +513,7 @@ mod test {
 
     #[test]
     fn deoper_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -522,7 +522,7 @@ mod test {
         let mut ch = Channel::new("#test20", "test", "test").unwrap();
         ch.opers.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test20 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test20 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
 
@@ -531,7 +531,7 @@ mod test {
         let mut ch = Channel::new("#test21", "test", "test").unwrap();
         ch.voice.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test21 test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test21 test\r\n");
         assert_eq!(Channel::load("#test21").unwrap().voice, Vec::new())
         let mut exp = "SAMODE #test21 -v test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is no longer voiced.\r\n");
@@ -540,7 +540,7 @@ mod test {
 
     #[test]
     fn devoice_failed_channel_unregistered() {
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #unregistered test\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #unregistered test\r\n");
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
 
@@ -549,7 +549,7 @@ mod test {
         let mut ch = Channel::new("#test22", "test", "test").unwrap();
         ch.voice.push("test2".into_string());
         assert!(ch.save().is_ok());
-        let data = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test22 wrong\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test22 wrong\r\n");
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
 }
