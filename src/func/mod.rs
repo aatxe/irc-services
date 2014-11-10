@@ -11,7 +11,7 @@ use irc::data::kinds::IrcStream;
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str], state: &'a mut State) -> IoResult<()>
+pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str], state: &'a State) -> IoResult<()>
               where T: IrcStream {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
@@ -148,7 +148,7 @@ mod test {
             },
             Connection::new(IoStream::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))),
         );
-        let mut state = State::new();
+        let state = State::new();
         state_hook(&state);
         for message in server.iter() {
             println!("{}", message);
@@ -159,7 +159,7 @@ mod test {
                 args.push(suffix[])
             }
             let source = message.prefix.unwrap_or(String::new());
-            super::process(&Wrapper::new(&server), source[], message.command[], args[], &mut state).unwrap();
+            super::process(&Wrapper::new(&server), source[], message.command[], args[], &state).unwrap();
         }
         (String::from_utf8(server.conn().stream().value()).unwrap(), state)
     }

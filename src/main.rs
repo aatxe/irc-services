@@ -15,7 +15,7 @@ mod func;
 #[cfg(not(test))]
 fn main() {
     let server = IrcServer::new("config.json").unwrap();
-    let mut state = State::new();
+    let state = State::new();
     for message in server.iter() {
         println!("{}", message.into_string());
         let mut args = Vec::new();
@@ -25,6 +25,6 @@ fn main() {
             args.push(suffix[])
         }
         let source = message.prefix.unwrap_or(String::new());
-        func::process(&Wrapper::new(&server), source[], message.command[], args[], &mut state).unwrap();
+        func::process(&Wrapper::new(&server), source[], message.command[], args[], &state).unwrap();
     }
 }
