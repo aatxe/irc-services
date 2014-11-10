@@ -401,6 +401,12 @@ mod test {
     }
 
     #[test]
+    fn register_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS REGISTER #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
+    }
+
+    #[test]
     fn register_failed_channel_exists() {
         let ch = Channel::new("#test", "test", "test").unwrap();
         assert!(ch.save().is_ok());
@@ -421,6 +427,12 @@ mod test {
         let mut exp = "SAMODE #test5 +a test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now an admin.\r\n");
         assert_eq!(data[], exp[]);
+    }
+
+    #[test]
+    fn admin_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -455,6 +467,12 @@ mod test {
     }
 
     #[test]
+    fn oper_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
+    }
+
+    #[test]
     fn oper_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #unregistered test\r\n", |state| {
             state.identify("test");
@@ -483,6 +501,12 @@ mod test {
         let mut exp = "SAMODE #test7 +v test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is now voiced.\r\n");
         assert_eq!(data[], exp[]);
+    }
+
+    #[test]
+    fn voice_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -516,6 +540,12 @@ mod test {
     }
 
     #[test]
+    fn mode_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
+    }
+
+    #[test]
     fn mode_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #unregistered test\r\n", |state| {
             state.identify("test");
@@ -545,6 +575,12 @@ mod test {
         let mut exp = "SAMODE #test17 -a test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is no longer an admin.\r\n");
         assert_eq!(data[], exp[])
+    }
+
+    #[test]
+    fn deadmin_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -581,6 +617,12 @@ mod test {
     }
 
     #[test]
+    fn deoper_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
+    }
+
+    #[test]
     fn deoper_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #unregistered test\r\n", |state| {
             state.identify("test");
@@ -611,6 +653,12 @@ mod test {
         let mut exp = "SAMODE #test21 -v test2\r\n".into_string();
         exp.push_str("PRIVMSG test :test2 is no longer voiced.\r\n");
         assert_eq!(data[], exp[])
+    }
+
+    #[test]
+    fn devoice_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
