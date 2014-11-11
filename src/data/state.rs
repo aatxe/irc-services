@@ -24,6 +24,7 @@ impl State {
         }
     }
 
+    #[cfg(test)]
     pub fn no_users_identified(&self) -> bool {
         self.identified.lock().is_empty()
     }

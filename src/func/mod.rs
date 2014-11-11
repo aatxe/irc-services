@@ -55,6 +55,11 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
         try!(start_up(server));
     } else if let ("422", _) = (command, args) {
         try!(start_up(server));
+    } else if let ("TOPIC", [chan, message]) = (command, args) {
+        if let Ok(mut channel) = Channel::load(chan) {
+            channel.topic = message.into_string();
+            try!(channel.save());
+        }
     } else if let ("JOIN", [chan]) = (command, args){
         if let Ok(channel) = Channel::load(chan) {
             let mode = if channel.owner[] == user {
@@ -109,6 +114,9 @@ fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
     for chan in chans.iter() {
         try!(server.send_samode(chan[], "+a", server.config().nickname[]));
         let ch = try!(Channel::load(chan[]));
+        if ch.topic.len() != 0 {
+            try!(server.send_topic(chan[], ch.topic[]));
+        }
         if ch.mode.len() != 0 {
             try!(server.send_samode(chan[], ch.mode[], ""));
         }
@@ -235,6 +243,16 @@ mod test {
         });
         assert!(state.no_users_identified())
         assert_eq!(data[], "");
+    }
+
+    #[test]
+    fn update_topic() {
+        let ch = Channel::new("#test23", "test", "owner").unwrap();
+        assert!(ch.save().is_ok());
+        let (data, _) = test_helper(":test!test@test TOPIC #test23 :This is a topic.\r\n", |_| {});
+        assert_eq!(data[], "");
+        let ch = Channel::load("#test23").unwrap();
+        assert_eq!(ch.topic[], "This is a topic.");
     }
 
     #[test]
