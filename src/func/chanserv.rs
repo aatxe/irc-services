@@ -79,6 +79,8 @@ impl<'a, T> Functionality for Admin<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
@@ -126,6 +128,8 @@ impl<'a, T> Functionality for Oper<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
@@ -173,6 +177,8 @@ impl<'a, T> Functionality for Voice<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
@@ -267,6 +273,8 @@ impl<'a, T> Functionality for DeAdmin<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
@@ -314,6 +322,8 @@ impl<'a, T> Functionality for DeOper<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
@@ -361,6 +371,8 @@ impl<'a, T> Functionality for DeVoice<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
         } else if let Ok(mut chan) = Channel::load(self.channel[]) {
@@ -422,6 +434,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test5 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".into_string()));
         let mut exp = "SAMODE #test5 +a test2\r\n".into_string();
@@ -436,9 +449,18 @@ mod test {
     }
 
     #[test]
+    fn admin_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
     fn admin_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #unregistered test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
@@ -449,6 +471,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS ADMIN test2 #test12 wrong\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
@@ -459,6 +482,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test6 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".into_string()));
         let mut exp = "SAMODE #test6 +o test2\r\n".into_string();
@@ -473,9 +497,18 @@ mod test {
     }
 
     #[test]
+    fn oper_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
     fn oper_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #unregistered test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
@@ -486,6 +519,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS OPER test2 #test13 wrong\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
@@ -496,6 +530,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test7 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".into_string()));
         let mut exp = "SAMODE #test7 +v test2\r\n".into_string();
@@ -510,9 +545,18 @@ mod test {
     }
 
     #[test]
+    fn voice_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
     fn voice_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #unregistered test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
@@ -523,6 +567,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS VOICE test2 #test14 wrong\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
@@ -533,6 +578,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #test15 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         let mut exp = "SAMODE #test15 +i\r\n".into_string();
         exp.push_str("PRIVMSG test :Channel mode is now +i.\r\n");
@@ -570,6 +616,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(Channel::load("#test17").unwrap().admins, Vec::new())
         let mut exp = "SAMODE #test17 -a test2\r\n".into_string();
@@ -584,9 +631,18 @@ mod test {
     }
 
     #[test]
+    fn deadmin_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
     fn deadmin_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #unregistered test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
@@ -598,6 +654,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEADMIN test2 #test18 wrong\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
@@ -609,6 +666,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test19 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(Channel::load("#test19").unwrap().opers, Vec::new())
         let mut exp = "SAMODE #test19 -o test2\r\n".into_string();
@@ -623,9 +681,18 @@ mod test {
     }
 
     #[test]
+    fn deoper_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
     fn deoper_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #unregistered test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
@@ -637,6 +704,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEOPER test2 #test20 wrong\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
@@ -648,6 +716,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test21 test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(Channel::load("#test21").unwrap().voice, Vec::new())
         let mut exp = "SAMODE #test21 -v test2\r\n".into_string();
@@ -662,9 +731,18 @@ mod test {
     }
 
     #[test]
+    fn devoice_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
     fn devoice_failed_channel_unregistered() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #unregistered test\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
     }
@@ -676,6 +754,7 @@ mod test {
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS DEVOICE test2 #test22 wrong\r\n", |state| {
             state.identify("test");
+            state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
     }
