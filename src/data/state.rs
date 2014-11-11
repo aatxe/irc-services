@@ -1,25 +1,26 @@
-use std::cell::RefCell;
+use std::sync::Mutex;
 
 pub struct State {
-    identified: RefCell<Vec<String>>
+    identified: Mutex<Vec<String>>
 }
 
 impl State {
     pub fn new() -> State {
-        State { identified: RefCell::new(Vec::new()) }
+        State { identified: Mutex::new(Vec::new()) }
     }
 
     pub fn identify(&self, nick: &str) {
-        self.identified.borrow_mut().push(nick.into_string())
+        self.identified.lock().push(nick.into_string())
     }
 
     pub fn is_identified(&self, nick: &str) -> bool {
-        self.identified.borrow().contains(&nick.into_string())
+        self.identified.lock().contains(&nick.into_string())
     }
 
     pub fn remove(&self, nick: &str) {
-        if let Some(i) = self.identified.borrow().position_elem(&nick.into_string()) {
-            self.identified.borrow_mut().swap_remove(i);
+        let mut identified = self.identified.lock();
+        if let Some(i) = identified.position_elem(&nick.into_string()) {
+            identified.swap_remove(i);
         }
     }
 }
