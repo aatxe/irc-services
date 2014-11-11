@@ -23,4 +23,8 @@ impl State {
             identified.swap_remove(i);
         }
     }
+
+    pub fn no_users_identified(&self) -> bool {
+        self.identified.lock().is_empty()
+    }
 }

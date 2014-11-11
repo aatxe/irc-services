@@ -229,6 +229,15 @@ mod test {
     }
 
     #[test]
+    fn unidentify_on_quit() {
+        let (data, state) = test_helper(":test!test@test QUIT :Goodbye!\r\n", |state| {
+            state.identify("test");
+        });
+        assert!(state.no_users_identified())
+        assert_eq!(data[], "");
+    }
+
+    #[test]
     fn upper_case() {
         assert_eq!(super::upper_case("identify")[], "IDENTIFY")
     }
