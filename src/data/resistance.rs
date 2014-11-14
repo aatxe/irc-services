@@ -101,6 +101,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn cast_proposal_vote(&mut self, server: &'a Wrapper<'a, T>, user: &str, vote: &str) -> IoResult<()> {
         if self.proposed_members.is_empty() {
             try!(server.send_privmsg(user, "There is no current mission proposal."));
+            return Ok(())
         } else if vote == "yea" || vote == "YEA" || vote == "Yea" {
             self.votes_for_mission.insert(user.into_string(), Success);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
