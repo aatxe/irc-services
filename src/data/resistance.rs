@@ -76,8 +76,11 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             self.validate_mission(server, users.len(), 3, 4, 4, 5, 5)
         });
         if valid {
-            for user in users.into_iter() {
+            for user in users.iter() {
                 self.proposed_members.push(user.into_string());
+            }
+            for user in self.rebels.iter().chain(self.spies.iter()) {
+                self.votes_for_mission.insert(user.clone(), NotYetVoted);
             }
             try!(server.send_privmsg(self.chan[],
                 format!("Proposed mission: {}", self.proposed_members)[]));
