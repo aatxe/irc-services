@@ -251,6 +251,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     fn run_mission(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
+        self.mission_votes = HashMap::new();
         for user in self.proposed_members.iter() {
             self.mission_votes.insert(user.clone(), NotYetVoted);
         }
