@@ -136,13 +136,7 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
     let mut games = state.get_games();
     let mut remove_game = false;
     if let Some(game) = games.get_mut(&chan.into_string()) {
-        if !chan.starts_with("#") && message.starts_with("!vote ") {
-            try!(game.cast_mission_vote(server, user, message[6..]));
-            if !game.is_complete() {
-                return Ok(true)
-            }
-            remove_game = true;
-        } else if message.starts_with("!join") {
+        if message.starts_with("!join") {
             try!(game.add_player(server, user));
             return Ok(true)
         } else if message.starts_with("!start") {
@@ -160,7 +154,6 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
         }
         if !remove_game { return Ok(false) }
     }
-    if remove_game { games.remove(&chan.into_string()); }
     if message.starts_with("!resistance") && chan.starts_with("#") {
         let game = Resistance::new_game(user, chan);
         games.insert(chan.into_string(), game);
@@ -169,7 +162,24 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
     } else if message.starts_with("!resistance") {
         try!(server.send_privmsg(user, "You cannot start a game in a private message."));
         return Ok(true)
+    } else if !chan.starts_with("#") && message.starts_with("!vote ") {
+        let tokens: Vec<_> = message[6..].split_str(" ").collect();
+        if tokens.len() != 2 {
+            try!(server.send_privmsg(user, "You must vote like so: `!vote #chan <yea/nay>`."))
+            return Ok(true)
+        }
+        if let Some(game) = games.get_mut(&tokens[0].into_string()) {
+            try!(game.cast_mission_vote(server, user, tokens[1]));
+            if !game.is_complete() {
+                return Ok(true)
+            }
+            remove_game = true;
+        } else {
+            try!(server.send_privmsg(user, "There's no game on that channel."))
+            return Ok(true)
+        }
     }
+    if remove_game { games.remove(&chan.into_string()); }
     Ok(false)
 }
 
