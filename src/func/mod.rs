@@ -136,15 +136,13 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
     let mut games = state.get_games();
     let mut remove_game = false;
     if let Some(game) = games.get_mut(&chan.into_string()) {
-        if !chan.starts_with("#") {
-            if message.starts_with("!vote ") {
-                try!(game.cast_mission_vote(server, user, message[6..]));
-                if game.is_complete() {
-                    remove_game = true;
-                } else {
-                    return Ok(true)
-                }
+        if !chan.starts_with("#") && message.starts_with("!vote ") {
+            try!(game.cast_mission_vote(server, user, message[6..]));
+            if !game.is_complete() {
+                return Ok(true)
+
             }
+            remove_game = true;
         } else if message.starts_with("!join") {
             try!(game.add_player(server, user));
             return Ok(true)
@@ -158,7 +156,7 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
             try!(game.cast_proposal_vote(server, user, message[6..]));
             return Ok(true)
         }
-        if !game.is_complete() { return Ok(false) }
+        if !remove_game { return Ok(false) }
     }
     if remove_game { games.remove(&chan.into_string()); }
     if message.starts_with("!resistance") && chan.starts_with("#") {

@@ -1,7 +1,7 @@
 #![cfg(feature = "resistance")]
 use std::collections::HashMap;
 use std::io::IoResult;
-use std::rand::random;
+use std::rand::{Rng, task_rng};
 use irc::data::kinds::IrcStream;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
@@ -9,6 +9,7 @@ use irc::server::utils::Wrapper;
 pub struct Resistance<T> where T: IrcStream {
     chan: String,
     started: bool,
+    players: Vec<String>,
     rebels: Vec<String>,
     spies: Vec<String>,
     missions_won: u8,
@@ -31,7 +32,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn new_game(user: &str, chan: &str) -> Resistance<T> {
         Resistance {
             chan: chan.into_string(), started: false,
-            rebels: Vec::new(), spies: Vec::new(),
+            players: Vec::new(), rebels: Vec::new(), spies: Vec::new(),
             missions_won: 0u8, missions_run: 0u8, rejected_proposals: 0u8,
             leader: user.into_string(), proposed_members: Vec::new(),
             votes_for_mission: HashMap::new(), mission_votes: HashMap::new(),
@@ -44,9 +45,17 @@ impl<'a, T> Resistance<T> where T: IrcStream {
 
     pub fn start(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
         if self.started {
-            server.send_privmsg(self.chan[], "The game has already begun!");
+            server.send_privmsg(self.chan[], "The game has already begun!")
         } else if self.total_players() > 4 {
             self.started = true;
+            task_rng().shuffle(self.players.as_mut_slice());
+            for user in self.players.clone().iter() {
+                if self.spies.len() < (self.total_players() * 2) / 5 {
+                    try!(self.add_spy(server, user[]));
+                } else {
+                    try!(self.add_rebel(server, user[]));
+                }
+            }
             server.send_privmsg(self.chan[], "The game has begun!")
         } else {
             server.send_privmsg(self.chan[], "You need at least five players to play.")
@@ -56,10 +65,9 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn add_player(&mut self, server: &'a Wrapper<'a, T>, nick: &str) -> IoResult<()> {
         if self.started {
             try!(server.send_privmsg(self.chan[], "Sorry, the game is already in progress!"));
-        } else if random::<bool>() && self.spies.len() < (self.total_players() * 2) / 5 {
-            try!(self.add_spy(server, nick));
         } else if self.total_players() < 10 {
-            try!(self.add_rebel(server, nick));
+            self.players.push(nick.into_string());
+            try!(server.send_privmsg(nick, "You've joined the game. You'll get your position when it starts."));
         } else {
             try!(server.send_privmsg(self.chan[], "Sorry, the game is full!"));
         }
@@ -170,7 +178,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     fn total_players(&self) -> uint {
-        self.rebels.len() + self.spies.len()
+        self.players.len()
     }
 
     fn get_mission_result(&self) -> (Vote, u8) {
