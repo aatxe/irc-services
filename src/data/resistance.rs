@@ -74,7 +74,8 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         Ok(())
     }
 
-    pub fn propose_mission(&mut self, server: &'a Wrapper<'a, T>, users: &str) -> IoResult<()> {
+    pub fn propose_mission(&mut self, server: &'a Wrapper<'a, T>, user: &str, users: &str) -> IoResult<()> {
+        if !self.proposed_members.is_empty() { return Ok(()) }
         let users: Vec<_> = users.split_str(" ").collect();
         let valid = try!(if self.total_players() > 7 {
             self.validate_mission(server, users.len(), 3, 4, 4, 5, 5)
@@ -85,7 +86,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         } else {
             self.validate_mission(server, users.len(), 3, 4, 4, 5, 5)
         });
-        if valid {
+        if valid && user == self.leader[] {
             for user in users.iter() {
                 self.proposed_members.push(user.into_string());
             }
@@ -117,12 +118,13 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         }
         let result = self.get_proposal_result();
         if result != NotYetVoted {
-            self.get_new_leader();
-            self.missions_run += 1;
             if result == Success {
+                self.missions_run += 1;
                 try!(self.run_mission(server));
             } else {
+                self.get_new_leader();
                 self.rejected_proposals += 1;
+                self.proposal_members = Vec::new();
                 try!(server.send_privmsg(self.chan[],
                      format!("The proposal was rejected ({} / 5). The new leader is {}.",
                              self.rejected_proposals, self.leader)[]
