@@ -43,7 +43,9 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     pub fn start(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
-        if self.total_players() > 4 {
+        if self.started {
+            server.send_privmsg(self.chan[], "The game has already begun!");
+        } else if self.total_players() > 4 {
             self.started = true;
             server.send_privmsg(self.chan[], "The game has begun!")
         } else {
