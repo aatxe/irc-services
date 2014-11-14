@@ -137,8 +137,10 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn cast_mission_vote(&mut self, server: &'a Wrapper<'a, T>, user: &str, vote: &str) -> IoResult<()> {
         if self.mission_votes.is_empty() {
             try!(server.send_privmsg(user, "There is no mission in progress."));
+            return Ok(());
         } else if !self.mission_votes.contains_key(&user.into_string()) {
             try!(server.send_privmsg(user, "You're not involved in this mission."));
+            return Ok(());
         } else if vote == "yea" || vote == "YEA" || vote == "Yea" {
             self.mission_votes.insert(user.into_string(), Success);
             try!(server.send_privmsg(user, "Your vote has been cast."));
