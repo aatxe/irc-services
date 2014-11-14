@@ -154,6 +154,7 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
         }
         if !remove_game { return Ok(false) }
     }
+    if remove_game { games.remove(&chan.into_string()); return Ok(true) }
     if message.starts_with("!resistance") && chan.starts_with("#") {
         let game = Resistance::new_game(user, chan);
         games.insert(chan.into_string(), game);
@@ -178,8 +179,8 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
             try!(server.send_privmsg(user, "There's no game on that channel."))
             return Ok(true)
         }
+        if remove_game { games.remove(&tokens[0].into_string()); return Ok(true) }
     }
-    if remove_game { games.remove(&chan.into_string()); }
     Ok(false)
 }
 
