@@ -76,7 +76,8 @@ impl<'a, T> Resistance<T> where T: IrcStream {
 
     pub fn propose_mission(&mut self, server: &'a Wrapper<'a, T>, user: &str, users: &str) -> IoResult<()> {
         if !self.proposed_members.is_empty() { return Ok(()) }
-        let users: Vec<_> = users.split_str(" ").collect();
+        let mut users: Vec<_> = users.split_str(" ").collect();
+        users.retain(|user| user.len() != 0);
         let valid = try!(if self.total_players() > 7 {
             self.validate_mission(server, users.len(), 3, 4, 4, 5, 5)
         } else if self.total_players() == 7 {
@@ -86,7 +87,9 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         } else {
             self.validate_mission(server, users.len(), 3, 4, 4, 5, 5)
         });
-        if valid && user == self.leader[] {
+        if users.partitioned(|user| self.players.contains(&user.into_string())).val1().len() != 0 {
+            try!(server.send_privmsg(self.chan[], "Proposals must only include registered players."));
+        } else if valid && user == self.leader[] {
             for user in users.iter() {
                 self.proposed_members.push(user.into_string());
             }
