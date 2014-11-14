@@ -162,7 +162,7 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
     if message.starts_with("!resistance") && chan.starts_with("#") {
         let game = Resistance::new_game(user, chan);
         games.insert(chan.into_string(), game);
-        try!(server.send_privmsg(user, "Players may now join the game. Use `!start` to start."));
+        try!(server.send_privmsg(chan, "Players may now join the game. Use `!start` to start."));
         return Ok(true)
     } else if message.starts_with("!resistance") {
         try!(server.send_privmsg(user, "You cannot start a game in a private message."));
