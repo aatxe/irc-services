@@ -103,11 +103,11 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     pub fn cast_proposal_vote(&mut self, server: &'a Wrapper<'a, T>, user: &str, vote: &str) -> IoResult<()> {
-        if self.proposed_members.is_empty() {
-            try!(server.send_privmsg(user, "There is no current mission proposal."));
-            return Ok(())
-        } else if !self.players.contains(&user.into_string()) {
+        if !self.players.contains(&user.into_string()) {
             try!(server.send_privmsg(user, "You're not involved in this game."));
+            return Ok(())
+        } else if self.proposed_members.is_empty() {
+            try!(server.send_privmsg(user, "There is no current mission proposal."));
             return Ok(())
         } else if vote == "yea" || vote == "YEA" || vote == "Yea" {
             self.votes_for_mission.insert(user.into_string(), Success);
@@ -138,7 +138,10 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     pub fn cast_mission_vote(&mut self, server: &'a Wrapper<'a, T>, user: &str, vote: &str) -> IoResult<()> {
-        if self.mission_votes.is_empty() {
+        if !self.players.contains(&user.into_string()) {
+            try!(server.send_privmsg(user, "You're not involved in this game."));
+            return Ok(())
+        } else if self.mission_votes.is_empty() {
             try!(server.send_privmsg(user, "There is no mission in progress."));
             return Ok(());
         } else if !self.mission_votes.contains_key(&user.into_string()) {
