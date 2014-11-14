@@ -40,7 +40,8 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     pub fn is_complete(&self) -> bool {
-        self.missions_run == 5 || self.missions_won == 3 || self.rejected_proposals == 5
+        self.missions_run == 5 || self.missions_won == 3
+        || self.rejected_proposals == 5 || self.missions_run - self.missions_won == 3
     }
 
     pub fn start(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
@@ -83,9 +84,9 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         } else if self.total_players() == 7 {
             self.validate_mission(server, users.len(), 2, 3, 3, 4, 4)
         } else if self.total_players() == 6 {
-            self.validate_mission(server, users.len(), 2, 3, 2, 3, 3)
+            self.validate_mission(server, users.len(), 2, 3, 4, 3, 4)
         } else {
-            self.validate_mission(server, users.len(), 3, 4, 4, 5, 5)
+            self.validate_mission(server, users.len(), 2, 3, 2, 3, 3)
         });
         if users.partitioned(|user| self.players.contains(&user.into_string())).val1().len() != 0 {
             try!(server.send_privmsg(self.chan[], "Proposals must only include registered players."));
@@ -226,7 +227,8 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     fn get_new_leader(&mut self) {
-
+        task_rng().shuffle(self.players.as_mut_slice());
+        self.leader = self.players[0].clone();
     }
 
     fn validate_mission(&self, server: &'a Wrapper<'a, T>, len: uint, m1: uint, m2: uint, m3: uint,
