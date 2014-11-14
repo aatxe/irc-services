@@ -75,7 +75,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     pub fn propose_mission(&mut self, server: &'a Wrapper<'a, T>, user: &str, users: &str) -> IoResult<()> {
-        if !self.proposed_members.is_empty() { return Ok(()) }
+        if !self.proposed_members.is_empty() || user != self.leader[] { return Ok(()) }
         let mut users: Vec<_> = users.split_str(" ").collect();
         users.retain(|user| user.len() != 0);
         let valid = try!(if self.total_players() > 7 {
@@ -89,7 +89,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         });
         if users.partitioned(|user| self.players.contains(&user.into_string())).val1().len() != 0 {
             try!(server.send_privmsg(self.chan[], "Proposals must only include registered players."));
-        } else if valid && user == self.leader[] {
+        } else if valid {
             for user in users.iter() {
                 self.proposed_members.push(user.into_string());
             }
@@ -168,6 +168,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
                              fails, self.missions_won, self.missions_run, self.leader)[]
                 ));
             }
+            self.mission_votes = HashMap::new();
             if self.is_complete() {
                 if self.missions_won == 3 {
                     try!(server.send_privmsg(self.chan[], "Game over: Rebels win!"));
@@ -262,7 +263,6 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     fn run_mission(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
-        self.mission_votes = HashMap::new();
         for user in self.proposed_members.iter() {
             self.mission_votes.insert(user.clone(), NotYetVoted);
         }
