@@ -102,6 +102,9 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         if self.proposed_members.is_empty() {
             try!(server.send_privmsg(user, "There is no current mission proposal."));
             return Ok(())
+        } else if !self.players.contains(&user.into_string()) {
+            try!(server.send_privmsg(user, "You're not involved in this game."));
+            return Ok(())
         } else if vote == "yea" || vote == "YEA" || vote == "Yea" {
             self.votes_for_mission.insert(user.into_string(), Success);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
@@ -119,6 +122,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             if result == Success {
                 try!(self.run_mission(server));
             } else {
+                self.rejected_proposals += 1;
                 try!(server.send_privmsg(self.chan[],
                      format!("The proposal was rejected ({} / 5). The new leader is {}.",
                              self.rejected_proposals, self.leader)[]
