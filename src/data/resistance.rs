@@ -124,7 +124,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             } else {
                 self.get_new_leader();
                 self.rejected_proposals += 1;
-                self.proposal_members = Vec::new();
+                self.proposed_members = Vec::new();
                 try!(server.send_privmsg(self.chan[],
                      format!("The proposal was rejected ({} / 5). The new leader is {}.",
                              self.rejected_proposals, self.leader)[]

@@ -143,7 +143,7 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
             try!(game.start(server));
             return Ok(true)
         } else if message.starts_with("!propose ") {
-            try!(game.propose_mission(server, message[9..]));
+            try!(game.propose_mission(server, user, message[9..]));
             return Ok(true)
         } else if message.starts_with("!vote ") {
             try!(game.cast_proposal_vote(server, user, message[6..]));
