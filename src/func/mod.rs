@@ -140,7 +140,6 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
             try!(game.cast_mission_vote(server, user, message[6..]));
             if !game.is_complete() {
                 return Ok(true)
-
             }
             remove_game = true;
         } else if message.starts_with("!join") {
@@ -154,7 +153,10 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
             return Ok(true)
         } else if message.starts_with("!vote ") {
             try!(game.cast_proposal_vote(server, user, message[6..]));
-            return Ok(true)
+            if !game.is_complete() {
+                return Ok(true)
+            }
+            remove_game = true;
         }
         if !remove_game { return Ok(false) }
     }
