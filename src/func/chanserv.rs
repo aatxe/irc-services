@@ -9,14 +9,14 @@ use irc::data::kinds::IrcStream;
 
 pub struct Register<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
 }
 
 impl<'a, T> Register<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: CS REGISTER channel password".into_string())
         }
@@ -52,7 +52,7 @@ impl<'a, T> Functionality for Register<'a, T> where T: IrcStream {
 
 pub struct Admin<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -60,7 +60,7 @@ pub struct Admin<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> Admin<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS ADMIN user channel password".into_string())
         }
@@ -101,7 +101,7 @@ impl<'a, T> Functionality for Admin<'a, T> where T: IrcStream {
 
 pub struct Oper<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -109,7 +109,7 @@ pub struct Oper<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> Oper<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS OPER user channel password".into_string())
         }
@@ -150,7 +150,7 @@ impl<'a, T> Functionality for Oper<'a, T> where T: IrcStream {
 
 pub struct Voice<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -158,7 +158,7 @@ pub struct Voice<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> Voice<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS VOICE user channel password".into_string())
         }
@@ -199,7 +199,7 @@ impl<'a, T> Functionality for Voice<'a, T> where T: IrcStream {
 
 pub struct Mode<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -207,7 +207,7 @@ pub struct Mode<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> Mode<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS MODE mode channel password".into_string())
         }
@@ -246,7 +246,7 @@ impl<'a, T> Functionality for Mode<'a, T> where T: IrcStream {
 
 pub struct DeAdmin<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -254,7 +254,7 @@ pub struct DeAdmin<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> DeAdmin<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEADMIN user channel password".into_string())
         }
@@ -295,7 +295,7 @@ impl<'a, T> Functionality for DeAdmin<'a, T> where T: IrcStream {
 
 pub struct DeOper<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -303,7 +303,7 @@ pub struct DeOper<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> DeOper<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEOPER user channel password".into_string())
         }
@@ -344,7 +344,7 @@ impl<'a, T> Functionality for DeOper<'a, T> where T: IrcStream {
 
 pub struct DeVoice<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State,
+    state: &'a State<T>,
     owner: String,
     channel: String,
     password: String,
@@ -352,7 +352,7 @@ pub struct DeVoice<'a, T> where T: IrcStream {
 }
 
 impl<'a, T> DeVoice<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State) -> BotResult<Box<Functionality + 'a>> {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
             return Err("Syntax: CS DEVOICE user channel password".into_string())
         }

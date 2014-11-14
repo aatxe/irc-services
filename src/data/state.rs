@@ -1,12 +1,24 @@
+#[cfg(feature = "resistance")] use std::collections::HashMap;
 use std::sync::Mutex;
+#[cfg(feature = "resistance")] use std::sync::MutexGuard;
+#[cfg(feature = "resistance")] use data::resistance::Resistance;
+use irc::data::kinds::IrcStream;
 
-pub struct State {
-    identified: Mutex<Vec<String>>
+pub struct State<T> where T: IrcStream {
+    identified: Mutex<Vec<String>>,
+    #[cfg(feature = "resistance")]
+    resistance: Mutex<HashMap<String, Resistance<T>>>,
 }
 
-impl State {
-    pub fn new() -> State {
+impl<T> State<T> where T: IrcStream {
+    #[cfg(not(feature = "resistance"))]
+    pub fn new() -> State<T> {
         State { identified: Mutex::new(Vec::new()) }
+    }
+
+    #[cfg(feature = "resistance")]
+    pub fn new() -> State<T> {
+        State { identified: Mutex::new(Vec::new()), resistance: Mutex::new(HashMap::new()) }
     }
 
     pub fn identify(&self, nick: &str) {
@@ -27,5 +39,10 @@ impl State {
     #[cfg(test)]
     pub fn no_users_identified(&self) -> bool {
         self.identified.lock().is_empty()
+    }
+
+    #[cfg(feature = "resistance")]
+    pub fn get_games<'a>(&'a self) -> MutexGuard<'a, HashMap<String, Resistance<T>>> {
+        self.resistance.lock()
     }
 }

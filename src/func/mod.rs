@@ -3,6 +3,7 @@ extern crate irc;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
+#[cfg(feature = "resistance")] use data::resistance::Resistance;
 use data::state::State;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
@@ -11,10 +12,15 @@ use irc::data::kinds::IrcStream;
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str], state: &'a State) -> IoResult<()>
+pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str], state: &'a State<T>) -> IoResult<()>
               where T: IrcStream {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
+        if msg.starts_with("!") {
+            if try!(do_resistance(server, user, msg, chan, state)) {
+                return Ok(());
+            }
+        }
         if chan.starts_with("#") { return Ok(()); }
         let tokens: Vec<_> = msg.split_str(" ").collect();
         let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
@@ -124,6 +130,55 @@ fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
     Ok(())
 }
 
+#[cfg(feature = "resistance")]
+pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str, state: &State<T>) -> IoResult<bool>
+    where T: IrcStream {
+    let mut games = state.get_games();
+    let mut remove_game = false;
+    if let Some(game) = games.get_mut(&chan.into_string()) {
+        if !chan.starts_with("#") {
+            if message.starts_with("!vote ") {
+                try!(game.cast_mission_vote(server, user, message[6..]));
+                if game.is_complete() {
+                    remove_game = true;
+                } else {
+                    return Ok(true)
+                }
+            }
+        } else if message.starts_with("!join") {
+            try!(game.add_player(server, user));
+            return Ok(true)
+        } else if message.starts_with("!start") {
+            try!(game.start(server));
+            return Ok(true)
+        } else if message.starts_with("!propose ") {
+            try!(game.propose_mission(server, message[9..]));
+            return Ok(true)
+        } else if message.starts_with("!vote ") {
+            try!(game.cast_proposal_vote(server, user, message[6..]));
+            return Ok(true)
+        }
+        if !game.is_complete() { return Ok(false) }
+    }
+    if remove_game { games.remove(&chan.into_string()); }
+    if message.starts_with("!resistance") && chan.starts_with("#") {
+        let game = Resistance::new_game(user, chan);
+        games.insert(chan.into_string(), game);
+        try!(server.send_privmsg(user, "Players may now join the game. Use `!start` to start."));
+        return Ok(true)
+    } else if message.starts_with("!resistance") {
+        try!(server.send_privmsg(user, "You cannot start a game in a private message."));
+        return Ok(true)
+    }
+    Ok(false)
+}
+
+#[cfg(not(feature = "resistance"))]
+pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State<T>) -> IoResult<bool>
+    where T: IrcStream {
+    Ok(false)
+}
+
 fn upper_case(string: &str) -> String {
     string.chars().map(|c| c.to_uppercase()).collect()
 }
@@ -139,7 +194,8 @@ mod test {
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
 
-    pub fn test_helper(input: &str, state_hook: |&State| -> ()) -> (String, State) {
+    pub fn test_helper(input: &str, state_hook: |&State<IoStream<MemWriter, MemReader>>| -> ()) ->
+        (String, State<IoStream<MemWriter, MemReader>>) {
         let server = IrcServer::from_connection(Config {
                 owners: vec!["test".into_string()],
                 nickname: "test".into_string(),

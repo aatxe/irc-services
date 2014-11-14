@@ -4,6 +4,10 @@ name = "irc-services"
 version = "0.0.1"
 authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 
+[features]
+
+resistance = []
+
 [dependencies.irc]
 
 git = "https://github.com/aaronweiss74/irc.git"
