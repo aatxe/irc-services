@@ -126,7 +126,6 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         let result = self.get_proposal_result();
         if result != NotYetVoted {
             if result == Success {
-                self.missions_run += 1;
                 try!(self.run_mission(server));
             } else {
                 self.get_new_leader();
@@ -164,6 +163,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         let (result, fails) = self.get_mission_result();
         if result != NotYetVoted {
             self.get_new_leader();
+            self.missions_run += 1;
             if result == Success {
                 self.missions_won += 1;
                 try!(server.send_privmsg(self.chan[],
