@@ -67,6 +67,8 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn add_player(&mut self, server: &'a Wrapper<'a, T>, nick: &str) -> IoResult<()> {
         if self.started {
             try!(server.send_privmsg(self.chan[], "Sorry, the game is already in progress!"));
+        } else if self.players.contains(&nick.into_string()) {
+            try!(server.send_privmsg(self.chan[], "You've already joined this game!"));
         } else if self.total_players() < 10 {
             self.players.push(nick.into_string());
             try!(server.send_privmsg(nick, "You've joined the game. You'll get your position when it starts."));
@@ -111,10 +113,10 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         } else if self.proposed_members.is_empty() {
             try!(server.send_privmsg(user, "There is no current mission proposal."));
             return Ok(())
-        } else if vote == "yea" || vote == "YEA" || vote == "Yea" {
+        } else if vote.starts_with("y") || vote.starts_with("Y") {
             self.votes_for_mission.insert(user.into_string(), Success);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
-        } else if vote == "nay" || vote == "NAY" || vote == "Nay" {
+        } else if vote.starts_with("n") || vote.starts_with("N") {
             self.votes_for_mission.insert(user.into_string(), Failure);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
         } else {
@@ -149,10 +151,10 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         } else if !self.mission_votes.contains_key(&user.into_string()) {
             try!(server.send_privmsg(user, "You're not involved in this mission."));
             return Ok(());
-        } else if vote == "yea" || vote == "YEA" || vote == "Yea" {
+        } else if vote.starts_with("y") || vote.starts_with("Y") {
             self.mission_votes.insert(user.into_string(), Success);
             try!(server.send_privmsg(user, "Your vote has been cast."));
-        } else if vote == "nay" || vote == "NAY" || vote == "Nay" {
+        } else if vote.starts_with("n") || vote.starts_with("N") {
             self.mission_votes.insert(user.into_string(), Failure);
             try!(server.send_privmsg(user, "Your vote has been cast."));
         } else {
