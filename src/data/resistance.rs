@@ -83,7 +83,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     pub fn propose_mission(&mut self, server: &'a Wrapper<'a, T>, user: &str, users: &str) -> IoResult<()> {
-        if !self.proposed_members.is_empty() || user != self.leader[] { return Ok(()) }
+        if !self.proposed_members.is_empty() || user != self.leader[] || !self.started { return Ok(()) }
         let mut users: Vec<_> = users.split_str(" ").collect();
         users.retain(|user| user.len() != 0);
         let valid = try!(if self.total_players() > 7 {
