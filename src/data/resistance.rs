@@ -45,6 +45,10 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         || self.rejected_proposals == 5 || (self.missions_run - self.missions_won >= 3)
     }
 
+    pub fn is_leader(&self, nick: &str) -> bool {
+        self.leader[] == nick
+    }
+
     pub fn start(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
         if self.started {
             server.send_privmsg(self.chan[], "The game has already begun!")
