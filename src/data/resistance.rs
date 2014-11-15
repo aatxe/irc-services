@@ -1,7 +1,7 @@
 #![cfg(feature = "resistance")]
 use std::collections::HashMap;
 use std::io::IoResult;
-use std::rand::{Rng, task_rng};
+use std::rand::{Rng, TaskRng, task_rng};
 use irc::data::kinds::IrcStream;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
@@ -9,6 +9,7 @@ use irc::server::utils::Wrapper;
 pub struct Resistance<T> where T: IrcStream {
     chan: String,
     started: bool,
+    rng: TaskRng,
     players: Vec<String>,
     rebels: Vec<String>,
     spies: Vec<String>,
@@ -31,7 +32,7 @@ enum Vote {
 impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn new_game(user: &str, chan: &str) -> Resistance<T> {
         Resistance {
-            chan: chan.into_string(), started: false,
+            chan: chan.into_string(), started: false, rng: task_rng(),
             players: Vec::new(), rebels: Vec::new(), spies: Vec::new(),
             missions_won: 0u8, missions_run: 0u8, rejected_proposals: 0u8,
             leader: user.into_string(), proposed_members: Vec::new(),
@@ -49,7 +50,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             server.send_privmsg(self.chan[], "The game has already begun!")
         } else if self.total_players() > 4 {
             self.started = true;
-            task_rng().shuffle(self.players.as_mut_slice());
+            self.rng.shuffle(self.players.as_mut_slice());
             for user in self.players.clone().iter() {
                 if self.spies.len() < (self.total_players() * 2) / 5 {
                     try!(self.add_spy(server, user[]));
@@ -227,7 +228,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     }
 
     fn get_new_leader(&mut self) {
-        task_rng().shuffle(self.players.as_mut_slice());
+        self.rng.shuffle(self.players.as_mut_slice());
         self.leader = self.players[0].clone();
     }
 
