@@ -42,7 +42,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
 
     pub fn is_complete(&self) -> bool {
         self.missions_run == 5 || self.missions_won == 3
-        || self.rejected_proposals == 5 || self.missions_run - self.missions_won == 3
+        || self.rejected_proposals == 5 || (self.missions_run - self.missions_won >= 3)
     }
 
     pub fn start(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
