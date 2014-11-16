@@ -33,7 +33,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
     pub fn new_game(user: &str, chan: &str) -> Resistance<T> {
         Resistance {
             chan: chan.into_string(), started: false, rng: task_rng(),
-            players: Vec::new(), rebels: Vec::new(), spies: Vec::new(),
+            players: vec![user.into_string()], rebels: Vec::new(), spies: Vec::new(),
             missions_won: 0u8, missions_run: 0u8, rejected_proposals: 0u8,
             leader: user.into_string(), proposed_members: Vec::new(),
             votes_for_mission: HashMap::new(), mission_votes: HashMap::new(),
