@@ -4,6 +4,7 @@ use std::io::IoResult;
 #[cfg(not(test))] use serialize::hex::ToHex;
 
 pub mod channel;
+#[cfg(feature = "derp")] pub mod derp;
 #[cfg(feature = "resistance")] pub mod resistance;
 pub mod state;
 pub mod user;

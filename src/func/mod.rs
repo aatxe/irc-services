@@ -3,6 +3,7 @@ extern crate irc;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
+#[cfg(feature = "derp")] use data::derp::DerpCounter;
 #[cfg(feature = "resistance")] use data::resistance::Resistance;
 use data::state::State;
 use irc::server::Server;
@@ -18,6 +19,9 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if msg.starts_with("!") {
             if try!(do_resistance(server, user, msg, chan, state)) {
+                return Ok(());
+            } else if msg.starts_with("!derp") &&
+                      try!(do_derp(server, if chan.starts_with("#") { chan } else { user })) {
                 return Ok(());
             }
         }
@@ -193,6 +197,28 @@ pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &S
     Ok(false)
 }
 
+#[cfg(feature = "derp")]
+pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str) -> IoResult<bool> where T: IrcStream {
+    let dc = DerpCounter::load();
+    if let Ok(mut counter) = dc {
+        counter.increment();
+        if let Ok(()) = counter.save() {
+            let (verb, plural) = if counter.derps() == 1 { ("has", "") } else { ("have", "s") };
+            try!(server.send_privmsg(resp,
+                 format!("There {} been {} derp{}.", verb, counter.derps(), plural)[])
+            );
+            return Ok(true);
+        }
+    }
+    try!(server.send_privmsg(resp, "Something went wrong with the Derp Counter."));
+    Ok(true)
+}
+
+#[cfg(not(feature = "derp"))]
+pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str) -> IoResult<bool> where T: IrcStream {
+    Ok(false)
+}
+
 fn upper_case(string: &str) -> String {
     string.chars().map(|c| c.to_uppercase()).collect()
 }
@@ -201,6 +227,7 @@ fn upper_case(string: &str) -> String {
 mod test {
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
+    use std::io::fs::unlink;
     use data::channel::Channel;
     use data::state::State;
     use irc::conn::{Connection, IoStream};
@@ -328,5 +355,15 @@ mod test {
     #[test]
     fn upper_case() {
         assert_eq!(super::upper_case("identify")[], "IDENTIFY")
+    }
+
+    #[cfg(feature = "derp")]
+    #[test]
+    fn derp_test() {
+        let _ = unlink(&Path::new("data/derp.json"));
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :!derp\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :There has been 1 derp.\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG #test :!derp\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG #test :There have been 2 derps.\r\n");
     }
 }

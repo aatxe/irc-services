@@ -1,6 +1,6 @@
 use super::password_hash;
-use std::io::fs::{File, PathExtensions, mkdir_recursive};
-use std::io::{FilePermission, InvalidInput, IoError, IoResult};
+use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
+use std::io::fs::{PathExtensions, mkdir_recursive};
 use serialize::json::{decode, encode};
 
 #[deriving(Encodable, Decodable, Show, PartialEq)]
