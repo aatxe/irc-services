@@ -62,7 +62,10 @@ impl<'a, T> Resistance<T> where T: IrcStream {
                     try!(self.add_rebel(server, user[]));
                 }
             }
-            server.send_privmsg(self.chan[], "The game has begun!")
+            try!(server.send_privmsg(self.chan[], "The game has begun!"));
+            server.send_privmsg(self.chan[],
+                    format!("The first mission requires {} participants.",
+                    self.get_number_for_next_mission())[])
         } else {
             server.send_privmsg(self.chan[], "You need at least five players to play.")
         }
@@ -171,13 +174,13 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             if result == Success {
                 self.missions_won += 1;
                 try!(server.send_privmsg(self.chan[],
-                     format!("The mission was a success (S: {} / {}). The new leader is {}.",
-                             self.missions_won, self.missions_run, self.leader)[]
+                     format!("The mission was a success (S: {} / {}). The new leader is {}. The next mission requires {} participants.",
+                             self.missions_won, self.missions_run, self.leader, self.get_number_for_next_mission())[]
                 ));
             } else {
                 try!(server.send_privmsg(self.chan[],
-                     format!("The mission was a failure with {} saboteurs (S: {} / {}). The new leader is {}.",
-                             fails, self.missions_won, self.missions_run, self.leader)[]
+                     format!("The mission was a failure with {} saboteurs (S: {} / {}). The new leader is {}. The next mission requires {} participants.",
+                             fails, self.missions_won, self.missions_run, self.leader, self.get_number_for_next_mission())[]
                 ));
             }
             self.mission_votes = HashMap::new();
@@ -273,6 +276,29 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             }
         }
         Ok(true)
+    }
+
+    fn get_number_for_next_mission(&self) -> uint {
+        if self.total_players() > 7 {
+            self.mission_number_helper(3, 4, 4, 5, 5)
+        } else if self.total_players() == 7 {
+            self.mission_number_helper(2, 3, 3, 4, 4)
+        } else if self.total_players() == 6 {
+            self.mission_number_helper(2, 3, 4, 3, 4)
+        } else {
+            self.mission_number_helper(2, 3, 2, 3, 3)
+        }
+    }
+
+    fn mission_number_helper(&self, m1: uint, m2: uint, m3: uint, m4: uint, m5: uint) -> uint {
+        match self.missions_run {
+            0 => m1,
+            1 => m2,
+            2 => m3,
+            3 => m4,
+            5 => m5,
+            _ => 0u,
+        }
     }
 
     fn run_mission(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
