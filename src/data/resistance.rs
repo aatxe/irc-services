@@ -239,7 +239,11 @@ impl<'a, T> Resistance<T> where T: IrcStream {
 
     fn get_new_leader(&mut self) {
         self.rng.shuffle(self.players.as_mut_slice());
-        self.leader = self.players[0].clone();
+        if self.is_leader(self.players[0][]) {
+            self.leader = self.players[1].clone();
+        } else {
+            self.leader = self.players[0].clone();
+        }
     }
 
     fn validate_mission(&self, server: &'a Wrapper<'a, T>, len: uint, m1: uint, m2: uint, m3: uint,
