@@ -21,7 +21,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
             if try!(do_resistance(server, user, msg, chan, state)) {
                 return Ok(());
             } else if msg.starts_with("!derp") &&
-                      try!(do_derp(server, if chan.starts_with("#") { chan } else { user })) {
+                      try!(do_derp(server, if chan.starts_with("#") { chan } else { user }, msg)) {
                 return Ok(());
             }
         }
@@ -198,10 +198,10 @@ pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &S
 }
 
 #[cfg(feature = "derp")]
-pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str) -> IoResult<bool> where T: IrcStream {
+pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str, msg: &str) -> IoResult<bool> where T: IrcStream {
     let dc = DerpCounter::load();
     if let Ok(mut counter) = dc {
-        counter.increment();
+        if msg.starts_with("!derp++") { counter.increment(); }
         if let Ok(()) = counter.save() {
             let (verb, plural) = if counter.derps() == 1 { ("has", "") } else { ("have", "s") };
             try!(server.send_privmsg(resp,
@@ -215,7 +215,7 @@ pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str) -> IoResult<bool> whe
 }
 
 #[cfg(not(feature = "derp"))]
-pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str) -> IoResult<bool> where T: IrcStream {
+pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str) -> IoResult<bool> where T: IrcStream {
     Ok(false)
 }
 
@@ -362,8 +362,8 @@ mod test {
     fn derp_test() {
         let _ = unlink(&Path::new("data/derp.json"));
         let (data, _) = test_helper(":test!test@test PRIVMSG test :!derp\r\n", |_| {});
-        assert_eq!(data[], "PRIVMSG test :There has been 1 derp.\r\n");
-        let (data, _) = test_helper(":test!test@test PRIVMSG #test :!derp\r\n", |_| {});
-        assert_eq!(data[], "PRIVMSG #test :There have been 2 derps.\r\n");
+        assert_eq!(data[], "PRIVMSG test :There have been 0 derps.\r\n");
+        let (data, _) = test_helper(":test!test@test PRIVMSG #test :!derp++\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG #test :There has been 1 derp.\r\n");
     }
 }
