@@ -227,7 +227,7 @@ fn upper_case(string: &str) -> String {
 mod test {
     use std::collections::HashMap;
     use std::io::{MemReader, MemWriter};
-    use std::io::fs::unlink;
+    #[cfg(feature = "derp")] use std::io::fs::unlink;
     use data::channel::Channel;
     use data::state::State;
     use irc::conn::{Connection, IoStream};

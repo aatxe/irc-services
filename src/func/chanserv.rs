@@ -19,6 +19,8 @@ impl<'a, T> Register<'a, T> where T: IrcStream {
     pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: CS REGISTER channel password".into_string())
+        } else if !args[2].starts_with("#") && !args[2][1..].contains("#") {
+            return Err("Channels must be prefixed with a #.".into_string())
         }
         Ok(box Register {
             server: server,
