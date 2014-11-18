@@ -1,6 +1,7 @@
 #![cfg(feature = "resistance")]
 use std::collections::HashMap;
 use std::io::IoResult;
+use std::num::Float;
 use std::rand::{Rng, TaskRng, task_rng};
 use irc::data::kinds::IrcStream;
 use irc::server::Server;
@@ -56,7 +57,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             self.started = true;
             self.rng.shuffle(self.players.as_mut_slice());
             for user in self.players.clone().iter() {
-                if self.spies.len() < (self.total_players() * 2) / 5 {
+                if self.spies.len() < (self.total_players() as f32 * 0.4).round() as uint {
                     try!(self.add_spy(server, user[]));
                 } else {
                     try!(self.add_rebel(server, user[]));
