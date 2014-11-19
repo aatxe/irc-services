@@ -13,8 +13,8 @@ use irc::data::kinds::IrcStream;
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str], state: &'a State<T>) -> IoResult<()>
-              where T: IrcStream {
+pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str],
+                      state: &'a State<T>) -> IoResult<()> where T: IrcStream {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if msg.starts_with("!") {
@@ -136,8 +136,8 @@ fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
 }
 
 #[cfg(feature = "resistance")]
-pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str, state: &State<T>) -> IoResult<bool>
-    where T: IrcStream {
+pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
+                            state: &State<T>) -> IoResult<bool> where T: IrcStream {
     let mut games = state.get_games();
     let mut remove_game = false;
     if let Some(game) = games.get_mut(&chan.into_string()) {
@@ -193,13 +193,14 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
 }
 
 #[cfg(not(feature = "resistance"))]
-pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State<T>) -> IoResult<bool>
-    where T: IrcStream {
+pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State<T>)
+    -> IoResult<bool> where T: IrcStream {
     Ok(false)
 }
 
 #[cfg(feature = "derp")]
-pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str, msg: &str) -> IoResult<bool> where T: IrcStream {
+pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str, msg: &str) -> IoResult<bool>
+    where T: IrcStream {
     let dc = DerpCounter::load();
     if let Ok(mut counter) = dc {
         if msg.starts_with("!derp++") { counter.increment(); }
@@ -254,7 +255,9 @@ mod test {
                     map
                 }
             },
-            Connection::new(IoStream::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))),
+            Connection::new(
+                IoStream::new(MemWriter::new(), MemReader::new(input.as_bytes().to_vec()))
+            )
         );
         let state = State::new();
         state_hook(&state);
@@ -267,7 +270,8 @@ mod test {
                 args.push(suffix[])
             }
             let source = message.prefix.unwrap_or(String::new());
-            super::process(&Wrapper::new(&server), source[], message.command[], args[], &state).unwrap();
+            super::process(&Wrapper::new(&server), source[], message.command[], args[],
+                           &state).unwrap();
         }
         (String::from_utf8(server.conn().stream().value()).unwrap(), state)
     }
