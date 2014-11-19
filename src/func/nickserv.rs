@@ -255,7 +255,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST test6 test\r\n", |_| {}
         );
-        let mut exp = "KILL test6 :Ghosted by test\r\nPRIVMSG test6 :User has been ghosted.\r\n";
+        let exp = "KILL test6 :Ghosted by test\r\nPRIVMSG test6 :User has been ghosted.\r\n";
         assert_eq!(data[], exp);
     }
 
