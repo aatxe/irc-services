@@ -47,6 +47,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
                 "DEADMIN"  => chanserv::DeAdmin::new(server, user, tokens, state),
                 "DEOPER"   => chanserv::DeOper::new(server, user, tokens, state),
                 "DEVOICE"  => chanserv::DeVoice::new(server, user, tokens, state),
+                "CHOWN"    => chanserv::ChangeOwner::new(server, user, tokens, state),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else {
@@ -99,7 +100,7 @@ pub trait Functionality {
 
 fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
     try!(server.send_oper(server.config().nickname[],
-                      server.config().options.get_copy(&format!("oper-pass"))[]));
+                          server.config().options[format!("oper-pass")].clone()[]));
     let mut chans: Vec<String> = Vec::new();
     for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
         let path_str = path.as_str().unwrap();

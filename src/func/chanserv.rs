@@ -393,6 +393,55 @@ impl<'a, T> Functionality for DeVoice<'a, T> where T: IrcStream {
     }
 }
 
+pub struct ChangeOwner<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
+    state: &'a State<T>,
+    owner: String,
+    channel: String,
+    password: String,
+    target: String,
+}
+
+impl<'a, T> ChangeOwner<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>) -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 5 {
+            return Err("Syntax: CS CHOWN user channel password".into_string())
+        }
+        Ok(box ChangeOwner {
+            server: server,
+            state: state,
+            owner: user.into_string(),
+            channel: args[3].into_string(),
+            password: args[4].into_string(),
+            target: args[2].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a, T> Functionality for ChangeOwner<'a, T> where T: IrcStream {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !self.state.is_identified(self.owner[]) {
+            format!("You must be identify as {} to do that.", self.owner[])
+        } else if !self.state.is_identified(self.target[]) {
+            format!("{} must be identified to do that.", self.target[])
+        } else if !Channel::exists(self.channel[]) {
+            format!("Channel {} is not registered!", self.channel[])
+        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
+            if try!(chan.is_password(self.password[])) {
+                chan.owner = self.target.clone();
+                try!(chan.save());
+                try!(self.server.send_samode(self.channel[], "+q", self.target[]));
+                format!("{} is now the channel owner.", self.target[])
+            } else {
+                format!("Password incorrect.")
+            }
+        } else {
+            format!("Failed to change owner to {} due to an I/O issue.", self.target[])
+        };
+        self.server.send_privmsg(self.owner[], msg[])
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::io::fs::unlink;
@@ -759,5 +808,53 @@ mod test {
             state.identify("test2");
         });
         assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n")
+    }
+
+    #[test]
+    fn chown_succeeded() {
+        let ch = Channel::new("#test24", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS CHOWN test2 #test24 test\r\n", |state| {
+            state.identify("test");
+            state.identify("test2");
+        });
+        assert_eq!(Channel::load("#test24").unwrap().owner[], "test2");
+        let mut exp = "SAMODE #test24 +q test2\r\n".into_string();
+        exp.push_str("PRIVMSG test :test2 is now the channel owner.\r\n");
+        assert_eq!(data[], exp[]);
+    }
+
+    #[test]
+    fn chown_failed_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS CHOWN test2 #test test\r\n", |_| {});
+        assert_eq!(data[], "PRIVMSG test :You must be identify as test to do that.\r\n");
+    }
+
+    #[test]
+    fn chown_failed_target_not_identified() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS CHOWN test2 #test test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "PRIVMSG test :test2 must be identified to do that.\r\n");
+    }
+
+    #[test]
+    fn chown_failed_channel_unregistered() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS CHOWN test2 #unregistered test\r\n", |state| {
+            state.identify("test");
+            state.identify("test2");
+        });
+        assert_eq!(data[], "PRIVMSG test :Channel #unregistered is not registered!\r\n");
+    }
+
+    #[test]
+    fn chown_failed_password_incorrect() {
+        let ch = Channel::new("#test25", "test", "test").unwrap();
+        assert!(ch.save().is_ok());
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS CHOWN test2 #test25 wrong\r\n", |state| {
+            state.identify("test");
+            state.identify("test2");
+        });
+        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
     }
 }

@@ -6,8 +6,8 @@ authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 
 [features]
 
-resistance = []
 derp = []
+resistance = []
 
 [dependencies.irc]
 

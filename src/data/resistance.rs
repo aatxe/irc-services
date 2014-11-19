@@ -106,7 +106,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
                 self.proposed_members.push(user.into_string());
             }
             for user in self.rebels.iter().chain(self.spies.iter()) {
-                self.votes_for_mission.insert(user.clone(), NotYetVoted);
+                self.votes_for_mission.insert(user.clone(), Vote::NotYetVoted);
             }
             try!(server.send_privmsg(self.chan[],
                 format!("Proposed mission: {}", self.proposed_members)[]));
@@ -122,18 +122,18 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             try!(server.send_privmsg(user, "There is no current mission proposal."));
             return Ok(())
         } else if vote.starts_with("y") || vote.starts_with("Y") {
-            self.votes_for_mission.insert(user.into_string(), Success);
+            self.votes_for_mission.insert(user.into_string(), Vote::Success);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
         } else if vote.starts_with("n") || vote.starts_with("N") {
-            self.votes_for_mission.insert(user.into_string(), Failure);
+            self.votes_for_mission.insert(user.into_string(), Vote::Failure);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
         } else {
             try!(server.send_privmsg(self.chan[], "You must vote yea or nay."));
             return Ok(());
         }
         let result = self.get_proposal_result();
-        if result != NotYetVoted {
-            if result == Success {
+        if result != Vote::NotYetVoted {
+            if result == Vote::Success {
                 try!(self.run_mission(server));
             } else {
                 self.get_new_leader();
@@ -159,20 +159,20 @@ impl<'a, T> Resistance<T> where T: IrcStream {
             try!(server.send_privmsg(user, "You're not involved in this mission."));
             return Ok(());
         } else if vote.starts_with("y") || vote.starts_with("Y") {
-            self.mission_votes.insert(user.into_string(), Success);
+            self.mission_votes.insert(user.into_string(), Vote::Success);
             try!(server.send_privmsg(user, "Your vote has been cast."));
         } else if vote.starts_with("n") || vote.starts_with("N") {
-            self.mission_votes.insert(user.into_string(), Failure);
+            self.mission_votes.insert(user.into_string(), Vote::Failure);
             try!(server.send_privmsg(user, "Your vote has been cast."));
         } else {
             try!(server.send_privmsg(user, "You must vote yea or nay."));
             return Ok(());
         }
         let (result, fails) = self.get_mission_result();
-        if result != NotYetVoted {
+        if result != Vote::NotYetVoted {
             self.get_new_leader();
             self.missions_run += 1;
-            if result == Success {
+            if result == Vote::Success {
                 self.missions_won += 1;
                 try!(server.send_privmsg(self.chan[],
                      format!("The mission was a success (S: {} / {}). The new leader is {}. The next mission requires {} participants.",
@@ -214,28 +214,28 @@ impl<'a, T> Resistance<T> where T: IrcStream {
         let special = self.missions_run == 4 && self.total_players() > 6;
         let mut fails = 0u8;
         for vote in self.mission_votes.values() {
-            if vote == &NotYetVoted {
-                return (NotYetVoted, 0)
-            } else if vote == &Failure {
+            if vote == &Vote::NotYetVoted {
+                return (Vote::NotYetVoted, 0)
+            } else if vote == &Vote::Failure {
                 fails += 1;
             }
         }
-        (if fails == 0 || special && fails == 1 { Success } else { Failure }, fails)
+        (if fails == 0 || special && fails == 1 { Vote::Success } else { Vote::Failure }, fails)
     }
 
     fn get_proposal_result(&self) -> Vote {
         let mut yea = 0u8;
         let mut nay = 0u8;
         for vote in self.votes_for_mission.values() {
-            if vote == &Success {
+            if vote == &Vote::Success {
                 yea += 1;
-            } else if vote == &Failure {
+            } else if vote == &Vote::Failure {
                 nay += 1;
             } else {
-                return NotYetVoted
+                return Vote::NotYetVoted
             }
         }
-        if yea > nay { Success } else { Failure }
+        if yea > nay { Vote::Success } else { Vote::Failure }
     }
 
     fn get_new_leader(&mut self) {
@@ -308,7 +308,7 @@ impl<'a, T> Resistance<T> where T: IrcStream {
 
     fn run_mission(&mut self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
         for user in self.proposed_members.iter() {
-            self.mission_votes.insert(user.clone(), NotYetVoted);
+            self.mission_votes.insert(user.clone(), Vote::NotYetVoted);
         }
         self.proposed_members = Vec::new();
         self.rejected_proposals = 0;

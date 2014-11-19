@@ -14,7 +14,7 @@ source = "git+https://github.com/seb-m/common.rs#d49902ea9359b7d229343f77354ac3c
 [[package]]
 name = "crypto"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/crypto.rs.git#65beab2371b0408f63be7e614a12e251e133638c"
+source = "git+https://github.com/seb-m/crypto.rs.git#ae65bed7738b70f041a16b6724291043d535f13b"
 dependencies = [
  "common 0.0.1 (git+https://github.com/seb-m/common.rs)",
  "curve41417 0.0.1 (git+https://github.com/seb-m/curve41417.rs)",
@@ -23,7 +23,7 @@ dependencies = [
 [[package]]
 name = "curve41417"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/curve41417.rs#8995a80a6ea347015deb760a43ce860175b2400a"
+source = "git+https://github.com/seb-m/curve41417.rs#378304f2c95a8b4c41a8955b6075871c191d82b4"
 dependencies = [
  "common 0.0.1 (git+https://github.com/seb-m/common.rs)",
 ]
@@ -31,5 +31,5 @@ dependencies = [
 [[package]]
 name = "irc"
 version = "0.0.1"
-source = "git+https://github.com/aaronweiss74/irc.git#df0f05f4be1b6fb0e3dfaaeb8a78a5564179bfeb"
+source = "git+https://github.com/aaronweiss74/irc.git#b1a29523cdd4cb01a4eea39396c8756411e1eec9"
 
