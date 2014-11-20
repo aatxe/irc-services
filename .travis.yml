@@ -3,6 +3,7 @@ script:
   - cargo build --verbose
   - cargo build --verbose --features "resistance derp"
   - cargo test --verbose
+  - cargo test --verbose --features "resistance derp"
   - cargo doc --verbose
 notifications:
   irc:
