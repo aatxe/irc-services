@@ -6,6 +6,7 @@ authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 
 [features]
 
+democracy = []
 derp = []
 resistance = []
 

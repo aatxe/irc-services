@@ -25,7 +25,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
                 return Ok(());
             }
         }
-        if chan.starts_with("#") { return Ok(()); }
+        if chan.starts_with("#") { return do_democracy(server, user, msg, chan, state); }
         let tokens: Vec<_> = msg.split_str(" ").collect();
         let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
             let cmd: String = upper_case(tokens[1]);
@@ -219,6 +219,17 @@ pub fn do_derp<'a, T>(server: &Wrapper<'a, T>, resp: &str, msg: &str) -> IoResul
 #[cfg(not(feature = "derp"))]
 pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str) -> IoResult<bool> where T: IrcStream {
     Ok(false)
+}
+
+#[cfg(feature = "democracy")]
+pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
+                           state: &State<T>) -> IoResult<()> where T: IrcStream {
+    Ok(())
+}
+#[cfg(not(feature = "democracy"))]
+pub fn do_democracy<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State<T>)
+    -> IoResult<()> where T: IrcStream {
+    Ok(())
 }
 
 fn upper_case(string: &str) -> String {
