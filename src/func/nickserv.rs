@@ -49,7 +49,7 @@ impl<'a, T> Functionality for Register<'a, T> where T: IrcStream {
         } else {
             format!("Failed to register {} due to an I/O issue.", user.nickname)
         };
-        self.server.send_privmsg(self.nickname[], msg[])
+        self.server.send_notice(self.nickname[], msg[])
     }
 }
 
@@ -90,7 +90,7 @@ impl<'a, T> Functionality for Identify<'a, T> where T: IrcStream {
         } else {
             "Failed to identify due to an I/O issue."
         };
-        self.server.send_privmsg(self.nickname[], msg)
+        self.server.send_notice(self.nickname[], msg)
     }
 }
 
@@ -124,7 +124,7 @@ impl<'a, T> Functionality for Ghost<'a, T> where T: IrcStream {
             if try!(user.is_password(self.password[])) {
                 try!(self.server.send_kill(self.nickname[],
                      format!("Ghosted by {}", self.current_nick[])[]));
-                try!(self.server.send_privmsg(self.nickname[], "User has been ghosted."));
+                try!(self.server.send_notice(self.nickname[], "User has been ghosted."));
                 return Ok(());
             } else {
                 "Password incorrect."
@@ -132,7 +132,7 @@ impl<'a, T> Functionality for Ghost<'a, T> where T: IrcStream {
         } else {
             "Failed to ghost nick due to an I/O issue."
         };
-        self.server.send_privmsg(self.current_nick[], msg)
+        self.server.send_notice(self.current_nick[], msg)
     }
 }
 
@@ -171,7 +171,7 @@ impl<'a, T> Functionality for Reclaim<'a, T> where T: IrcStream {
                 try!(self.server.send_sanick(self.current_nick[], self.nickname[]));
                 try!(self.server.send_samode(self.nickname[], "+r", ""));
                 self.state.identify(self.nickname[]);
-                try!(self.server.send_privmsg(self.nickname[],
+                try!(self.server.send_notice(self.nickname[],
                                            "Password accepted - you are now recognized."));
                 return Ok(());
             } else {
@@ -180,7 +180,7 @@ impl<'a, T> Functionality for Reclaim<'a, T> where T: IrcStream {
         } else {
             "Failed to reclaim nick due to an I/O issue."
         };
-        self.server.send_privmsg(self.current_nick[], msg)
+        self.server.send_notice(self.current_nick[], msg)
     }
 }
 
@@ -198,9 +198,9 @@ mod test {
         );
         assert!(state.is_identified("test4"));
         let exp = "SAMODE test4 +r\r\n\
-                   PRIVMSG test4 :Nickname test4 has been registered. \
+                   NOTICE test4 :Nickname test4 has been registered. \
                    Don't forget your password!\r\n\
-                   PRIVMSG test4 :You're now identified.\r\n";
+                   NOTICE test4 :You're now identified.\r\n";
         assert_eq!(data[], exp);
     }
 
@@ -212,7 +212,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS REGISTER test\r\n", |_| {}
         );
         assert!(!state.is_identified("test"));
-        assert_eq!(data[], "PRIVMSG test :Nickname test is already registered!\r\n");
+        assert_eq!(data[], "NOTICE test :Nickname test is already registered!\r\n");
     }
 
     #[test]
@@ -224,7 +224,7 @@ mod test {
         );
         assert!(state.is_identified("test5"));
         let exp = "SAMODE test5 +r\r\n\
-                   PRIVMSG test5 :Password accepted - you are now recognized.\r\n";
+                   NOTICE test5 :Password accepted - you are now recognized.\r\n";
         assert_eq!(data[], exp);
     }
 
@@ -236,7 +236,7 @@ mod test {
             ":test9!test@test PRIVMSG test :NS IDENTIFY tset\r\n", |_| {}
         );
         assert!(!state.is_identified("test9"));
-        assert_eq!(data[], "PRIVMSG test9 :Password incorrect.\r\n");
+        assert_eq!(data[], "NOTICE test9 :Password incorrect.\r\n");
     }
 
     #[test]
@@ -245,7 +245,7 @@ mod test {
             ":unregistered!test@test PRIVMSG test :NS IDENTIFY test\r\n", |_| {}
         );
         assert!(!state.is_identified("unregistered"));
-        assert_eq!(data[], "PRIVMSG unregistered :Your nick isn't registered.\r\n");
+        assert_eq!(data[], "NOTICE unregistered :Your nick isn't registered.\r\n");
     }
 
     #[test]
@@ -255,7 +255,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST test6 test\r\n", |_| {}
         );
-        let exp = "KILL test6 :Ghosted by test\r\nPRIVMSG test6 :User has been ghosted.\r\n";
+        let exp = "KILL test6 :Ghosted by test\r\nNOTICE test6 :User has been ghosted.\r\n";
         assert_eq!(data[], exp);
     }
 
@@ -267,7 +267,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST test8 tset\r\n", |_| {}
         );
-        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -275,7 +275,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST unregistered test\r\n", |_| {}
         );
-        let exp = "PRIVMSG test :That nick isn't registered, and therefore cannot be ghosted.\r\n";
+        let exp = "NOTICE test :That nick isn't registered, and therefore cannot be ghosted.\r\n";
         assert_eq!(data[], exp);
     }
 
@@ -290,7 +290,7 @@ mod test {
         let exp = "KILL test11 :Reclaimed by test\r\n\
                    SANICK test test11\r\n\
                    SAMODE test11 +r\r\n\
-                   PRIVMSG test11 :Password accepted - you are now recognized.\r\n";
+                   NOTICE test11 :Password accepted - you are now recognized.\r\n";
         assert_eq!(data[], exp);
     }
 
@@ -302,7 +302,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS RECLAIM test10 tset\r\n", |_| {}
         );
         assert!(!state.is_identified("test10"));
-        assert_eq!(data[], "PRIVMSG test :Password incorrect.\r\n");
+        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -311,8 +311,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS RECLAIM unregistered test\r\n", |_| {}
         );
         assert!(!state.is_identified("unregistered"));
-        let exp = "PRIVMSG test :That nick isn't registered, and therefore cannot be reclaimed.\
-                   \r\n";
+        let exp = "NOTICE test :That nick isn't registered, and therefore cannot be reclaimed.\r\n";
         assert_eq!(data[], exp);
     }
 }

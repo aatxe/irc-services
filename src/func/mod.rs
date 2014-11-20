@@ -54,7 +54,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
             Err("Commands must be prefixed by CS or NS.".into_string())
         };
         if let Err(msg) = res {
-            try!(server.send_privmsg(user, msg[]));
+            try!(server.send_notice(user, msg[]));
         } else {
             try!(res.unwrap().do_func())
         }
@@ -279,7 +279,7 @@ mod test {
     #[test]
     fn commands_must_be_prefxed() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :IDENTIFY\r\n", |_| {});
-        assert_eq!(data[], "PRIVMSG test :Commands must be prefixed by CS or NS.\r\n")
+        assert_eq!(data[], "NOTICE test :Commands must be prefixed by CS or NS.\r\n")
     }
 
     #[test]
@@ -291,7 +291,7 @@ mod test {
     #[test]
     fn non_command_message_in_query() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS line\r\n", |_| {});
-        assert_eq!(data[], "PRIVMSG test :line is not a valid command.\r\n");
+        assert_eq!(data[], "NOTICE test :line is not a valid command.\r\n");
     }
 
     #[test]
