@@ -184,6 +184,47 @@ impl<'a, T> Functionality for Reclaim<'a, T> where T: IrcStream {
     }
 }
 
+pub struct ChangePassword<'a, T> where T: IrcStream {
+    server: &'a Wrapper<'a, T>,
+    user: String,
+    password: String,
+    new_password: String,
+}
+
+impl<'a, T> ChangePassword<'a, T> where T: IrcStream {
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>)
+        -> BotResult<Box<Functionality + 'a>> {
+        if args.len() != 4 {
+            return Err("Syntax: NS CHPASS old_password new_password".into_string())
+        }
+        Ok(box ChangePassword {
+            server: server,
+            user: user.into_string(),
+            password: args[2].into_string(),
+            new_password: args[3].into_string(),
+        } as Box<Functionality>)
+    }
+}
+
+impl<'a, T> Functionality for ChangePassword<'a, T> where T: IrcStream {
+    fn do_func(&self) -> IoResult<()> {
+        let msg = if !User::exists(self.user[]) {
+            "This nick isn't registered, and therefore doesn't have a password to change."
+        } else if let Ok(mut user) = User::load(self.user[]) {
+            if try!(user.is_password(self.password[])) {
+                try!(user.update_password(self.new_password[]));
+                try!(user.save());
+                "Your password has been changed. Don't forget it!"
+            } else {
+                "Password incorrect."
+            }
+        } else {
+            "Failed to change password due to an I/O issue."
+        };
+        self.server.send_notice(self.user[], msg)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::io::fs::unlink;
@@ -312,6 +353,40 @@ mod test {
         );
         assert!(!state.is_identified("unregistered"));
         let exp = "NOTICE test :That nick isn't registered, and therefore cannot be reclaimed.\r\n";
+        assert_eq!(data[], exp);
+    }
+
+    #[test]
+    fn chpass_succeeded() {
+        let u = User::new("test13", "test", None).unwrap();
+        assert!(u.save().is_ok());
+        let (data, _) = test_helper(
+            ":test13!test@test PRIVMSG test :NS CHPASS test blahblah\r\n", |_| {}
+        );
+        let u = User::load("test13").unwrap();
+        assert!(u.is_password("blahblah").unwrap());
+        let exp = "NOTICE test13 :Your password has been changed. Don't forget it!\r\n";
+        assert_eq!(data[], exp);
+    }
+
+    #[test]
+    fn chpass_failed_password_incorrect() {
+        let u = User::new("test12", "test", None).unwrap();
+        assert!(u.save().is_ok());
+        let (data, _) = test_helper(
+            ":test12!test@test PRIVMSG test :NS CHPASS tset blahblah\r\n", |_| {}
+        );
+        let exp = "NOTICE test12 :Password incorrect.\r\n";
+        assert_eq!(data[], exp);
+    }
+
+    #[test]
+    fn chpass_failed_nickname_unregistered() {
+        let (data, _) = test_helper(
+            ":unregistered!test@test PRIVMSG test :NS CHPASS blah blahblah\r\n", |_| {}
+        );
+        let exp = "NOTICE unregistered :This nick isn't registered, and therefore doesn't have a \
+                   password to change.\r\n";
         assert_eq!(data[], exp);
     }
 }

@@ -34,6 +34,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
                 "IDENTIFY" => nickserv::Identify::new(server, user, tokens, state),
                 "GHOST"    => nickserv::Ghost::new(server, user,tokens),
                 "RECLAIM"  => nickserv::Reclaim::new(server, user, tokens, state),
+                "CHPASS"   => nickserv::ChangePassword::new(server, user, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {

@@ -19,6 +19,11 @@ impl User {
         })
     }
 
+    pub fn update_password(&mut self, password: &str) -> IoResult<()> {
+        self.password = try!(password_hash(password));
+        Ok(())
+    }
+
     pub fn is_password(&self, password: &str) -> IoResult<bool> {
         Ok(self.password == try!(password_hash(password)))
     }
