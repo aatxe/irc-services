@@ -1,9 +1,9 @@
 language: rust
 script:
   - cargo build --verbose
-  - cargo build --verbose --features "resistance derp"
+  - cargo build --verbose --features "resistance derp democracy"
   - cargo test --verbose
-  - cargo test --verbose --features "resistance derp"
+  - cargo test --verbose --features "resistance derp democracy"
   - cargo doc --verbose
 notifications:
   irc:
