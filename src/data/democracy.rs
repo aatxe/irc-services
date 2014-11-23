@@ -199,8 +199,11 @@ impl<'a, T> Proposal where T: IrcStream {
         if let Ok(mut channel) = Channel::load(chan) {
             match self {
                 &Proposal::ChangeOwner(ref owner) => {
+                    let old = channel.owner.clone();
                     channel.owner = owner.clone();
                     try!(channel.save());
+                    try!(server.send_samode(chan, "-q", old[]));
+                    try!(server.send_samode(chan, "+q", owner[]));
                 },
                 &Proposal::Oper(ref user) => {
                     if user[] == server.config().nickname[] {
