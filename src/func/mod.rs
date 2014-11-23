@@ -31,7 +31,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
         }
         if chan.starts_with("#") { return do_democracy(server, user, msg, chan, state); }
         let tokens: Vec<_> = msg.split_str(" ").collect();
-        let res = if args.len() > 1 && upper_case(tokens[0])[] == "NS" {
+        let res = if tokens.len() > 1 && upper_case(tokens[0])[] == "NS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
                 "REGISTER" => nickserv::Register::new(server, user, tokens, state),
@@ -41,7 +41,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
                 "CHPASS"   => nickserv::ChangePassword::new(server, user, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
-        } else if args.len() > 1 && upper_case(tokens[0])[] == "CS" {
+        } else if tokens.len() > 1 && upper_case(tokens[0])[] == "CS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
                 "REGISTER" => chanserv::Register::new(server, user, tokens, state),
@@ -55,6 +55,11 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
                 "CHOWN"    => chanserv::ChangeOwner::new(server, user, tokens, state),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
+        } else if tokens.len() == 1 && upper_case(tokens[0])[] == "NS" {
+            Err("Commands: REGISTER, IDENTIFY, GHOST, RECLAIM, CHPASS".into_string())
+        } else if tokens.len() == 1 && upper_case(tokens[0])[] == "CS" {
+            Err("Commands: REGISTER, ADMIN, OPER, VOICE, MODE, DEADMIN, DEOPER, DEVOICE, \
+                 CHOWN".into_string())
         } else {
             Err("Commands must be prefixed by CS or NS.".into_string())
         };
@@ -330,7 +335,7 @@ pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str
                 let mut msg = String::new();
                 for proposal in proposals.iter() {
                     msg.push_str(proposal[]);
-                    msh.push_str("\r\n");
+                    msg.push_str("\r\n");
                 }
                 if msg.len() > 0 {
                     try!(server.send_privmsg(chan, msg[]));
@@ -561,6 +566,22 @@ mod test {
     fn upper_case() {
         assert_eq!(super::upper_case("identify")[], "IDENTIFY")
     }
+
+    #[test]
+    fn send_just_ns() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :NS\r\n", |_| {});
+        let exp = "NOTICE test :Commands: REGISTER, IDENTIFY, GHOST, RECLAIM, CHPASS\r\n";
+        assert_eq!(data[], exp);
+    }
+
+    #[test]
+    fn send_just_cs() {
+        let (data, _) = test_helper(":test!test@test PRIVMSG test :CS\r\n", |_| {});
+        let exp = "NOTICE test :Commands: REGISTER, ADMIN, OPER, VOICE, MODE, DEADMIN, DEOPER, \
+                   DEVOICE, CHOWN\r\n";
+        assert_eq!(data[], exp);
+    }
+
 
     #[cfg(feature = "derp")]
     #[test]
