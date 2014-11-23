@@ -63,6 +63,9 @@ impl<'a, T> Resistance where T: IrcStream {
                     try!(self.add_rebel(server, user[]));
                 }
             }
+            for user in self.spies.iter() {
+                try!(server.send_privmsg(user[], format!("Spies: {}", self.spies)[]));
+            }
             try!(server.send_privmsg(self.chan[], "The game has begun!"));
             server.send_privmsg(self.chan[], format!("The first mission requires {} participants.",
                                 self.get_number_for_next_mission())[])
