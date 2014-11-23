@@ -73,10 +73,10 @@ impl Democracy {
                     None => ()
                 }
             }
-            if (full && (yea * 100) / voting_pop >= 40) || (yea * 100) / voting_pop >= 25 {
+            if full && (yea * 100) / voting_pop >= 40 || !full && (yea * 100) / voting_pop >= 25 {
                 self.delete_all_votes(proposal_id);
                 VoteResult::VotePassed(self.proposals.remove(&proposal_id).unwrap())
-            } else if (full && (nay * 100) / voting_pop >= 60) || (nay * 100) / voting_pop >= 75 {
+            } else if full && (nay * 100) / voting_pop >= 60 || !full && (nay * 100) / voting_pop >= 75 {
                 self.proposals.remove(&proposal_id);
                 self.delete_all_votes(proposal_id);
                 VoteResult::VoteFailed
