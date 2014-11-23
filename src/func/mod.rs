@@ -331,7 +331,11 @@ pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str
                 for proposal in proposals.iter() {
                     msg.push_str(proposal[]);
                 }
-                try!(server.send_privmsg(chan, msg[]));
+                if msg.len() > 0 {
+                    try!(server.send_privmsg(chan, msg[]));
+                } else {
+                    try!(server.send_privmsg(chan, "None"));
+                }
             },
             _ => ()
         }
