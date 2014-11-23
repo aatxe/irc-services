@@ -511,18 +511,36 @@ mod test {
         assert!(ch.voice.is_empty());
         assert_eq!(data[], "SAMODE #test27 -v test\r\n");
     }
-
-    #[cfg(not(feature = "democracy"))]
+    
     #[test]
     fn voicing_user_on_unregistered_channel() {
         let (data, _) = test_helper(":test!test@test MODE #unregistered +v test\r\n", |_| {});
         assert_eq!(data[], "");
     }
 
+    #[cfg(not(feature = "democracy"))]
+    #[test]
+    fn devoicing_user() {
+        let (data, _) = test_helper(":test!test@test MODE #test28 -v test\r\n", |_| {});
+        assert_eq!(data[], "");
+    }
+
     #[cfg(feature = "democracy")]
     #[test]
-    fn voicing_user_on_unregistered_channel() {
-        let (data, _) = test_helper(":test!test@test MODE #unregistered +v test\r\n", |_| {});
+    fn devoicing_user() {
+        let mut ch = Channel::new("#test28", "test", "owner").unwrap();
+        ch.voice.push("test".into_string());
+        assert!(ch.save().is_ok());
+        assert!(!ch.voice.is_empty());
+        let (data, _) = test_helper(":test!test@test MODE #test28 -v test\r\n", |_| {});
+        let ch = Channel::load("#test28").unwrap();
+        assert!(ch.voice.is_empty());
+        assert_eq!(data[], "");
+    }
+
+    #[test]
+    fn devoicing_user_on_unregistered_channel() {
+        let (data, _) = test_helper(":test!test@test MODE #unregistered -v test\r\n", |_| {});
         assert_eq!(data[], "");
     }
 
