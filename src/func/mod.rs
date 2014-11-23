@@ -325,6 +325,14 @@ pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str
                     _ => Ok(())
                 })
             },
+            [".active"] => {
+                let proposals = democracy.get_active_proposals();
+                let mut msg = String::new();
+                for proposal in proposals.iter() {
+                    msg.push_str(proposal[]);
+                }
+                try!(server.send_privmsg(chan, msg[]));
+            },
             _ => ()
         }
     }

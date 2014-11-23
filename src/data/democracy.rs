@@ -88,6 +88,14 @@ impl Democracy {
         }
     }
 
+    pub fn get_active_proposals(&self) -> Vec<String> {
+        let mut ret = Vec::new();
+        for proposal in self.proposals.values() {
+            ret.push(format!("Proposal to {}.", proposal.to_string()));
+        }
+        ret
+    }
+
     pub fn is_full_vote(&self, proposal_id: u8) -> bool {
         self.proposals.get(&proposal_id).map(|p| p.is_full_vote()).unwrap_or(false)
     }
