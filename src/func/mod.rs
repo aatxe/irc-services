@@ -264,7 +264,18 @@ pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str
                            state: &State) -> IoResult<()> where T: IrcStream {
     let mut votes = state.get_votes();
     if let Some(democracy) = votes.get_mut(&chan.into_string()) {
-        let tokens: Vec<_> = message.split_str(" ").collect();
+        if message.starts_with(".propose topic ") {
+            let id = democracy.propose("topic", message[15..]);
+            if let Some(id) = id {
+                try!(server.send_privmsg(chan, format!("Proposal {} is live.", id)[]));
+            }
+            return Ok(())
+        }
+        let tokens = {
+            let mut tmp: Vec<&str> = message.split_str(" ").collect();
+            tmp.retain(|t| t.len() != 0);
+            tmp
+        };
         match tokens[] {
             [".propose", proposal, parameter] => {
                 let id = democracy.propose(proposal, parameter);
