@@ -2,22 +2,21 @@
 use std::sync::Mutex;
 #[cfg(feature = "resistance")] use std::sync::MutexGuard;
 #[cfg(feature = "resistance")] use data::resistance::Resistance;
-use irc::data::kinds::IrcStream;
 
-pub struct State<T> where T: IrcStream {
+pub struct State {
     identified: Mutex<Vec<String>>,
     #[cfg(feature = "resistance")]
-    resistance: Mutex<HashMap<String, Resistance<T>>>,
+    resistance: Mutex<HashMap<String, Resistance>>,
 }
 
-impl<T> State<T> where T: IrcStream {
+impl State {
     #[cfg(not(feature = "resistance"))]
-    pub fn new() -> State<T> {
+    pub fn new() -> State {
         State { identified: Mutex::new(Vec::new()) }
     }
 
     #[cfg(feature = "resistance")]
-    pub fn new() -> State<T> {
+    pub fn new() -> State {
         State { identified: Mutex::new(Vec::new()), resistance: Mutex::new(HashMap::new()) }
     }
 
@@ -42,7 +41,7 @@ impl<T> State<T> where T: IrcStream {
     }
 
     #[cfg(feature = "resistance")]
-    pub fn get_games<'a>(&'a self) -> MutexGuard<'a, HashMap<String, Resistance<T>>> {
+    pub fn get_games<'a>(&'a self) -> MutexGuard<'a, HashMap<String, Resistance>> {
         self.resistance.lock()
     }
 }

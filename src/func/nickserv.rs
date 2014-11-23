@@ -8,14 +8,14 @@ use irc::data::kinds::IrcStream;
 
 pub struct Register<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State<T>,
+    state: &'a State,
     nickname: String,
     password: String,
     email: Option<String>,
 }
 
 impl<'a, T> Register<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>)
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err("Syntax: NS REGISTER password [email]".into_string())
@@ -55,13 +55,13 @@ impl<'a, T> Functionality for Register<'a, T> where T: IrcStream {
 
 pub struct Identify<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State<T>,
+    state: &'a State,
     nickname: String,
     password: String,
 }
 
 impl<'a, T> Identify<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>)
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err("Syntax: NS IDENTIFY password".into_string())
@@ -138,14 +138,14 @@ impl<'a, T> Functionality for Ghost<'a, T> where T: IrcStream {
 
 pub struct Reclaim<'a, T> where T: IrcStream {
     server: &'a Wrapper<'a, T>,
-    state: &'a State<T>,
+    state: &'a State,
     current_nick: String,
     nickname: String,
     password: String,
 }
 
 impl<'a, T> Reclaim<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State<T>)
+    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS RECLAIM nickname password".into_string())

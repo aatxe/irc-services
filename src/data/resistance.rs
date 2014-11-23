@@ -7,7 +7,7 @@ use irc::data::kinds::IrcStream;
 use irc::server::Server;
 use irc::server::utils::Wrapper;
 
-pub struct Resistance<T> where T: IrcStream {
+pub struct Resistance {
     chan: String,
     started: bool,
     rng: TaskRng,
@@ -30,8 +30,8 @@ enum Vote {
     NotYetVoted,
 }
 
-impl<'a, T> Resistance<T> where T: IrcStream {
-    pub fn new_game(user: &str, chan: &str) -> Resistance<T> {
+impl<'a, T> Resistance where T: IrcStream {
+    pub fn new_game(user: &str, chan: &str) -> Resistance {
         Resistance {
             chan: chan.into_string(), started: false, rng: task_rng(),
             players: vec![user.into_string()], rebels: Vec::new(), spies: Vec::new(),

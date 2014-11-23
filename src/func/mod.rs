@@ -14,7 +14,7 @@ mod chanserv;
 mod nickserv;
 
 pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, args: &[&str],
-                      state: &'a State<T>) -> IoResult<()> where T: IrcStream {
+                      state: &'a State) -> IoResult<()> where T: IrcStream {
     let user = source.find('!').map_or("", |i| source[..i]);
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if msg.starts_with("!") {
@@ -138,7 +138,7 @@ fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
 
 #[cfg(feature = "resistance")]
 pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
-                            state: &State<T>) -> IoResult<bool> where T: IrcStream {
+                            state: &State) -> IoResult<bool> where T: IrcStream {
     let mut games = state.get_games();
     let mut remove_game = false;
     if let Some(game) = games.get_mut(&chan.into_string()) {
@@ -194,7 +194,7 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
 }
 
 #[cfg(not(feature = "resistance"))]
-pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State<T>)
+pub fn do_resistance<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State)
     -> IoResult<bool> where T: IrcStream {
     Ok(false)
 }
@@ -224,11 +224,11 @@ pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str) -> IoResult<bool> wh
 
 #[cfg(feature = "democracy")]
 pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
-                           state: &State<T>) -> IoResult<()> where T: IrcStream {
+                           state: &State) -> IoResult<()> where T: IrcStream {
     Ok(())
 }
 #[cfg(not(feature = "democracy"))]
-pub fn do_democracy<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State<T>)
+pub fn do_democracy<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State)
     -> IoResult<()> where T: IrcStream {
     Ok(())
 }
@@ -249,8 +249,7 @@ mod test {
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
 
-    pub fn test_helper(input: &str, state_hook: |&State<IoStream<MemWriter, MemReader>>| -> ()) ->
-        (String, State<IoStream<MemWriter, MemReader>>) {
+    pub fn test_helper(input: &str, state_hook: |&State| -> ()) -> (String, State) {
         let server = IrcServer::from_connection(Config {
                 owners: vec!["test".into_string()],
                 nickname: "test".into_string(),
