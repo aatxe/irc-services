@@ -91,6 +91,17 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
         }
     } else if let ("QUIT", _) = (command, args) {
         state.remove(user);
+    } else if let ("MODE", [chan, "+v", user]) = (command, args) {
+        if Channel::exists(chan) {
+            if state.is_identified(user) {
+                if let Ok(mut channel) = Channel::load(chan) {
+                    channel.voice.push(user.into_string());
+                    try!(channel.save());
+                }
+            } else {
+                try!(server.send_samode(chan, "-v", user));
+            }
+        }
     }
     Ok(())
 }
@@ -367,6 +378,29 @@ mod test {
         let ch = Channel::load("#test23").unwrap();
         assert_eq!(ch.topic[], "This is a topic.");
     }
+
+    #[test]
+    fn voicing_identified_user() {
+        let ch = Channel::new("#test26", "test", "owner").unwrap();
+        assert!(ch.save().is_ok());
+        let (data, _) = test_helper(":test!test@test MODE #test26 +v test\r\n", |state| {
+            state.identify("test");
+        });
+        let ch = Channel::load("#test26").unwrap();
+        assert_eq!(ch.voice, vec!["test".into_string()]);
+        assert_eq!(data[], "");
+    }
+
+    #[test]
+    fn voicing_unidentified_user() {
+        let ch = Channel::new("#test27", "test", "owner").unwrap();
+        assert!(ch.save().is_ok());
+        let (data, _) = test_helper(":test!test@test MODE #test27 +v test\r\n", |_| {});
+        let ch = Channel::load("#test27").unwrap();
+        assert!(ch.voice.is_empty());
+        assert_eq!(data[], "SAMODE #test27 -v test\r\n");
+    }
+
 
     #[test]
     fn upper_case() {
