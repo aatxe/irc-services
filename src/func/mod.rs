@@ -401,6 +401,11 @@ mod test {
         assert_eq!(data[], "SAMODE #test27 -v test\r\n");
     }
 
+    #[test]
+    fn voicing_user_on_unregistered_channel() {
+        let (data, _) = test_helper(":test!test@test MODE #unregistered +v test\r\n", |_| {});
+        assert_eq!(data[], "");
+    }
 
     #[test]
     fn upper_case() {
