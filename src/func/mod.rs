@@ -96,7 +96,9 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
     } else if let ("QUIT", _) = (command, args) {
         state.remove(user);
     } else if let ("MODE", [chan, "+v", user]) = (command, args) {
-        try!(democracy_process_hook(server, user, chan, state));
+        try!(democracy_process_hook(server, "+v", user, chan, state));
+    } else if let ("MODE", [chan, "-v", user]) = (command, args) {
+        try!(democracy_process_hook(server, "-v", user, chan, state));
     }
     Ok(())
 }
@@ -238,12 +240,17 @@ pub fn new_voting_booth(chan: &str, state: &State) {
 pub fn new_voting_booth(_: &str, _: &State) {}
 
 #[cfg(feature = "democracy")]
-pub fn democracy_process_hook<'a, T>(server: &'a Wrapper<'a, T>, user: &str, chan: &str, 
+pub fn democracy_process_hook<'a, T>(server: &'a Wrapper<'a, T>, msg: &str, user: &str, chan: &str, 
                                      state: &State) -> IoResult<()> where T: IrcStream {
     if Channel::exists(chan) {
-        if state.is_identified(user) {
+        if msg == "+v" && state.is_identified(user) {
             if let Ok(mut channel) = Channel::load(chan) {
                 channel.voice.push(user.into_string());
+                try!(channel.save());
+            }
+        } else if msg == "-v" {
+            if let Ok(mut channel) = Channel::load(chan) {
+                channel.voice.retain(|u| u[] != user);
                 try!(channel.save());
             }
         } else {
@@ -254,7 +261,7 @@ pub fn democracy_process_hook<'a, T>(server: &'a Wrapper<'a, T>, user: &str, cha
 }
 
 #[cfg(not(feature = "democracy"))]
-pub fn democracy_process_hook<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &State)
+pub fn democracy_process_hook<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State)
     -> IoResult<()> where T: IrcStream {
     Ok(())
 }
