@@ -61,9 +61,11 @@ impl Democracy {
                 }
             }
             if (full && (yea * 100) / voting_pop >= 40) || (yea * 100) / voting_pop >= 25 {
+                self.delete_all_votes(proposal_id);
                 VoteResult::VotePassed(self.proposals.remove(&proposal_id).unwrap())
             } else if (full && (nay * 100) / voting_pop >= 60) || (nay * 100) / voting_pop >= 75 {
                 self.proposals.remove(&proposal_id);
+                self.delete_all_votes(proposal_id);
                 VoteResult::VoteFailed
             } else {
                 VoteResult::VoteInProgress
@@ -75,6 +77,12 @@ impl Democracy {
 
     pub fn is_full_vote(&self, proposal_id: u8) -> bool {
         self.proposals.get(&proposal_id).map(|p| p.is_full_vote()).unwrap_or(false)
+    }
+
+    fn delete_all_votes(&mut self, proposal_id: u8) {
+        for (_, votes) in self.votes.iter_mut() {
+            votes.retain(|v| v.id() != proposal_id)
+        }
     }
 
     fn find_vote(&self, votes: &Vec<Vote>, proposal_id: u8) -> Option<Vote> {
@@ -116,6 +124,13 @@ impl Vote {
             "yea" => Some(Vote::Yea(proposal_id)),
             "nay" => Some(Vote::Nay(proposal_id)),
             _     => None,
+        }
+    }
+
+    pub fn id(&self) -> u8 {
+        match self {
+            &Vote::Yea(id) => id,
+            &Vote::Nay(id) => id,
         }
     }
 }
