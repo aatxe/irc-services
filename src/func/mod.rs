@@ -3,6 +3,10 @@ extern crate irc;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
+#[cfg(feature = "democracy")] use data::democracy::Democracy;
+#[cfg(feature = "democracy")] use data::democracy::VoteResult::{VotePassed, VoteFailed};
+#[cfg(feature = "democracy")] use data::democracy::VotingResult::{VoteIssued, InvalidVote};
+#[cfg(feature = "democracy")] use data::democracy::VotingResult::NoSuchProposal;
 #[cfg(feature = "derp")] use data::derp::DerpCounter;
 #[cfg(feature = "resistance")] use data::resistance::Resistance;
 use data::state::State;
@@ -64,9 +68,9 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
             try!(server.identify());
         }
     } else if let ("376", _) = (command, args) {
-        try!(start_up(server));
+        try!(start_up(server, state));
     } else if let ("422", _) = (command, args) {
-        try!(start_up(server));
+        try!(start_up(server, state));
     } else if let ("TOPIC", [chan, message]) = (command, args) {
         if let Ok(mut channel) = Channel::load(chan) {
             channel.topic = message.into_string();
@@ -101,7 +105,7 @@ pub trait Functionality {
     fn do_func(&self) -> IoResult<()>;
 }
 
-fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
+fn start_up<T>(server: &Wrapper<T>, state: &State) -> IoResult<()> where T: IrcStream {
     try!(server.send_oper(server.config().nickname[],
                           server.config().options[format!("oper-pass")].clone()[]));
     let mut chans: Vec<String> = Vec::new();
@@ -126,6 +130,7 @@ fn start_up<T>(server: &Wrapper<T>) -> IoResult<()> where T: IrcStream {
     }
     try!(server.send_join(join_line[]));
     for chan in chans.iter() {
+        new_voting_booth(chan[], state);
         try!(server.send_samode(chan[], "+a", server.config().nickname[]));
         let ch = try!(Channel::load(chan[]));
         if ch.topic.len() != 0 {
@@ -225,6 +230,14 @@ pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str) -> IoResult<bool> wh
 }
 
 #[cfg(feature = "democracy")]
+pub fn new_voting_booth(chan: &str, state: &State) {
+   state.get_votes().insert(chan.into_string(), Democracy::new());
+}
+
+#[cfg(not(feature = "democracy"))]
+pub fn new_voting_booth(_: &str, _: &State) {}
+
+#[cfg(feature = "democracy")]
 pub fn democracy_process_hook<'a, T>(server: &'a Wrapper<'a, T>, user: &str, chan: &str, 
                                      state: &State) -> IoResult<()> where T: IrcStream {
     if Channel::exists(chan) {
@@ -249,6 +262,44 @@ pub fn democracy_process_hook<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _:
 #[cfg(feature = "democracy")]
 pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
                            state: &State) -> IoResult<()> where T: IrcStream {
+    let mut votes = state.get_votes();
+    if let Some(democracy) = votes.get_mut(&chan.into_string()) {
+        let tokens: Vec<_> = message.split_str(" ").collect();
+        match tokens[] {
+            [".propose", proposal, parameter] => {
+                let id = democracy.propose(proposal, parameter);
+                if let Some(id) = id {
+                    try!(server.send_privmsg(chan, format!("Proposal {} is live.", id)[]));
+                } else {
+                    try!(server.send_privmsg(chan, 
+                         format!("{} is not a valid option for a proposal.", proposal)[]));
+                }
+            },
+            [".vote", proposal_id, vote] => {
+                let proposal_id = from_str(proposal_id).unwrap_or(0u8);
+                let res = democracy.vote(proposal_id, vote, user);
+                let msg = match res {
+                    VoteIssued => format!("Vote issued."),
+                    InvalidVote => format!("{} is not a valid vote.", vote),
+                    NoSuchProposal => format!("{} is not a valid proposal.", proposal_id),
+                };
+                try!(server.send_privmsg(chan, msg[]));
+                let voting_pop = if democracy.is_full_vote(proposal_id) {
+                    state.get_voting_pop(chan)
+                } else {
+                    state.get_online_voting_pop(chan)
+                };
+                try!(match democracy.get_result_of_vote(proposal_id, voting_pop) {
+                    VotePassed(proposal) => proposal.enact(server, chan),
+                    VoteFailed => server.send_privmsg(chan, 
+                                  format!("Failed to pass proposal {}.", proposal_id)[]),
+
+                    _ => Ok(())
+                })
+            },
+            _ => ()
+        }
+    }
     Ok(())
 }
 
