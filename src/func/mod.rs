@@ -92,16 +92,7 @@ pub fn process<'a, T>(server: &'a Wrapper<'a, T>, source: &str, command: &str, a
     } else if let ("QUIT", _) = (command, args) {
         state.remove(user);
     } else if let ("MODE", [chan, "+v", user]) = (command, args) {
-        if Channel::exists(chan) {
-            if state.is_identified(user) {
-                if let Ok(mut channel) = Channel::load(chan) {
-                    channel.voice.push(user.into_string());
-                    try!(channel.save());
-                }
-            } else {
-                try!(server.send_samode(chan, "-v", user));
-            }
-        }
+        try!(democracy_process_hook(server, user, chan, state));
     }
     Ok(())
 }
@@ -234,10 +225,33 @@ pub fn do_derp<'a, T>(_: &Wrapper<'a, T>, _: &str, _: &str) -> IoResult<bool> wh
 }
 
 #[cfg(feature = "democracy")]
+pub fn democracy_process_hook<'a, T>(server: &'a Wrapper<'a, T>, user: &str, chan: &str, 
+                                     state: &State) -> IoResult<()> where T: IrcStream {
+    if Channel::exists(chan) {
+        if state.is_identified(user) {
+            if let Ok(mut channel) = Channel::load(chan) {
+                channel.voice.push(user.into_string());
+                try!(channel.save());
+            }
+        } else {
+            try!(server.send_samode(chan, "-v", user));
+        }
+    }
+    Ok(())
+}
+
+#[cfg(not(feature = "democracy"))]
+pub fn democracy_process_hook<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &State)
+    -> IoResult<()> where T: IrcStream {
+    Ok(())
+}
+
+#[cfg(feature = "democracy")]
 pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
                            state: &State) -> IoResult<()> where T: IrcStream {
     Ok(())
 }
+
 #[cfg(not(feature = "democracy"))]
 pub fn do_democracy<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _: &str, _: &State)
     -> IoResult<()> where T: IrcStream {
@@ -379,6 +393,16 @@ mod test {
         assert_eq!(ch.topic[], "This is a topic.");
     }
 
+    #[cfg(not(feature = "democracy"))]
+    #[test]
+    fn voicing_identified_user() {
+        let (data, _) = test_helper(":test!test@test MODE #test +v test\r\n", |state| {
+            state.identify("test");
+        });
+        assert_eq!(data[], "");
+    }
+    
+    #[cfg(feature = "democracy")]
     #[test]
     fn voicing_identified_user() {
         let ch = Channel::new("#test26", "test", "owner").unwrap();
@@ -390,7 +414,15 @@ mod test {
         assert_eq!(ch.voice, vec!["test".into_string()]);
         assert_eq!(data[], "");
     }
+    
+    #[cfg(not(feature = "democracy"))]
+    #[test]
+    fn voicing_unidentified_user() {
+        let (data, _) = test_helper(":test!test@test MODE #test +v test\r\n", |_| {});
+        assert_eq!(data[], "");
+    }
 
+    #[cfg(feature = "democracy")]
     #[test]
     fn voicing_unidentified_user() {
         let ch = Channel::new("#test27", "test", "owner").unwrap();
@@ -401,6 +433,14 @@ mod test {
         assert_eq!(data[], "SAMODE #test27 -v test\r\n");
     }
 
+    #[cfg(not(feature = "democracy"))]
+    #[test]
+    fn voicing_user_on_unregistered_channel() {
+        let (data, _) = test_helper(":test!test@test MODE #unregistered +v test\r\n", |_| {});
+        assert_eq!(data[], "");
+    }
+
+    #[cfg(feature = "democracy")]
     #[test]
     fn voicing_user_on_unregistered_channel() {
         let (data, _) = test_helper(":test!test@test MODE #unregistered +v test\r\n", |_| {});
