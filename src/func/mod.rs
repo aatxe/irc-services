@@ -330,6 +330,7 @@ pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str
                 let mut msg = String::new();
                 for proposal in proposals.iter() {
                     msg.push_str(proposal[]);
+                    msh.push_str("\r\n");
                 }
                 if msg.len() > 0 {
                     try!(server.send_privmsg(chan, msg[]));

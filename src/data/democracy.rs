@@ -90,8 +90,8 @@ impl Democracy {
 
     pub fn get_active_proposals(&self) -> Vec<String> {
         let mut ret = Vec::new();
-        for proposal in self.proposals.values() {
-            ret.push(format!("Proposal to {}.", proposal.to_string()));
+        for (id, proposal)  in self.proposals.iter() {
+            ret.push(format!("Proposal ({}) to {}.", id, proposal.to_string()));
         }
         ret
     }
