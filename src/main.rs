@@ -15,7 +15,7 @@ fn main() {
     let server = IrcServer::new("config.json").unwrap();
     let state = State::new();
     for message in server.iter() {
-        println!("{}", message.into_string());
+        print!("{}", message.into_string());
         let mut args = Vec::new();
         let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
         args.push_all(msg_args[]);
