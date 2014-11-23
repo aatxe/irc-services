@@ -34,6 +34,19 @@ impl Democracy {
         }
     }
 
+    pub fn has_voted(&self, proposal_id: u8, user: &str) -> bool {
+        if let Some(votes) = self.votes.get(&user.into_string()) {
+            for vote in votes.iter() {
+                match vote {
+                    &Vote::Yea(id) if id == proposal_id => return true,
+                    &Vote::Nay(id) if id == proposal_id => return true,
+                    _ => (),
+                }
+            }
+        }
+        false
+    }
+
     pub fn vote(&mut self, proposal_id: u8, vote: &str, user: &str) -> VotingResult {
         let vote = Vote::from_str(vote, proposal_id);
         if vote.is_none() {
@@ -88,12 +101,9 @@ impl Democracy {
     fn find_vote(&self, votes: &Vec<Vote>, proposal_id: u8) -> Option<Vote> {
         for vote in votes.iter() {
             match vote {
-                &Vote::Yea(id) => if id == proposal_id {
-                    return Some(Vote::Yea(id))
-                },
-                &Vote::Nay(id) => if id == proposal_id {
-                    return Some(Vote::Nay(id))
-                },
+                &Vote::Yea(id) if id == proposal_id => return Some(Vote::Yea(id)),
+                &Vote::Nay(id) if id == proposal_id => return Some(Vote::Nay(id)),
+                _ => (),
             }
         }
         None

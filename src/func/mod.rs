@@ -277,6 +277,9 @@ pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str
             },
             [".vote", proposal_id, vote] => {
                 let proposal_id = from_str(proposal_id).unwrap_or(0u8);
+                if democracy.has_voted(proposal_id, user) {
+                    return server.send_privmsg(chan, "You've already voted in that proposal.");
+                }
                 let res = democracy.vote(proposal_id, vote, user);
                 let msg = match res {
                     VoteIssued => format!("Vote issued."),
