@@ -92,4 +92,13 @@ impl State {
             0u
         }
     }
+
+    #[cfg(feature = "democracy")]
+    pub fn is_voiced(&self, user: &str, chan: &str) -> bool {
+        if let Ok(chan) = Channel::load(chan) {
+            chan.voice.contains(&user.into_string())
+        } else {
+            false
+        }
+    }
 }
