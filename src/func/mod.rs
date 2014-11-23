@@ -262,7 +262,7 @@ pub fn democracy_process_hook<'a, T>(_: &'a Wrapper<'a, T>, _: &str, _: &str, _:
 #[cfg(feature = "democracy")]
 pub fn do_democracy<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &str, chan: &str,
                            state: &State) -> IoResult<()> where T: IrcStream {
-    if message.starts_with(".") {
+    if message.starts_with(".propose") || message.starts_with(".vote") {
         if !state.is_identified(user) {
             return server.send_privmsg(chan, "You must be identified to do that.");
         } else if !state.is_voiced(user, chan) {
