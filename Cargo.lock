@@ -3,7 +3,7 @@ name = "irc-services"
 version = "0.0.1"
 dependencies = [
  "crypto 0.0.1 (git+https://github.com/seb-m/crypto.rs.git)",
- "irc 0.0.1 (git+https://github.com/aaronweiss74/irc.git)",
+ "irc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -30,6 +30,6 @@ dependencies = [
 
 [[package]]
 name = "irc"
-version = "0.0.1"
-source = "git+https://github.com/aaronweiss74/irc.git#2ab1f65e1f8b70cc505ec0314cc26aa9b4e15d2c"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 

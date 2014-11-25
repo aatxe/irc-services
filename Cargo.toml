@@ -12,7 +12,7 @@ resistance = []
 
 [dependencies.irc]
 
-git = "https://github.com/aaronweiss74/irc.git"
+irc = "~0.1.0"
 
 [dependencies.crypto]
 
