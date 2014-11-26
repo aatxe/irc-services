@@ -250,8 +250,10 @@ pub fn democracy_process_hook<'a, T>(server: &'a Wrapper<'a, T>, msg: &str, user
     if Channel::exists(chan) {
         if msg == "+v" && state.is_identified(user) {
             if let Ok(mut channel) = Channel::load(chan) {
-                channel.voice.push(user.into_string());
-                try!(channel.save());
+                if !channel.voice.contains(&user.into_string()) {
+                    channel.voice.push(user.into_string());
+                    try!(channel.save());
+                }
             }
         } else if msg == "-v" {
             if let Ok(mut channel) = Channel::load(chan) {
