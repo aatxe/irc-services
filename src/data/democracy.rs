@@ -63,16 +63,8 @@ impl Democracy {
     }
 
     pub fn get_result_of_vote(&mut self, proposal_id: u8, voting_pop: uint) -> VoteResult {
-        if self.proposals.contains_key(&proposal_id) {
+        if let Some((yea, nay)) = self.get_vote_counts(proposal_id) {
             let full = self.proposals[proposal_id].is_full_vote();
-            let mut yea: uint = 0; let mut nay: uint = 0;
-            for votes in self.votes.values() {
-                match self.find_vote(votes, proposal_id) {
-                    Some(Vote::Yea(_)) => yea += 1,
-                    Some(Vote::Nay(_)) => nay += 1,
-                    None => ()
-                }
-            }
             if full && (yea * 100) / voting_pop >= 60 || !full && (yea * 100) / voting_pop >= 30 {
                 self.delete_all_votes(proposal_id);
                 VoteResult::VotePassed(self.proposals.remove(&proposal_id).unwrap())
@@ -91,13 +83,31 @@ impl Democracy {
     pub fn get_active_proposals(&self) -> Vec<String> {
         let mut ret = Vec::new();
         for (id, proposal)  in self.proposals.iter() {
-            ret.push(format!("Proposal ({}) to {}.", id, proposal.to_string()));
+            let (yea, nay) = self.get_vote_counts(*id).unwrap();
+            ret.push(format!("Proposal ({}) to {} (Y: {}, N {}).", id, proposal.to_string(), yea, 
+                             nay));
         }
         ret
     }
 
     pub fn is_full_vote(&self, proposal_id: u8) -> bool {
         self.proposals.get(&proposal_id).map(|p| p.is_full_vote()).unwrap_or(false)
+    }
+
+    fn get_vote_counts(&self, proposal_id: u8) -> Option<(uint, uint)> {
+        if self.proposals.contains_key(&proposal_id) {
+            let mut yea: uint = 0; let mut nay: uint = 0;
+            for votes in self.votes.values() {
+                match self.find_vote(votes, proposal_id) {
+                    Some(Vote::Yea(_)) => yea += 1,
+                    Some(Vote::Nay(_)) => nay += 1,
+                    None => ()
+                }
+            }
+            Some((yea, nay))
+        } else {
+            None
+        }
     }
 
     fn delete_all_votes(&mut self, proposal_id: u8) {
