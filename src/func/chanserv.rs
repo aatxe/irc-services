@@ -431,7 +431,7 @@ impl<'a, T> Functionality for ChangeOwner<'a, T> where T: IrcStream {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !self.state.is_identified(self.owner[]) {
             format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
+        } else if !self.state.is_identified(self.target[]) && self.target[] != "Pidgey" {
             format!("{} must be identified to do that.", self.target[])
         } else if !Channel::exists(self.channel[]) {
             format!("Channel {} is not registered!", self.channel[])
