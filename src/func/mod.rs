@@ -174,6 +174,9 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
         } else if message.starts_with("!drop") && game.is_leader(user) {
             try!(server.send_privmsg(chan, "The game of Resistance has been dropped."));
             remove_game = true;
+        } else if message.starts_with("!players") {
+            try!(game.list_players(server));
+            return Ok(true)
         }
         if !remove_game { return Ok(false) }
     }
@@ -185,6 +188,9 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
         return Ok(true)
     } else if message.starts_with("!resistance") {
         try!(server.send_privmsg(user, "You cannot start a game in a private message."));
+        return Ok(true)
+    } else if message.starts_with("!players") {
+        try!(server.send_privmsg(chan, "There's no Resistance game on this channel."));
         return Ok(true)
     } else if !chan.starts_with("#") && message.starts_with("!vote ") {
         let tokens: Vec<_> = message[6..].split_str(" ").collect();

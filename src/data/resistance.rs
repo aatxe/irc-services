@@ -207,6 +207,10 @@ impl<'a, T> Resistance where T: IrcStream {
         Ok(())
     }
 
+    pub fn list_players(&self, server: &'a Wrapper<'a, T>) -> IoResult<()> {
+        server.send_privmsg(self.chan[], format!("Players: {}", self.players)[])
+    }
+
     fn add_rebel(&mut self, server: &'a Wrapper<'a, T>, nick: &str) -> IoResult<()> {
         self.rebels.push(nick.into_string());
         server.send_privmsg(nick, format!("You're a rebel in {}.", self.chan)[])
