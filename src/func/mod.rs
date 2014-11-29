@@ -171,7 +171,8 @@ pub fn do_resistance<'a, T>(server: &'a Wrapper<'a, T>, user: &str, message: &st
                 return Ok(true)
             }
             remove_game = true;
-        } else if message.starts_with("!drop") && game.is_leader(user) {
+        } else if message.starts_with("!drop") && 
+                  (game.is_leader(user) || server.config().is_owner(user)) {
             try!(server.send_privmsg(chan, "The game of Resistance has been dropped."));
             remove_game = true;
         } else if message.starts_with("!players") {
