@@ -390,6 +390,7 @@ mod test {
                 server: "irc.fyrechat.net".into_string(),
                 port: 6667,
                 use_ssl: false,
+                encoding: "UTF-8".into_string(),
                 channels: vec!["#test".into_string(), "#test2".into_string()],
                 options: {
                     let mut map = HashMap::new();
