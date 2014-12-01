@@ -4,18 +4,18 @@ use data::BotResult;
 use data::state::State;
 use data::user::User;
 use irc::server::utils::Wrapper;
-use irc::data::kinds::IrcStream;
+use irc::data::kinds::{IrcReader, IrcWriter};
 
-pub struct Register<'a, T> where T: IrcStream {
-    server: &'a Wrapper<'a, T>,
+pub struct Register<'a, T: IrcReader, U: IrcWriter> {
+    server: &'a Wrapper<'a, T, U>,
     state: &'a State,
     nickname: String,
     password: String,
     email: Option<String>,
 }
 
-impl<'a, T> Register<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State)
+impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err("Syntax: NS REGISTER password [email]".into_string())
@@ -34,7 +34,7 @@ impl<'a, T> Register<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for Register<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
         let user = try!(
             User::new(self.nickname[], self.password[], self.email.as_ref().map(|s| s[]))
@@ -53,15 +53,15 @@ impl<'a, T> Functionality for Register<'a, T> where T: IrcStream {
     }
 }
 
-pub struct Identify<'a, T> where T: IrcStream {
-    server: &'a Wrapper<'a, T>,
+pub struct Identify<'a, T: IrcReader, U: IrcWriter> {
+    server: &'a Wrapper<'a, T, U>,
     state: &'a State,
     nickname: String,
     password: String,
 }
 
-impl<'a, T> Identify<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State)
+impl<'a, T: IrcReader, U: IrcWriter> Identify<'a, T, U> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err("Syntax: NS IDENTIFY password".into_string())
@@ -75,7 +75,7 @@ impl<'a, T> Identify<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for Identify<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for Identify<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "Your nick isn't registered."
@@ -94,15 +94,15 @@ impl<'a, T> Functionality for Identify<'a, T> where T: IrcStream {
     }
 }
 
-pub struct Ghost<'a, T> where T: IrcStream {
-    server: &'a Wrapper<'a, T>,
+pub struct Ghost<'a, T: IrcReader, U: IrcWriter> {
+    server: &'a Wrapper<'a, T, U>,
     current_nick: String,
     nickname: String,
     password: String,
 }
 
-impl<'a, T> Ghost<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>)
+impl<'a, T: IrcReader, U: IrcWriter> Ghost<'a, T, U> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS GHOST nickname password".into_string())
@@ -116,7 +116,7 @@ impl<'a, T> Ghost<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for Ghost<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for Ghost<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be ghosted."
@@ -136,16 +136,16 @@ impl<'a, T> Functionality for Ghost<'a, T> where T: IrcStream {
     }
 }
 
-pub struct Reclaim<'a, T> where T: IrcStream {
-    server: &'a Wrapper<'a, T>,
+pub struct Reclaim<'a, T: IrcReader, U: IrcWriter> {
+    server: &'a Wrapper<'a, T, U>,
     state: &'a State,
     current_nick: String,
     nickname: String,
     password: String,
 }
 
-impl<'a, T> Reclaim<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>, state: &'a State)
+impl<'a, T: IrcReader, U: IrcWriter> Reclaim<'a, T, U> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS RECLAIM nickname password".into_string())
@@ -160,7 +160,7 @@ impl<'a, T> Reclaim<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for Reclaim<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for Reclaim<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.nickname[]) {
             "That nick isn't registered, and therefore cannot be reclaimed."
@@ -184,15 +184,15 @@ impl<'a, T> Functionality for Reclaim<'a, T> where T: IrcStream {
     }
 }
 
-pub struct ChangePassword<'a, T> where T: IrcStream {
-    server: &'a Wrapper<'a, T>,
+pub struct ChangePassword<'a, T: IrcReader, U: IrcWriter> {
+    server: &'a Wrapper<'a, T, U>,
     user: String,
     password: String,
     new_password: String,
 }
 
-impl<'a, T> ChangePassword<'a, T> where T: IrcStream {
-    pub fn new(server: &'a Wrapper<'a, T>, user: &str, args: Vec<&str>)
+impl<'a, T: IrcReader, U: IrcWriter> ChangePassword<'a, T, U> {
+    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS CHPASS old_password new_password".into_string())
@@ -206,7 +206,7 @@ impl<'a, T> ChangePassword<'a, T> where T: IrcStream {
     }
 }
 
-impl<'a, T> Functionality for ChangePassword<'a, T> where T: IrcStream {
+impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangePassword<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
         let msg = if !User::exists(self.user[]) {
             "This nick isn't registered, and therefore doesn't have a password to change."

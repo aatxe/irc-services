@@ -4,7 +4,7 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::IoResult;
 use std::string::ToString;
 use data::channel::Channel;
-use irc::data::kinds::IrcStream;
+use irc::data::kinds::{IrcReader, IrcWriter};
 use irc::server::Server;
 use irc::server::utils::Wrapper;
 
@@ -212,8 +212,8 @@ impl Proposal {
     }
 }
 
-impl<'a, T> Proposal where T: IrcStream {
-    pub fn enact(&self, server: &'a Wrapper<'a, T>, chan: &str) -> IoResult<()> {
+impl<'a, T: IrcReader, U: IrcWriter> Proposal {
+    pub fn enact(&self, server: &'a Wrapper<'a, T, U>, chan: &str) -> IoResult<()> {
         if let Ok(mut channel) = Channel::load(chan) {
             match self {
                 &Proposal::ChangeOwner(ref owner) => {

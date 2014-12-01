@@ -1,8 +1,6 @@
-#[cfg(feature = "democracy")] use std::collections::HashMap;
-#[cfg(feature = "resistance")] #[cfg(not(feature = "democracy"))] use std::collections::HashMap;
+#[cfg(any(feature = "democracy", feature = "resistance"))] use std::collections::HashMap;
 use std::sync::Mutex;
-#[cfg(feature = "democracy")] use std::sync::MutexGuard;
-#[cfg(feature = "resistance")] #[cfg(not(feature = "democracy"))] use std::sync::MutexGuard;
+#[cfg(any(feature = "democracy", feature = "resistance"))] use std::sync::MutexGuard;
 #[cfg(feature = "democracy")] use data::channel::Channel;
 #[cfg(feature = "democracy")] use data::democracy::Democracy;
 #[cfg(feature = "resistance")] use data::resistance::Resistance;
