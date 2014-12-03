@@ -1,6 +1,6 @@
 use std::io::IoResult;
 #[cfg(not(test))] use crypto::sbuf::StdHeapAllocator;
-#[cfg(not(test))] use crypto::sha3::{hash, Sha3_512};
+#[cfg(not(test))] use crypto::sha3::{hash, Sha3Mode};
 #[cfg(not(test))] use serialize::hex::ToHex;
 
 pub mod channel;
@@ -15,7 +15,7 @@ pub type BotResult<T> = Result<T, String>;
 #[cfg(not(test))]
 pub fn password_hash(password: &str) -> IoResult<String> {
     let mut data = [0u8, ..64];
-    try!(hash::<StdHeapAllocator>(Sha3_512, password.as_bytes(), &mut data));
+    try!(hash::<StdHeapAllocator>(Sha3Mode::Sha3_512, password.as_bytes(), &mut data));
     Ok(data.to_hex())
 }
 
