@@ -12,7 +12,9 @@ resistance = []
 
 [dependencies.irc]
 
-irc = "~0.4.1"
+irc = "~0.4.2"
+features = ["ssl"]
+
 
 [dependencies.crypto]
 
