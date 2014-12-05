@@ -224,7 +224,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Proposal {
                     try!(server.send_samode(chan, "+q", owner[]));
                 },
                 &Proposal::Oper(ref user) => {
-                    if user[] == server.config().nickname[] {
+                    if user[] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
                     channel.opers.push(user.clone());
@@ -232,7 +232,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Proposal {
                     try!(server.send_samode(chan, "+o", user[]));
                 },
                 &Proposal::Deop(ref user) => {
-                    if user[] == server.config().nickname[] {
+                    if user[] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
                     channel.opers.retain(|u| u[] != user[]);
@@ -240,7 +240,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Proposal {
                     try!(server.send_samode(chan, "-o", user[]));
                 },
                 &Proposal::Kick(ref user) => {
-                    if user[] == server.config().nickname[] {
+                    if user[] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
                     try!(server.send_kick(chan, user[], "It was decided so."));

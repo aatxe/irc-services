@@ -114,8 +114,7 @@ pub trait Functionality {
 }
 
 fn start_up<T: IrcReader, U: IrcWriter>(server: &Wrapper<T, U>, state: &State) -> IoResult<()> {
-    try!(server.send_oper(server.config().nickname[],
-                          server.config().options[format!("oper-pass")].clone()[]));
+    try!(server.send_oper(server.config().nickname(), server.config().get_option("oper-pass")));
     let mut chans: Vec<String> = Vec::new();
     for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
         let path_str = path.as_str().unwrap();
@@ -139,7 +138,7 @@ fn start_up<T: IrcReader, U: IrcWriter>(server: &Wrapper<T, U>, state: &State) -
     try!(server.send_join(join_line[]));
     for chan in chans.iter() {
         new_voting_booth(chan[], state);
-        try!(server.send_samode(chan[], "+a", server.config().nickname[]));
+        try!(server.send_samode(chan[], "+a", server.config().nickname()));
         let ch = try!(Channel::load(chan[]));
         if ch.topic.len() != 0 {
             try!(server.send_topic(chan[], ch.topic[]));
@@ -377,6 +376,7 @@ fn upper_case(string: &str) -> String {
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
+    use std::default::Default;
     use std::io::{MemReader, MemWriter};
     #[cfg(feature = "derp")] use std::io::fs::unlink;
     use data::channel::Channel;
@@ -388,20 +388,15 @@ mod test {
 
     pub fn test_helper(input: &str, state_hook: |&State| -> ()) -> (String, State) {
         let server = IrcServer::from_connection(Config {
-                owners: vec!["test".into_string()],
-                nickname: "test".into_string(),
-                username: "test".into_string(),
-                realname: "test".into_string(),
-                password: String::new(),
-                server: "irc.fyrechat.net".into_string(),
-                port: 6667,
-                use_ssl: false,
-                channels: vec!["#test".into_string(), "#test2".into_string()],
+                owners: Some(vec!["test".into_string()]),
+                nickname: Some("test".into_string()),
+                // channels: Some(vec!["#test".into_string(), "#test2".into_string()]),
                 options: {
                     let mut map = HashMap::new();
                     map.insert("oper-pass".into_string(), "test".into_string());
-                    map
-                }
+                    Some(map)
+                },
+                .. Default::default()
             },
             Connection::new(
                 MemReader::new(input.as_bytes().to_vec()), MemWriter::new()

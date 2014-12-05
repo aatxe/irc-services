@@ -44,7 +44,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
             try!(self.server.send_samode(self.channel[], "+r", ""));
             try!(self.server.send_samode(self.channel[], "+qa", self.owner[]));
             try!(self.server.send_join(self.channel[]));
-            try!(self.server.send_samode(self.channel[], "+a", self.server.config().nickname[]));
+            try!(self.server.send_samode(self.channel[], "+a", self.server.config().nickname()));
             format!("Channel {} has been registered. Don't forget the password!", chan.name)
         } else {
             format!("Failed to register {} due to an I/O issue.", chan.name)
