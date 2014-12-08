@@ -1,4 +1,4 @@
-#![feature(if_let, slicing_syntax)]
+#![feature(slicing_syntax)]
 extern crate crypto;
 extern crate irc;
 extern crate serialize;
