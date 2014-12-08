@@ -705,7 +705,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test17").unwrap().admins, Vec::new())
+        assert!(Channel::load("#test17").unwrap().admins.is_empty())
         let exp = "SAMODE #test17 -a test2\r\n\
                    NOTICE test :test2 is no longer an admin.\r\n";
         assert_eq!(data[], exp)
@@ -761,7 +761,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test19").unwrap().opers, Vec::new())
+        assert!(Channel::load("#test19").unwrap().opers.is_empty())
         let exp = "SAMODE #test19 -o test2\r\n\
                    NOTICE test :test2 is no longer an oper.\r\n";
         assert_eq!(data[], exp)
@@ -817,7 +817,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test21").unwrap().voice, Vec::new())
+        assert!(Channel::load("#test21").unwrap().voice.is_empty())
         let exp = "SAMODE #test21 -v test2\r\n\
                    NOTICE test :test2 is no longer voiced.\r\n";
         assert_eq!(data[], exp)
