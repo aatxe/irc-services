@@ -3,7 +3,7 @@ name = "irc-services"
 version = "0.0.1"
 dependencies = [
  "crypto 0.0.1 (git+https://github.com/seb-m/crypto.rs.git)",
- "irc 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "irc 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -23,37 +23,56 @@ dependencies = [
 [[package]]
 name = "curve41417"
 version = "0.0.1"
-source = "git+https://github.com/seb-m/curve41417.rs#9acb94f4f5d5478d11b44507ce1093d841e5fd27"
+source = "git+https://github.com/seb-m/curve41417.rs#bcfc657f4d2918bf851f5162737a931d77581734"
 dependencies = [
- "common 0.0.1 (git+https://github.com/seb-m/common.rs)",
+ "tars 0.0.1 (git+https://github.com/seb-m/tars)",
 ]
 
 [[package]]
 name = "irc"
-version = "0.5.2"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "openssl 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "openssl 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "libressl-pnacl-sys"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "pnacl-build-helper 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "openssl"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "openssl-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "openssl-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "openssl-sys"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "pkg-config 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libressl-pnacl-sys 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "pkg-config"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "pnacl-build-helper"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "tars"
+version = "0.0.1"
+source = "git+https://github.com/seb-m/tars#47c3aa8990b5bd1ccc9ebdb8169bf533661461a8"
 

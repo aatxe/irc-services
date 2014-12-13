@@ -12,7 +12,7 @@ resistance = []
 
 [dependencies.irc]
 
-irc = "~0.4.2"
+irc = "*"
 features = ["ssl"]
 
 
