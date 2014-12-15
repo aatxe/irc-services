@@ -1,6 +1,6 @@
 #![feature(slicing_syntax)]
-extern crate crypto;
 extern crate irc;
+extern crate openssl;
 extern crate serialize;
 
 #[cfg(not(test))] use data::state::State;

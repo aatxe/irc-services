@@ -15,7 +15,6 @@ resistance = []
 irc = "*"
 features = ["ssl"]
 
+[dependencies.openssl]
 
-[dependencies.crypto]
-
-git = "https://github.com/seb-m/crypto.rs.git"
+openssl = "*"
