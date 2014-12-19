@@ -48,7 +48,7 @@ mod test {
     #[test]
     fn save() {
         let derp = DerpCounter::load();
-        assert!(derp.is_ok())
+        assert!(derp.is_ok());
         let mut derp = derp.unwrap();
         derp.increment();
         assert!(derp.save().is_ok());

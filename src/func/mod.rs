@@ -197,7 +197,7 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
     } else if !chan.starts_with("#") && message.starts_with("!vote ") {
         let tokens: Vec<_> = message[6..].split_str(" ").collect();
         if tokens.len() != 2 {
-            try!(server.send_privmsg(user, "You must vote like so: `!vote #chan <yea/nay>`."))
+            try!(server.send_privmsg(user, "You must vote like so: `!vote #chan <yea/nay>`."));
             return Ok(true)
         }
         if let Some(game) = games.get_mut(&tokens[0].into_string()) {
@@ -207,7 +207,7 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
             }
             remove_game = true;
         } else {
-            try!(server.send_privmsg(user, "There's no game on that channel."))
+            try!(server.send_privmsg(user, "There's no game on that channel."));
             return Ok(true)
         }
         if remove_game { games.remove(&tokens[0].into_string()); return Ok(true) }
@@ -486,7 +486,7 @@ mod test {
         let (data, state) = test_helper(":test!test@test QUIT :Goodbye!\r\n", |state| {
             state.identify("test");
         });
-        assert!(state.no_users_identified())
+        assert!(state.no_users_identified());
         assert_eq!(data[], "");
     }
 
