@@ -1,4 +1,5 @@
 #![cfg(feature = "democracy")]
+use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::IoResult;
@@ -36,7 +37,7 @@ impl Democracy {
     }
 
     pub fn has_voted(&self, proposal_id: u8, user: &str) -> bool {
-        if let Some(votes) = self.votes.get(&user.into_string()) {
+        if let Some(votes) = self.votes.get(&user.to_owned()) {
             for vote in votes.iter() {
                 match vote {
                     &Vote::Yea(id) if id == proposal_id => return true,
@@ -53,7 +54,7 @@ impl Democracy {
         if vote.is_none() {
             VotingResult::InvalidVote
         } else if self.proposals.contains_key(&proposal_id) {
-            match self.votes.entry(user.into_string()) {
+            match self.votes.entry(user.to_owned()) {
                 Occupied(mut entry) => entry.get_mut().push(vote.unwrap()),
                 Vacant(entry) => { entry.set(vec![vote.unwrap()]); },
             }
@@ -193,7 +194,7 @@ impl Proposal {
     }
         
     pub fn from_str(proposal: &str, parameter: &str) -> Option<Proposal> {
-        let param = parameter.into_string();
+        let param = parameter.to_owned();
         match proposal {
             "chown" => Some(Proposal::ChangeOwner(param)),
             "oper"  => Some(Proposal::Oper(param)),

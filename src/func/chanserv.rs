@@ -1,4 +1,5 @@
 use super::Functionality;
+use std::borrow::ToOwned;
 use std::io::IoResult;
 use data::BotResult;
 use data::channel::Channel;
@@ -19,16 +20,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
-            return Err("Syntax: CS REGISTER channel password".into_string())
+            return Err("Syntax: CS REGISTER channel password".to_owned())
         } else if !args[2].starts_with("#") && !args[2][1..].contains("#") {
-            return Err("Channels must be prefixed with a #.".into_string())
+            return Err("Channels must be prefixed with a #.".to_owned())
         }
         Ok(box Register {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[2].into_string(),
-            password: args[3].into_string(),
+            owner: user.to_owned(),
+            channel: args[2].to_owned(),
+            password: args[3].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -66,15 +67,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Admin<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS ADMIN user channel password".into_string())
+            return Err("Syntax: CS ADMIN user channel password".to_owned())
         }
         Ok(box Admin {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -116,15 +117,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Oper<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS OPER user channel password".into_string())
+            return Err("Syntax: CS OPER user channel password".to_owned())
         }
         Ok(box Oper {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -166,15 +167,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Voice<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS VOICE user channel password".into_string())
+            return Err("Syntax: CS VOICE user channel password".to_owned())
         }
         Ok(box Voice {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -216,15 +217,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Mode<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS MODE mode channel password".into_string())
+            return Err("Syntax: CS MODE mode channel password".to_owned())
         }
         Ok(box Mode {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            mode: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            mode: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -264,15 +265,15 @@ impl<'a, T: IrcReader, U: IrcWriter> DeAdmin<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS DEADMIN user channel password".into_string())
+            return Err("Syntax: CS DEADMIN user channel password".to_owned())
         }
         Ok(box DeAdmin {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -314,15 +315,15 @@ impl<'a, T: IrcReader, U: IrcWriter> DeOper<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS DEOPER user channel password".into_string())
+            return Err("Syntax: CS DEOPER user channel password".to_owned())
         }
         Ok(box DeOper {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -364,15 +365,15 @@ impl<'a, T: IrcReader, U: IrcWriter> DeVoice<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS DEVOICE user channel password".into_string())
+            return Err("Syntax: CS DEVOICE user channel password".to_owned())
         }
         Ok(box DeVoice {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -414,15 +415,15 @@ impl<'a, T: IrcReader, U: IrcWriter> ChangeOwner<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 5 {
-            return Err("Syntax: CS CHOWN user channel password".into_string())
+            return Err("Syntax: CS CHOWN user channel password".to_owned())
         }
         Ok(box ChangeOwner {
             server: server,
             state: state,
-            owner: user.into_string(),
-            channel: args[3].into_string(),
-            password: args[4].into_string(),
-            target: args[2].into_string(),
+            owner: user.to_owned(),
+            channel: args[3].to_owned(),
+            password: args[4].to_owned(),
+            target: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -453,6 +454,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangeOwner<'a, T, U> {
 
 #[cfg(test)]
 mod test {
+    use std::borrow::ToOwned;
     use std::io::fs::unlink;
     use data::channel::Channel;
     use func::test::test_helper;
@@ -501,7 +503,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".into_string()));
+        assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".to_owned()));
         let exp = "SAMODE #test5 +a test2\r\n\
                    NOTICE test :test2 is now an admin.\r\n";
         assert_eq!(data[], exp);
@@ -555,7 +557,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".into_string()));
+        assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".to_owned()));
         let exp = "SAMODE #test6 +o test2\r\n\
                    NOTICE test :test2 is now an oper.\r\n";
         assert_eq!(data[], exp);
@@ -609,7 +611,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".into_string()));
+        assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".to_owned()));
         let exp = "SAMODE #test7 +v test2\r\n\
                    NOTICE test :test2 is now voiced.\r\n";
         assert_eq!(data[], exp);
@@ -698,7 +700,7 @@ mod test {
     #[test]
     fn deadmin_succeeded() {
         let mut ch = Channel::new("#test17", "test", "test").unwrap();
-        ch.admins.push("test2".into_string());
+        ch.admins.push("test2".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 test\r\n", |state| {
@@ -741,7 +743,7 @@ mod test {
     #[test]
     fn deadmin_failed_incorrect_password() {
         let mut ch = Channel::new("#test18", "test", "test").unwrap();
-        ch.admins.push("test2".into_string());
+        ch.admins.push("test2".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test18 wrong\r\n", |state| {
@@ -754,7 +756,7 @@ mod test {
     #[test]
     fn deoper_succeeded() {
         let mut ch = Channel::new("#test19", "test", "test").unwrap();
-        ch.opers.push("test2".into_string());
+        ch.opers.push("test2".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test19 test\r\n", |state| {
@@ -797,7 +799,7 @@ mod test {
     #[test]
     fn deoper_failed_incorrect_password() {
         let mut ch = Channel::new("#test20", "test", "test").unwrap();
-        ch.opers.push("test2".into_string());
+        ch.opers.push("test2".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test20 wrong\r\n", |state| {
@@ -810,7 +812,7 @@ mod test {
     #[test]
     fn devoice_succeeded() {
         let mut ch = Channel::new("#test21", "test", "test").unwrap();
-        ch.voice.push("test2".into_string());
+        ch.voice.push("test2".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test21 test\r\n", |state| {
@@ -853,7 +855,7 @@ mod test {
     #[test]
     fn devoice_failed_incorrect_password() {
         let mut ch = Channel::new("#test22", "test", "test").unwrap();
-        ch.voice.push("test2".into_string());
+        ch.voice.push("test2".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test22 wrong\r\n", |state| {

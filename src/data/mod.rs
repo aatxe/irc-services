@@ -1,6 +1,6 @@
 use std::io::IoResult;
 use openssl::crypto::hash::{HashType, Hasher};
-use serialize::hex::ToHex;
+use rustc_serialize::hex::ToHex;
 
 pub mod channel;
 #[cfg(feature = "democracy")] pub mod democracy;

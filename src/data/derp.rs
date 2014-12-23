@@ -1,16 +1,17 @@
 #![cfg(feature = "derp")]
+use std::borrow::ToOwned;
 use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::io::fs::mkdir_recursive;
-use serialize::json::{decode, encode};
+use rustc_serialize::json::{decode, encode};
 
-#[deriving(Encodable, Decodable, Show, PartialEq)]
+#[deriving(RustcEncodable, RustcDecodable, Show, PartialEq)]
 pub struct DerpCounter {
     derps: uint,
 }
 
 impl DerpCounter {
     pub fn load() -> IoResult<DerpCounter> {
-        let path = "data/derp.json".into_string();
+        let path = "data/derp.json".to_owned();
         let file = File::open(&Path::new(path[]));
         if let Ok(mut file) = file {
             let data = try!(file.read_to_string());
@@ -25,7 +26,7 @@ impl DerpCounter {
     }
 
     pub fn save(&self) -> IoResult<()> {
-        let mut path = "data/".into_string();
+        let mut path = "data/".to_owned();
         try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
         path.push_str("derp.json");
         let mut f = File::create(&Path::new(path[]));

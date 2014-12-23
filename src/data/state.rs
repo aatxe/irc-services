@@ -1,3 +1,4 @@
+use std::borrow::ToOwned;
 #[cfg(any(feature = "democracy", feature = "resistance"))] use std::collections::HashMap;
 use std::sync::Mutex;
 #[cfg(any(feature = "democracy", feature = "resistance"))] use std::sync::MutexGuard;
@@ -43,16 +44,16 @@ impl State {
     }
 
     pub fn identify(&self, nick: &str) {
-        self.identified.lock().push(nick.into_string())
+        self.identified.lock().push(nick.to_owned())
     }
 
     pub fn is_identified(&self, nick: &str) -> bool {
-        self.identified.lock().contains(&nick.into_string())
+        self.identified.lock().contains(&nick.to_owned())
     }
 
     pub fn remove(&self, nick: &str) {
         let mut identified = self.identified.lock();
-        if let Some(i) = identified.position_elem(&nick.into_string()) {
+        if let Some(i) = identified.position_elem(&nick.to_owned()) {
             identified.swap_remove(i);
         }
     }
@@ -94,7 +95,7 @@ impl State {
     #[cfg(feature = "democracy")]
     pub fn is_voiced(&self, user: &str, chan: &str) -> bool {
         if let Ok(chan) = Channel::load(chan) {
-            chan.voice.contains(&user.into_string())
+            chan.voice.contains(&user.to_owned())
         } else {
             false
         }

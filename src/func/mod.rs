@@ -1,5 +1,7 @@
 extern crate irc;
 
+
+use std::borrow::ToOwned;
 use std::io::IoResult;
 use std::io::fs::walk_dir;
 use data::channel::Channel;
@@ -57,12 +59,12 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if tokens.len() == 1 && upper_case(tokens[0])[] == "NS" {
-            Err("Commands: REGISTER, IDENTIFY, GHOST, RECLAIM, CHPASS".into_string())
+            Err("Commands: REGISTER, IDENTIFY, GHOST, RECLAIM, CHPASS".to_owned())
         } else if tokens.len() == 1 && upper_case(tokens[0])[] == "CS" {
             Err("Commands: REGISTER, ADMIN, OPER, VOICE, MODE, DEADMIN, DEOPER, DEVOICE, \
-                 CHOWN".into_string())
+                 CHOWN".to_owned())
         } else {
-            Err("Commands must be prefixed by CS or NS.".into_string())
+            Err("Commands must be prefixed by CS or NS.".to_owned())
         };
         if let Err(msg) = res {
             try!(server.send_notice(user, msg[]));
@@ -79,18 +81,18 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
         try!(start_up(server, state));
     } else if let ("TOPIC", [chan, message]) = (command, args) {
         if let Ok(mut channel) = Channel::load(chan) {
-            channel.topic = message.into_string();
+            channel.topic = message.to_owned();
             try!(channel.save());
         }
     } else if let ("JOIN", [chan]) = (command, args){
         if let Ok(channel) = Channel::load(chan) {
             let mode = if channel.owner[] == user {
                 "+qa"
-            } else if channel.admins[].contains(&user.into_string()) {
+            } else if channel.admins[].contains(&user.to_owned()) {
                 "+a"
-            } else if channel.opers[].contains(&user.into_string()) {
+            } else if channel.opers[].contains(&user.to_owned()) {
                 "+o"
-            } else if channel.voice[].contains(&user.into_string()) {
+            } else if channel.voice[].contains(&user.to_owned()) {
                 "+v"
             } else {
                 ""
@@ -118,7 +120,7 @@ fn start_up<T: IrcReader, U: IrcWriter>(server: &Wrapper<T, U>, state: &State) -
     let mut chans: Vec<String> = Vec::new();
     for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
         let path_str = path.as_str().unwrap();
-        let chan = path_str.find('.').map_or(String::new(), |i| path_str[14..i].into_string());
+        let chan = path_str.find('.').map_or(String::new(), |i| path_str[14..i].to_owned());
         if chan[] != "" {
             chans.push(chan);
         }
@@ -156,7 +158,7 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
     -> IoResult<bool> {
     let mut games = state.get_games();
     let mut remove_game = false;
-    if let Some(game) = games.get_mut(&chan.into_string()) {
+    if let Some(game) = games.get_mut(&chan.to_owned()) {
         if message.starts_with("!join") {
             try!(game.add_player(server, user));
             return Ok(true)
@@ -182,10 +184,10 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
         }
         if !remove_game { return Ok(false) }
     }
-    if remove_game { games.remove(&chan.into_string()); return Ok(true) }
+    if remove_game { games.remove(&chan.to_owned()); return Ok(true) }
     if message.starts_with("!resistance") && chan.starts_with("#") {
         let game = Resistance::new_game(user, chan);
-        games.insert(chan.into_string(), game);
+        games.insert(chan.to_owned(), game);
         try!(server.send_privmsg(chan, "Players may now join the game. Use `!start` to start."));
         return Ok(true)
     } else if message.starts_with("!resistance") {
@@ -200,7 +202,7 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
             try!(server.send_privmsg(user, "You must vote like so: `!vote #chan <yea/nay>`."));
             return Ok(true)
         }
-        if let Some(game) = games.get_mut(&tokens[0].into_string()) {
+        if let Some(game) = games.get_mut(&tokens[0].to_owned()) {
             try!(game.cast_mission_vote(server, user, tokens[1]));
             if !game.is_complete() {
                 return Ok(true)
@@ -210,7 +212,7 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
             try!(server.send_privmsg(user, "There's no game on that channel."));
             return Ok(true)
         }
-        if remove_game { games.remove(&tokens[0].into_string()); return Ok(true) }
+        if remove_game { games.remove(&tokens[0].to_owned()); return Ok(true) }
     }
     Ok(false)
 }
@@ -247,7 +249,7 @@ pub fn do_derp<'a, T: IrcReader, U: IrcWriter>(_: &Wrapper<'a, T, U>, _: &str, _
 
 #[cfg(feature = "democracy")]
 pub fn new_voting_booth(chan: &str, state: &State) {
-   state.get_votes().insert(chan.into_string(), Democracy::new());
+   state.get_votes().insert(chan.to_owned(), Democracy::new());
 }
 
 #[cfg(not(feature = "democracy"))]
@@ -260,8 +262,8 @@ pub fn democracy_process_hook<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrappe
     if Channel::exists(chan) {
         if msg == "+v" && state.is_identified(user) {
             if let Ok(mut channel) = Channel::load(chan) {
-                if !channel.voice.contains(&user.into_string()) {
-                    channel.voice.push(user.into_string());
+                if !channel.voice.contains(&user.to_owned()) {
+                    channel.voice.push(user.to_owned());
                     try!(channel.save());
                 }
             }
@@ -296,7 +298,7 @@ pub fn do_democracy<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U
         }
     }
     let mut votes = state.get_votes();
-    if let Some(democracy) = votes.get_mut(&chan.into_string()) {
+    if let Some(democracy) = votes.get_mut(&chan.to_owned()) {
         if message.starts_with(".propose topic ") {
             let id = democracy.propose("topic", message[15..]);
             if let Some(id) = id {
@@ -320,7 +322,7 @@ pub fn do_democracy<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U
                 }
             },
             [".vote", proposal_id, vote] => {
-                let proposal_id = from_str(proposal_id).unwrap_or(0u8);
+                let proposal_id = proposal_id.parse().unwrap_or(0u8);
                 if democracy.has_voted(proposal_id, user) {
                     return server.send_privmsg(chan, "You've already voted in that proposal.");
                 }
@@ -375,6 +377,7 @@ fn upper_case(string: &str) -> String {
 
 #[cfg(test)]
 mod test {
+    use std::borrow::ToOwned;
     use std::collections::HashMap;
     use std::default::Default;
     use std::io::{MemReader, MemWriter};
@@ -388,12 +391,12 @@ mod test {
 
     pub fn test_helper(input: &str, state_hook: |&State| -> ()) -> (String, State) {
         let server = IrcServer::from_connection(Config {
-                owners: Some(vec!["test".into_string()]),
-                nickname: Some("test".into_string()),
-                // channels: Some(vec!["#test".into_string(), "#test2".into_string()]),
+                owners: Some(vec!["test".to_owned()]),
+                nickname: Some("test".to_owned()),
+                // channels: Some(vec!["#test".to_owned(), "#test2".to_owned()]),
                 options: {
                     let mut map = HashMap::new();
-                    map.insert("oper-pass".into_string(), "test".into_string());
+                    map.insert("oper-pass".to_owned(), "test".to_owned());
                     Some(map)
                 },
                 .. Default::default()
@@ -405,6 +408,7 @@ mod test {
         let state = State::new();
         state_hook(&state);
         for message in server.iter() {
+            let message = message.unwrap();
             println!("{}", message);
             let mut args = Vec::new();
             let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
@@ -440,7 +444,7 @@ mod test {
     #[test]
     fn owner_on_join() {
         let mut ch = Channel::new("#test11", "test", "test").unwrap();
-        ch.admins.push("test".into_string());
+        ch.admins.push("test".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test JOIN :#test11\r\n", |state| {
             state.identify("test");
@@ -451,7 +455,7 @@ mod test {
     #[test]
     fn admin_on_join() {
         let mut ch = Channel::new("#test8", "test", "owner").unwrap();
-        ch.admins.push("test".into_string());
+        ch.admins.push("test".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test JOIN :#test8\r\n", |state| {
             state.identify("test");
@@ -462,7 +466,7 @@ mod test {
     #[test]
     fn oper_on_join() {
         let mut ch = Channel::new("#test9", "test", "owner").unwrap();
-        ch.opers.push("test".into_string());
+        ch.opers.push("test".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test JOIN :#test9\r\n", |state| {
             state.identify("test");
@@ -473,7 +477,7 @@ mod test {
     #[test]
     fn voice_on_join() {
         let mut ch = Channel::new("#test10", "test", "owner").unwrap();
-        ch.voice.push("test".into_string());
+        ch.voice.push("test".to_owned());
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test JOIN :#test10\r\n", |state| {
             state.identify("test");
@@ -518,7 +522,7 @@ mod test {
             state.identify("test");
         });
         let ch = Channel::load("#test26").unwrap();
-        assert_eq!(ch.voice, vec!["test".into_string()]);
+        assert_eq!(ch.voice, vec!["test".to_owned()]);
         assert_eq!(data[], "");
     }
     
@@ -557,7 +561,7 @@ mod test {
     #[test]
     fn devoicing_user() {
         let mut ch = Channel::new("#test28", "test", "owner").unwrap();
-        ch.voice.push("test".into_string());
+        ch.voice.push("test".to_owned());
         assert!(ch.save().is_ok());
         assert!(!ch.voice.is_empty());
         let (data, _) = test_helper(":test!test@test MODE #test28 -v test\r\n", |_| {});

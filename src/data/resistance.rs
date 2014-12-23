@@ -1,4 +1,5 @@
 #![cfg(feature = "resistance")]
+use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::io::IoResult;
 use std::num::Float;
@@ -33,10 +34,10 @@ enum Vote {
 impl<'a, T: IrcReader, U: IrcWriter> Resistance {
     pub fn new_game(user: &str, chan: &str) -> Resistance {
         Resistance {
-            chan: chan.into_string(), started: false, rng: task_rng(),
-            players: vec![user.into_string()], rebels: Vec::new(), spies: Vec::new(),
+            chan: chan.to_owned(), started: false, rng: task_rng(),
+            players: vec![user.to_owned()], rebels: Vec::new(), spies: Vec::new(),
             missions_won: 0u8, missions_run: 0u8, rejected_proposals: 0u8,
-            leader: user.into_string(), proposed_members: Vec::new(),
+            leader: user.to_owned(), proposed_members: Vec::new(),
             votes_for_mission: HashMap::new(), mission_votes: HashMap::new(),
         }
     }
@@ -77,10 +78,10 @@ impl<'a, T: IrcReader, U: IrcWriter> Resistance {
     pub fn add_player(&mut self, server: &'a Wrapper<'a, T, U>, nick: &str) -> IoResult<()> {
         if self.started {
             try!(server.send_privmsg(self.chan[], "Sorry, the game is already in progress!"));
-        } else if self.players.contains(&nick.into_string()) {
+        } else if self.players.contains(&nick.to_owned()) {
             try!(server.send_privmsg(self.chan[], "You've already joined this game!"));
         } else if self.total_players() < 10 {
-            self.players.push(nick.into_string());
+            self.players.push(nick.to_owned());
             try!(server.send_privmsg(nick, "You've joined the game. You'll get your position when \
                                             it starts."));
         } else {
@@ -105,13 +106,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Resistance {
         } else {
             self.validate_mission(server, users.len(), 2, 3, 2, 3, 3)
         });
-        if users.partitioned(|user| self.players.contains(&user.into_string())).val1().len() != 0 {
+        if users.partitioned(|&user| self.players.contains(&user.to_owned())).1.len() != 0 {
             try!(
                 server.send_privmsg(self.chan[], "Proposals must only include registered players.")
             );
         } else if valid {
             for user in users.iter() {
-                self.proposed_members.push(user.into_string());
+                self.proposed_members.push((*user).to_owned());
             }
             for user in self.rebels.iter().chain(self.spies.iter()) {
                 self.votes_for_mission.insert(user.clone(), Vote::NotYetVoted);
@@ -124,17 +125,17 @@ impl<'a, T: IrcReader, U: IrcWriter> Resistance {
 
     pub fn cast_proposal_vote(&mut self, server: &'a Wrapper<'a, T, U>, user: &str, vote: &str)
         -> IoResult<()> {
-        if !self.players.contains(&user.into_string()) {
+        if !self.players.contains(&user.to_owned()) {
             try!(server.send_privmsg(user, "You're not involved in this game."));
             return Ok(())
         } else if self.proposed_members.is_empty() {
             try!(server.send_privmsg(user, "There is no current mission proposal."));
             return Ok(())
         } else if vote.starts_with("y") || vote.starts_with("Y") {
-            self.votes_for_mission.insert(user.into_string(), Vote::Success);
+            self.votes_for_mission.insert(user.to_owned(), Vote::Success);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
         } else if vote.starts_with("n") || vote.starts_with("N") {
-            self.votes_for_mission.insert(user.into_string(), Vote::Failure);
+            self.votes_for_mission.insert(user.to_owned(), Vote::Failure);
             try!(server.send_privmsg(self.chan[], "A vote has been cast."));
         } else {
             try!(server.send_privmsg(self.chan[], "You must vote yea or nay."));
@@ -158,20 +159,20 @@ impl<'a, T: IrcReader, U: IrcWriter> Resistance {
 
     pub fn cast_mission_vote(&mut self, server: &'a Wrapper<'a, T, U>, user: &str, vote: &str)
         -> IoResult<()> {
-        if !self.players.contains(&user.into_string()) {
+        if !self.players.contains(&user.to_owned()) {
             try!(server.send_privmsg(user, "You're not involved in this game."));
             return Ok(())
         } else if self.mission_votes.is_empty() {
             try!(server.send_privmsg(user, "There is no mission in progress."));
             return Ok(());
-        } else if !self.mission_votes.contains_key(&user.into_string()) {
+        } else if !self.mission_votes.contains_key(&user.to_owned()) {
             try!(server.send_privmsg(user, "You're not involved in this mission."));
             return Ok(());
         } else if vote.starts_with("y") || vote.starts_with("Y") {
-            self.mission_votes.insert(user.into_string(), Vote::Success);
+            self.mission_votes.insert(user.to_owned(), Vote::Success);
             try!(server.send_privmsg(user, "Your vote has been cast."));
         } else if vote.starts_with("n") || vote.starts_with("N") {
-            self.mission_votes.insert(user.into_string(), Vote::Failure);
+            self.mission_votes.insert(user.to_owned(), Vote::Failure);
             try!(server.send_privmsg(user, "Your vote has been cast."));
         } else {
             try!(server.send_privmsg(user, "You must vote yea or nay."));
@@ -212,12 +213,12 @@ impl<'a, T: IrcReader, U: IrcWriter> Resistance {
     }
 
     fn add_rebel(&mut self, server: &'a Wrapper<'a, T, U>, nick: &str) -> IoResult<()> {
-        self.rebels.push(nick.into_string());
+        self.rebels.push(nick.to_owned());
         server.send_privmsg(nick, format!("You're a rebel in {}.", self.chan)[])
     }
 
     fn add_spy(&mut self, server: &'a Wrapper<'a, T, U>, nick: &str) -> IoResult<()> {
-        self.spies.push(nick.into_string());
+        self.spies.push(nick.to_owned());
         server.send_privmsg(nick, format!("You're a spy in {}.", self.chan)[])
     }
 

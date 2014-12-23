@@ -1,9 +1,10 @@
 use super::password_hash;
+use std::borrow::ToOwned;
 use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::io::fs::{PathExtensions, mkdir_recursive};
-use serialize::json::{decode, encode};
+use rustc_serialize::json::{decode, encode};
 
-#[deriving(Encodable, Decodable, Show, PartialEq)]
+#[deriving(RustcEncodable, RustcDecodable, Show, PartialEq)]
 pub struct Channel {
     pub name: String,
     pub password: String,
@@ -18,9 +19,9 @@ pub struct Channel {
 impl Channel {
     pub fn new(name: &str, password: &str, owner: &str) -> IoResult<Channel> {
         Ok(Channel {
-            name: name.into_string(),
+            name: name.to_owned(),
             password: try!(password_hash(password)),
-            owner: owner.into_string(),
+            owner: owner.to_owned(),
             admins: Vec::new(), opers: Vec::new(), voice: Vec::new(),
             topic: String::new(),
             mode: String::new(),
@@ -36,7 +37,7 @@ impl Channel {
     }
 
     pub fn load(name: &str) -> IoResult<Channel> {
-        let mut path = "data/chanserv/".into_string();
+        let mut path = "data/chanserv/".to_owned();
         path.push_str(name);
         path.push_str(".json");
         let mut file = try!(File::open(&Path::new(path[])));
@@ -49,7 +50,7 @@ impl Channel {
     }
 
     pub fn save(&self) -> IoResult<()> {
-        let mut path = "data/chanserv/".into_string();
+        let mut path = "data/chanserv/".to_owned();
         try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
         path.push_str(self.name[]);
         path.push_str(".json");
@@ -62,17 +63,18 @@ impl Channel {
 mod test {
     use super::super::password_hash;
     use super::Channel;
+    use std::borrow::ToOwned;
     use std::io::fs::unlink;
 
     #[test]
     fn new() {
         assert_eq!(Channel::new("#test", "test", "test").unwrap(), Channel {
-            name: "#test".into_string(),
+            name: "#test".to_owned(),
             password: password_hash("test").unwrap(),
-            owner: "test".into_string(),
+            owner: "test".to_owned(),
             admins: Vec::new(), opers: Vec::new(), voice: Vec::new(),
-            topic: "".into_string(),
-            mode: "".into_string(),
+            topic: "".to_owned(),
+            mode: "".to_owned(),
         });
     }
 

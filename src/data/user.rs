@@ -1,9 +1,10 @@
 use super::password_hash;
+use std::borrow::ToOwned;
 use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::io::fs::{PathExtensions, mkdir_recursive};
-use serialize::json::{decode, encode};
+use rustc_serialize::json::{decode, encode};
 
-#[deriving(Encodable, Decodable, Show, PartialEq)]
+#[deriving(RustcEncodable, RustcDecodable, Show, PartialEq)]
 pub struct User {
     pub nickname: String,
     pub password: String,
@@ -13,9 +14,9 @@ pub struct User {
 impl User {
     pub fn new(nickname: &str, password: &str, email: Option<&str>) -> IoResult<User> {
         Ok(User {
-            nickname: nickname.into_string(),
+            nickname: nickname.to_owned(),
             password: try!(password_hash(password)),
-            email: email.map(|s| s.into_string()),
+            email: email.map(|s| s.to_owned()),
         })
     }
 
@@ -33,7 +34,7 @@ impl User {
     }
 
     pub fn load(nickname: &str) -> IoResult<User> {
-        let mut path = "data/nickserv/".into_string();
+        let mut path = "data/nickserv/".to_owned();
         path.push_str(nickname);
         path.push_str(".json");
         let mut file = try!(File::open(&Path::new(path[])));
@@ -46,7 +47,7 @@ impl User {
     }
 
     pub fn save(&self) -> IoResult<()> {
-        let mut path = "data/nickserv/".into_string();
+        let mut path = "data/nickserv/".to_owned();
         try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
         path.push_str(self.nickname[]);
         path.push_str(".json");
@@ -59,19 +60,20 @@ impl User {
 mod test {
     use super::super::password_hash;
     use super::User;
+    use std::borrow::ToOwned;
     use std::io::fs::unlink;
 
     #[test]
     fn new() {
         assert_eq!(User::new("test", "test", None).unwrap(), User {
-            nickname: "test".into_string(),
+            nickname: "test".to_owned(),
             password: password_hash("test").unwrap(),
             email: None,
         });
         assert_eq!(User::new("test", "test", Some("test@test.com")).unwrap(), User {
-            nickname: "test".into_string(),
+            nickname: "test".to_owned(),
             password: password_hash("test").unwrap(),
-            email: Some("test@test.com".into_string()),
+            email: Some("test@test.com".to_owned()),
         });
     }
 

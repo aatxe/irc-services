@@ -18,3 +18,7 @@ features = ["ssl"]
 [dependencies.openssl]
 
 openssl = "*"
+
+[dependencies.rustc-serialize]
+
+rustc-serialize = "*"

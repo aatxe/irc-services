@@ -1,4 +1,5 @@
 use super::Functionality;
+use std::borrow::ToOwned;
 use std::io::IoResult;
 use data::BotResult;
 use data::state::State;
@@ -18,15 +19,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
-            return Err("Syntax: NS REGISTER password [email]".into_string())
+            return Err("Syntax: NS REGISTER password [email]".to_owned())
         }
         Ok(box Register {
             server: server,
             state: state,
-            nickname: user.into_string(),
-            password: args[2].into_string(),
+            nickname: user.to_owned(),
+            password: args[2].to_owned(),
             email: if args.len() == 4 {
-                Some(args[3].into_string())
+                Some(args[3].to_owned())
             } else {
                 None
             }
@@ -64,13 +65,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Identify<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
-            return Err("Syntax: NS IDENTIFY password".into_string())
+            return Err("Syntax: NS IDENTIFY password".to_owned())
         }
         Ok(box Identify {
             server: server,
             state: state,
-            nickname: user.into_string(),
-            password: args[2].into_string(),
+            nickname: user.to_owned(),
+            password: args[2].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -105,13 +106,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Ghost<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
-            return Err("Syntax: NS GHOST nickname password".into_string())
+            return Err("Syntax: NS GHOST nickname password".to_owned())
         }
         Ok(box Ghost {
             server: server,
-            current_nick: user.into_string(),
-            nickname: args[2].into_string(),
-            password: args[3].into_string(),
+            current_nick: user.to_owned(),
+            nickname: args[2].to_owned(),
+            password: args[3].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -148,14 +149,14 @@ impl<'a, T: IrcReader, U: IrcWriter> Reclaim<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
-            return Err("Syntax: NS RECLAIM nickname password".into_string())
+            return Err("Syntax: NS RECLAIM nickname password".to_owned())
         }
         Ok(box Reclaim {
             server: server,
             state: state,
-            current_nick: user.into_string(),
-            nickname: args[2].into_string(),
-            password: args[3].into_string(),
+            current_nick: user.to_owned(),
+            nickname: args[2].to_owned(),
+            password: args[3].to_owned(),
         } as Box<Functionality>)
     }
 }
@@ -195,13 +196,13 @@ impl<'a, T: IrcReader, U: IrcWriter> ChangePassword<'a, T, U> {
     pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
-            return Err("Syntax: NS CHPASS old_password new_password".into_string())
+            return Err("Syntax: NS CHPASS old_password new_password".to_owned())
         }
         Ok(box ChangePassword {
             server: server,
-            user: user.into_string(),
-            password: args[2].into_string(),
-            new_password: args[3].into_string(),
+            user: user.to_owned(),
+            password: args[2].to_owned(),
+            new_password: args[3].to_owned(),
         } as Box<Functionality>)
     }
 }
