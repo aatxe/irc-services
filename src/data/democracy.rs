@@ -86,7 +86,7 @@ impl Democracy {
         let mut ret = Vec::new();
         for (id, proposal)  in self.proposals.iter() {
             let (yea, nay) = self.get_vote_counts(*id).unwrap();
-            ret.push(format!("Proposal ({}) to {} (Y: {}, N {}).", id, proposal.display(), yea, 
+            ret.push(format!("Proposal ({}) to {} (Y: {}, N: {}).", id, proposal.display(), yea, 
                              nay));
         }
         ret
@@ -331,5 +331,17 @@ mod test {
         assert_eq!(dem.is_full_vote(3), false);
         assert_eq!(dem.is_full_vote(4), false);
         assert_eq!(dem.is_full_vote(5), false); // it's not a full vote if it doesn't exist.
+    }
+
+    #[test]
+    fn get_active_proposals() {
+        let mut dem = Democracy::new();
+        assert_eq!(dem.get_active_proposals(), Vec::<String>::new());
+        assert_eq!(dem.propose("chown", "test"), Some(0));
+        assert_eq!(dem.propose("oper", "test"), Some(1));    
+        assert_eq!(dem.get_active_proposals(), vec![
+            format!("Proposal (0) to change the owner to test (Y: 0, N: 0)."),
+            format!("Proposal (1) to oper test (Y: 0, N: 0).")
+        ]);
     }
 }
