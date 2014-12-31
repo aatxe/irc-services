@@ -341,7 +341,7 @@ mod test {
         assert_eq!(dem.propose("oper", "test"), Some(1));    
         let actv = dem.get_active_proposals();
         assert_eq!(actv.len(), 2);
-        assert!(actv.contains(format!("Proposal (0) to change the owner to test (Y: 0, N: 0).")));
-        assert!(actv.contains(format!("Proposal (1) to oper test (Y: 0, N: 0).")));
+        assert!(actv.contains(&format!("Proposal (0) to change the owner to test (Y: 0, N: 0).")));
+        assert!(actv.contains(&format!("Proposal (1) to oper test (Y: 0, N: 0).")));
     }
 }
