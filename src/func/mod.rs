@@ -74,9 +74,7 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
         if suffix.starts_with("***") {
             try!(server.identify());
         }
-    } else if let ("376", _) = (command, args) {
-        try!(start_up(server, state));
-    } else if let ("422", _) = (command, args) {
+    } else if let ("001", _) = (command, args) {
         try!(start_up(server, state));
     } else if let ("TOPIC", [chan, message]) = (command, args) {
         if let Ok(mut channel) = Channel::load(chan) {
