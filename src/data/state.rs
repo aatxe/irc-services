@@ -44,15 +44,15 @@ impl State {
     }
 
     pub fn identify(&self, nick: &str) {
-        self.identified.lock().push(nick.to_owned())
+        self.identified.lock().unwrap().push(nick.to_owned())
     }
 
     pub fn is_identified(&self, nick: &str) -> bool {
-        self.identified.lock().contains(&nick.to_owned())
+        self.identified.lock().unwrap().contains(&nick.to_owned())
     }
 
     pub fn remove(&self, nick: &str) {
-        let mut identified = self.identified.lock();
+        let mut identified = self.identified.lock().unwrap();
         if let Some(i) = identified.position_elem(&nick.to_owned()) {
             identified.swap_remove(i);
         }
@@ -65,18 +65,18 @@ impl State {
 
     #[cfg(feature = "resistance")]
     pub fn get_games<'a>(&'a self) -> MutexGuard<'a, HashMap<String, Resistance>> {
-        self.resistance.lock()
+        self.resistance.lock().unwrap()
     }
 
     #[cfg(feature = "democracy")]
     pub fn get_votes<'a>(&'a self) -> MutexGuard<'a, HashMap<String, Democracy>> {
-        self.democracy.lock()
+        self.democracy.lock().unwrap()
     }
 
     #[cfg(feature = "democracy")]
     pub fn get_online_voting_pop(&self, chan: &str) -> uint {
         if let Ok(mut chan) = Channel::load(chan) {
-            chan.voice.retain(|u| self.identified.lock().contains(u));
+            chan.voice.retain(|u| self.identified.lock().unwrap().contains(u));
             chan.voice.len()
         } else {
             0u
