@@ -60,7 +60,7 @@ impl State {
 
     #[cfg(test)]
     pub fn no_users_identified(&self) -> bool {
-        self.identified.lock().is_empty()
+        self.identified.lock().unwrap().is_empty()
     }
 
     #[cfg(feature = "resistance")]
