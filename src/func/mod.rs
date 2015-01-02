@@ -21,41 +21,40 @@ mod nickserv;
 
 pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, source: &str, 
                                                command: &str, args: &[&str], state: &'a State) 
-    -> IoResult<()> {
-    let user = source.find('!').map_or("", |i| source[..i]);
+    -> IoResult<()> { 
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if msg.starts_with("!") {
-            if try!(do_resistance(server, user, msg, chan, state)) {
+            if try!(do_resistance(server, source, msg, chan, state)) {
                 return Ok(());
             } else if msg.starts_with("!derp") &&
-                      try!(do_derp(server, if chan.starts_with("#") { chan } else { user }, msg)) {
+                   try!(do_derp(server, if chan.starts_with("#") { chan } else { source }, msg)) {
                 return Ok(());
             }
         }
-        if chan.starts_with("#") { return do_democracy(server, user, msg, chan, state); }
+        if chan.starts_with("#") { return do_democracy(server, source, msg, chan, state); }
         let tokens: Vec<_> = msg.split_str(" ").collect();
         let res = if tokens.len() > 1 && upper_case(tokens[0])[] == "NS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
-                "REGISTER" => nickserv::Register::new(server, user, tokens, state),
-                "IDENTIFY" => nickserv::Identify::new(server, user, tokens, state),
-                "GHOST"    => nickserv::Ghost::new(server, user,tokens),
-                "RECLAIM"  => nickserv::Reclaim::new(server, user, tokens, state),
-                "CHPASS"   => nickserv::ChangePassword::new(server, user, tokens),
+                "REGISTER" => nickserv::Register::new(server, source, tokens, state),
+                "IDENTIFY" => nickserv::Identify::new(server, source, tokens, state),
+                "GHOST"    => nickserv::Ghost::new(server, source,tokens),
+                "RECLAIM"  => nickserv::Reclaim::new(server, source, tokens, state),
+                "CHPASS"   => nickserv::ChangePassword::new(server, source, tokens),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if tokens.len() > 1 && upper_case(tokens[0])[] == "CS" {
             let cmd: String = upper_case(tokens[1]);
             match cmd[] {
-                "REGISTER" => chanserv::Register::new(server, user, tokens, state),
-                "ADMIN"    => chanserv::Admin::new(server, user, tokens, state),
-                "OPER"     => chanserv::Oper::new(server, user, tokens, state),
-                "VOICE"    => chanserv::Voice::new(server, user, tokens, state),
-                "MODE"     => chanserv::Mode::new(server, user, tokens, state),
-                "DEADMIN"  => chanserv::DeAdmin::new(server, user, tokens, state),
-                "DEOPER"   => chanserv::DeOper::new(server, user, tokens, state),
-                "DEVOICE"  => chanserv::DeVoice::new(server, user, tokens, state),
-                "CHOWN"    => chanserv::ChangeOwner::new(server, user, tokens, state),
+                "REGISTER" => chanserv::Register::new(server, source, tokens, state),
+                "ADMIN"    => chanserv::Admin::new(server, source, tokens, state),
+                "OPER"     => chanserv::Oper::new(server, source, tokens, state),
+                "VOICE"    => chanserv::Voice::new(server, source, tokens, state),
+                "MODE"     => chanserv::Mode::new(server, source, tokens, state),
+                "DEADMIN"  => chanserv::DeAdmin::new(server, source, tokens, state),
+                "DEOPER"   => chanserv::DeOper::new(server, source, tokens, state),
+                "DEVOICE"  => chanserv::DeVoice::new(server, source, tokens, state),
+                "CHOWN"    => chanserv::ChangeOwner::new(server, source, tokens, state),
                 _          => Err(format!("{} is not a valid command.", tokens[1])),
             }
         } else if tokens.len() == 1 && upper_case(tokens[0])[] == "NS" {
@@ -67,7 +66,7 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
             Err("Commands must be prefixed by CS or NS.".to_owned())
         };
         if let Err(msg) = res {
-            try!(server.send_notice(user, msg[]));
+            try!(server.send_notice(source, msg[]));
         } else {
             try!(res.unwrap().do_func())
         }
@@ -86,23 +85,23 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
         }
     } else if let ("JOIN", [chan]) = (command, args){
         if let Ok(channel) = Channel::load(chan) {
-            let mode = if channel.owner[] == user {
+            let mode = if channel.owner[] == source {
                 "+qa"
-            } else if channel.admins[].contains(&user.to_owned()) {
+            } else if channel.admins[].contains(&source.to_owned()) {
                 "+a"
-            } else if channel.opers[].contains(&user.to_owned()) {
+            } else if channel.opers[].contains(&source.to_owned()) {
                 "+o"
-            } else if channel.voice[].contains(&user.to_owned()) {
+            } else if channel.voice[].contains(&source.to_owned()) {
                 "+v"
             } else {
                 ""
             };
-            if state.is_identified(user) && mode.len() > 0 {
-                try!(server.send_samode(chan, mode[], user[]));
+            if state.is_identified(source) && mode.len() > 0 {
+                try!(server.send_samode(chan, mode[], source[]));
             }
         }
     } else if let ("QUIT", _) = (command, args) {
-        state.remove(user);
+        state.remove(source);
     } else if let ("MODE", [chan, "+v", user]) = (command, args) {
         try!(democracy_process_hook(server, "+v", user, chan, state));
     } else if let ("MODE", [chan, "-v", user]) = (command, args) {
@@ -416,9 +415,9 @@ mod test {
             if let Some(ref suffix) = message.suffix {
                 args.push(suffix[])
             }
-            let source = message.prefix.unwrap_or(String::new());
-            super::process(&Wrapper::new(&server), source[], message.command[], args[],
-                           &state).unwrap();
+            let source = message.get_source_nickname().unwrap_or("");
+            super::process(&Wrapper::new(&server), source, message.command[], args[], &state)
+                .unwrap();
         }
         (String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap(), state)
     }

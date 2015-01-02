@@ -23,7 +23,7 @@ fn main() {
         if let Some(ref suffix) = message.suffix {
             args.push(suffix[])
         }
-        let source = message.prefix.unwrap_or(String::new());
-        func::process(&Wrapper::new(&server), source[], message.command[], args[], &state).unwrap();
+        let source = message.get_source_nickname().unwrap_or("");
+        func::process(&Wrapper::new(&server), source, message.command[], args[], &state).unwrap();
     }
 }
