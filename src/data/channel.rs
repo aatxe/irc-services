@@ -4,7 +4,7 @@ use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::io::fs::{PathExtensions, mkdir_recursive};
 use rustc_serialize::json::{decode, encode};
 
-#[deriving(RustcEncodable, RustcDecodable, Show, PartialEq)]
+#[derive(RustcEncodable, RustcDecodable, Show, PartialEq)]
 pub struct Channel {
     pub name: String,
     pub password: String,

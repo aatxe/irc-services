@@ -24,7 +24,7 @@ pub struct Resistance {
     mission_votes: HashMap<String, Vote>,
 }
 
-#[deriving(Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 enum Vote {
     Success,
     Failure,

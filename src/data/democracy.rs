@@ -9,7 +9,7 @@ use irc::data::kinds::{IrcReader, IrcWriter};
 use irc::server::Server;
 use irc::server::utils::Wrapper;
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 pub struct Democracy {
     proposals: HashMap<u8, Proposal>,
     votes: HashMap<String, Vec<Vote>>,
@@ -54,9 +54,9 @@ impl Democracy {
         if vote.is_none() {
             VotingResult::InvalidVote
         } else if self.proposals.contains_key(&proposal_id) {
-            match self.votes.entry(user.to_owned()) {
+            match self.votes.entry(&user.to_owned()) {
                 Occupied(mut entry) => entry.get_mut().push(vote.unwrap()),
-                Vacant(entry) => { entry.set(vec![vote.unwrap()]); },
+                Vacant(entry) => { entry.insert(vec![vote.unwrap()]); },
             }
             VotingResult::VoteIssued
         } else {
@@ -130,14 +130,14 @@ impl Democracy {
     }
 }
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 pub enum VotingResult {
     VoteIssued,
     InvalidVote,
     NoSuchProposal,
 }
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 pub enum VoteResult {
     VotePassed(Proposal),
     VoteFailed,
@@ -145,7 +145,7 @@ pub enum VoteResult {
     NoSuchVote,
 }
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 enum Vote {
     Yea(u8),
     Nay(u8)
@@ -168,7 +168,7 @@ impl Vote {
     }
 }
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 enum Proposal {
     ChangeOwner(String),
     Oper(String),

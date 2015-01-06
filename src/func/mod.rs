@@ -386,7 +386,8 @@ mod test {
     use irc::server::{IrcServer, Server};
     use irc::server::utils::Wrapper;
 
-    pub fn test_helper(input: &str, state_hook: |&State| -> ()) -> (String, State) {
+    pub fn test_helper<F>(input: &str, state_hook: F) -> (String, State) 
+        where F: FnOnce(&State) -> () {
         let server = IrcServer::from_connection(Config {
                 owners: Some(vec!["test".to_owned()]),
                 nickname: Some("test".to_owned()),
