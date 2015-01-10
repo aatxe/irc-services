@@ -3,7 +3,6 @@ use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::IoResult;
-use std::string::ToString;
 use data::channel::Channel;
 use irc::data::kinds::{IrcReader, IrcWriter};
 use irc::server::Server;
@@ -54,7 +53,7 @@ impl Democracy {
         if vote.is_none() {
             VotingResult::InvalidVote
         } else if self.proposals.contains_key(&proposal_id) {
-            match self.votes.entry(&user.to_owned()) {
+            match self.votes.entry(user.to_owned()) {
                 Occupied(mut entry) => entry.get_mut().push(vote.unwrap()),
                 Vacant(entry) => { entry.insert(vec![vote.unwrap()]); },
             }
@@ -64,7 +63,7 @@ impl Democracy {
         }
     }
 
-    pub fn get_result_of_vote(&mut self, proposal_id: u8, voting_pop: uint) -> VoteResult {
+    pub fn get_result_of_vote(&mut self, proposal_id: u8, voting_pop: usize) -> VoteResult {
         if let Some((yea, nay)) = self.get_vote_counts(proposal_id) {
             let full = self.proposals[proposal_id].is_full_vote();
             if full && (yea * 100) / voting_pop >= 60 || !full && (yea * 100) / voting_pop >= 30 {
@@ -96,9 +95,9 @@ impl Democracy {
         self.proposals.get(&proposal_id).map(|p| p.is_full_vote()).unwrap_or(false)
     }
 
-    fn get_vote_counts(&self, proposal_id: u8) -> Option<(uint, uint)> {
+    fn get_vote_counts(&self, proposal_id: u8) -> Option<(usize, usize)> {
         if self.proposals.contains_key(&proposal_id) {
-            let mut yea: uint = 0; let mut nay: uint = 0;
+            let mut yea: usize = 0; let mut nay: usize = 0;
             for votes in self.votes.values() {
                 match self.find_vote(votes, proposal_id) {
                     Some(Vote::Yea(_)) => yea += 1,
@@ -184,12 +183,12 @@ enum Proposal {
 impl Proposal {
     fn display(&self) -> String {
         format!("{}", match self {
-            &Proposal::ChangeOwner(ref owner) => format!("change the owner to {}", owner[]),
-            &Proposal::Oper(ref user) => format!("oper {}", user[]),
-            &Proposal::Deop(ref user) => format!("deop {}", user[]),
-            &Proposal::Kick(ref user) => format!("kick {}", user[]),
-            &Proposal::Topic(ref message) => format!("change the topic to {}", message[]),
-            &Proposal::Mode(ref mode) => format!("change the channel mode to {}", mode[]),
+            &Proposal::ChangeOwner(ref owner) => format!("change the owner to {}", &owner[]),
+            &Proposal::Oper(ref user) => format!("oper {}", &user[]),
+            &Proposal::Deop(ref user) => format!("deop {}", &user[]),
+            &Proposal::Kick(ref user) => format!("kick {}", &user[]),
+            &Proposal::Topic(ref message) => format!("change the topic to {}", &message[]),
+            &Proposal::Mode(ref mode) => format!("change the channel mode to {}", &mode[]),
         })
     }
         
@@ -214,53 +213,52 @@ impl Proposal {
             _                         => false,
         }
     }
-}
-
-impl<'a, T: IrcReader, U: IrcWriter> Proposal {
-    pub fn enact(&self, server: &'a Wrapper<'a, T, U>, chan: &str) -> IoResult<()> {
+    
+    pub fn enact<'a, T, U>(&self, server: &'a Wrapper<'a, T, U>, chan: &str) -> IoResult<()>
+        where T: IrcReader, U: IrcWriter {
         if let Ok(mut channel) = Channel::load(chan) {
             match self {
                 &Proposal::ChangeOwner(ref owner) => {
                     let old = channel.owner.clone();
                     channel.owner = owner.clone();
                     try!(channel.save());
-                    try!(server.send_samode(chan, "-q", old[]));
-                    try!(server.send_samode(chan, "+q", owner[]));
+                    try!(server.send_samode(chan, "-q", &old[]));
+                    try!(server.send_samode(chan, "+q", &owner[]));
                 },
                 &Proposal::Oper(ref user) => {
-                    if user[] == server.config().nickname() {
+                    if &user[] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
                     channel.opers.push(user.clone());
                     try!(channel.save());
-                    try!(server.send_samode(chan, "+o", user[]));
+                    try!(server.send_samode(chan, "+o", &user[]));
                 },
                 &Proposal::Deop(ref user) => {
-                    if user[] == server.config().nickname() {
+                    if &user[] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
                     channel.opers.retain(|u| u[] != user[]);
                     try!(channel.save());
-                    try!(server.send_samode(chan, "-o", user[]));
+                    try!(server.send_samode(chan, "-o", &user[]));
                 },
                 &Proposal::Kick(ref user) => {
-                    if user[] == server.config().nickname() {
+                    if &user[] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
-                    try!(server.send_kick(chan, user[], "It was decided so."));
+                    try!(server.send_kick(chan, &user[], "It was decided so."));
                 },
                 &Proposal::Topic(ref topic) => {
-                    try!(server.send_topic(chan, topic[]));
+                    try!(server.send_topic(chan, &topic[]));
                 },
                 &Proposal::Mode(ref mode) => {
                     channel.mode = mode.clone();
-                    try!(server.send_samode(chan, mode[], ""));
+                    try!(server.send_samode(chan, &mode[], ""));
                 },
             }
-            server.send_privmsg(chan, format!("Enacted proposal to {}.", self.to_string())[])
+            server.send_privmsg(chan, &format!("Enacted proposal to {}.", self.display())[])
         } else {
             server.send_privmsg(chan, 
-                                format!("Failed to enact proposal to {}.", self.to_string())[])
+                                &format!("Failed to enact proposal to {}.", self.display())[])
         }
     }
 }

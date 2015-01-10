@@ -36,21 +36,21 @@ impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let chan = try!(Channel::new(self.channel[], self.password[], self.owner[]));
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if Channel::exists(self.channel[]) {
+        let chan = try!(Channel::new(&self.channel[], &self.password[], &self.owner[]));
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if Channel::exists(&self.channel[]) {
             format!("Channel {} is already registered!", chan.name)
         } else if chan.save().is_ok() {;
-            try!(self.server.send_samode(self.channel[], "+r", ""));
-            try!(self.server.send_samode(self.channel[], "+qa", self.owner[]));
-            try!(self.server.send_join(self.channel[]));
-            try!(self.server.send_samode(self.channel[], "+a", self.server.config().nickname()));
+            try!(self.server.send_samode(&self.channel[], "+r", ""));
+            try!(self.server.send_samode(&self.channel[], "+qa", &self.owner[]));
+            try!(self.server.send_join(&self.channel[]));
+            try!(self.server.send_samode(&self.channel[], "+a", self.server.config().nickname()));
             format!("Channel {} has been registered. Don't forget the password!", chan.name)
         } else {
             format!("Failed to register {} due to an I/O issue.", chan.name)
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -82,25 +82,25 @@ impl<'a, T: IrcReader, U: IrcWriter> Admin<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Admin<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.admins.push(self.target.clone());
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "+a", self.target[]));
-                format!("{} is now an admin.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "+a", &self.target[]));
+                format!("{} is now an admin.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to admin {} due to an I/O issue.", self.target[])
+            format!("Failed to admin {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -132,25 +132,25 @@ impl<'a, T: IrcReader, U: IrcWriter> Oper<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Oper<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.opers.push(self.target.clone());
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "+o", self.target[]));
-                format!("{} is now an oper.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "+o", &self.target[]));
+                format!("{} is now an oper.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to oper {} due to an I/O issue.", self.target[])
+            format!("Failed to oper {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -182,25 +182,25 @@ impl<'a, T: IrcReader, U: IrcWriter> Voice<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Voice<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.voice.push(self.target.clone());
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "+v", self.target[]));
-                format!("{} is now voiced.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "+v", &self.target[]));
+                format!("{} is now voiced.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to voice {} due to an I/O issue.", self.target[])
+            format!("Failed to voice {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -232,23 +232,23 @@ impl<'a, T: IrcReader, U: IrcWriter> Mode<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Mode<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.mode = self.mode.clone();
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], self.mode[], ""));
-                format!("Channel mode is now {}.", self.mode[])
+                try!(self.server.send_samode(&self.channel[], &self.mode[], ""));
+                format!("Channel mode is now {}.", &self.mode[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to set channel mode {} due to an I/O issue.", self.mode[])
+            format!("Failed to set channel mode {} due to an I/O issue.", &self.mode[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -280,25 +280,25 @@ impl<'a, T: IrcReader, U: IrcWriter> DeAdmin<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for DeAdmin<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.admins.retain(|u| u[] != self.target[]);
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "-a", self.target[]));
-                format!("{} is no longer an admin.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "-a", &self.target[]));
+                format!("{} is no longer an admin.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to de-admin {} due to an I/O issue.", self.target[])
+            format!("Failed to de-admin {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -330,25 +330,25 @@ impl<'a, T: IrcReader, U: IrcWriter> DeOper<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for DeOper<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.opers.retain(|u| u[] != self.target[]);
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "-o", self.target[]));
-                format!("{} is no longer an oper.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "-o", &self.target[]));
+                format!("{} is no longer an oper.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to de-oper {} due to an I/O issue.", self.target[])
+            format!("Failed to de-oper {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -380,25 +380,25 @@ impl<'a, T: IrcReader, U: IrcWriter> DeVoice<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for DeVoice<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.voice.retain(|u| u[] != self.target[]);
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "-v", self.target[]));
-                format!("{} is no longer voiced.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "-v", &self.target[]));
+                format!("{} is no longer voiced.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to de-voice {} due to an I/O issue.", self.target[])
+            format!("Failed to de-voice {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -430,25 +430,25 @@ impl<'a, T: IrcReader, U: IrcWriter> ChangeOwner<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangeOwner<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !self.state.is_identified(self.owner[]) {
-            format!("You must be identify as {} to do that.", self.owner[])
-        } else if !self.state.is_identified(self.target[]) && self.target[] != "Pidgey" {
-            format!("{} must be identified to do that.", self.target[])
-        } else if !Channel::exists(self.channel[]) {
-            format!("Channel {} is not registered!", self.channel[])
-        } else if let Ok(mut chan) = Channel::load(self.channel[]) {
-            if try!(chan.is_password(self.password[])) {
+        let msg = if !self.state.is_identified(&self.owner[]) {
+            format!("You must be identify as {} to do that.", &self.owner[])
+        } else if !self.state.is_identified(&self.target[]) && &self.target[] != "Pidgey" {
+            format!("{} must be identified to do that.", &self.target[])
+        } else if !Channel::exists(&self.channel[]) {
+            format!("Channel {} is not registered!", &self.channel[])
+        } else if let Ok(mut chan) = Channel::load(&self.channel[]) {
+            if try!(chan.is_password(&self.password[])) {
                 chan.owner = self.target.clone();
                 try!(chan.save());
-                try!(self.server.send_samode(self.channel[], "+q", self.target[]));
-                format!("{} is now the channel owner.", self.target[])
+                try!(self.server.send_samode(&self.channel[], "+q", &self.target[]));
+                format!("{} is now the channel owner.", &self.target[])
             } else {
                 format!("Password incorrect.")
             }
         } else {
-            format!("Failed to change owner to {} due to an I/O issue.", self.target[])
+            format!("Failed to change owner to {} due to an I/O issue.", &self.target[])
         };
-        self.server.send_notice(self.owner[], msg[])
+        self.server.send_notice(&self.owner[], &msg[])
     }
 }
 
@@ -472,7 +472,7 @@ mod test {
                    SAMODE #test4 +a test\r\n\
                    NOTICE test2 :Channel #test4 has been registered. \
                    Don't forget the password!\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -480,7 +480,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS REGISTER #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -491,7 +491,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS REGISTER #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :Channel #test is already registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #test is already registered!\r\n");
     }
 
     #[test]
@@ -506,7 +506,7 @@ mod test {
         assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".to_owned()));
         let exp = "SAMODE #test5 +a test2\r\n\
                    NOTICE test :test2 is now an admin.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -514,7 +514,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS ADMIN test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -523,7 +523,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS ADMIN test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -533,7 +533,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -545,7 +545,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -560,7 +560,7 @@ mod test {
         assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".to_owned()));
         let exp = "SAMODE #test6 +o test2\r\n\
                    NOTICE test :test2 is now an oper.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -568,7 +568,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS OPER test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -577,7 +577,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS OPER test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -587,7 +587,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -599,7 +599,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -614,7 +614,7 @@ mod test {
         assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".to_owned()));
         let exp = "SAMODE #test7 +v test2\r\n\
                    NOTICE test :test2 is now voiced.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -622,7 +622,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS VOICE test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -631,7 +631,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS VOICE test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -641,7 +641,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -653,7 +653,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -667,7 +667,7 @@ mod test {
         });
         let exp = "SAMODE #test15 +i\r\n\
                    NOTICE test :Channel mode is now +i.\r\n";
-        assert_eq!(data[], exp)
+        assert_eq!(&data[], exp)
     }
 
     #[test]
@@ -675,7 +675,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS MODE +i #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -683,7 +683,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #unregistered test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -694,7 +694,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS MODE +i #test16 wrong\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -710,7 +710,7 @@ mod test {
         assert!(Channel::load("#test17").unwrap().admins.is_empty());
         let exp = "SAMODE #test17 -a test2\r\n\
                    NOTICE test :test2 is no longer an admin.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -718,7 +718,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -727,7 +727,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -737,7 +737,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -750,7 +750,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n")
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n")
     }
 
     #[test]
@@ -766,7 +766,7 @@ mod test {
         assert!(Channel::load("#test19").unwrap().opers.is_empty());
         let exp = "SAMODE #test19 -o test2\r\n\
                    NOTICE test :test2 is no longer an oper.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -774,7 +774,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -783,7 +783,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -793,7 +793,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -806,7 +806,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -822,7 +822,7 @@ mod test {
         assert!(Channel::load("#test21").unwrap().voice.is_empty());
         let exp = "SAMODE #test21 -v test2\r\n\
                    NOTICE test :test2 is no longer voiced.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -830,7 +830,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -839,7 +839,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -849,7 +849,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -862,7 +862,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n")
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n")
     }
 
     #[test]
@@ -874,10 +874,10 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(Channel::load("#test24").unwrap().owner[], "test2");
+        assert_eq!(&Channel::load("#test24").unwrap().owner[], "test2");
         let exp = "SAMODE #test24 +q test2\r\n\
                    NOTICE test :test2 is now the channel owner.\r\n";
-        assert_eq!(data[], exp);
+        assert_eq!(&data[], exp);
     }
 
     #[test]
@@ -885,7 +885,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS CHOWN test2 #test test\r\n", |_| {}
         );
-        assert_eq!(data[], "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -894,7 +894,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS CHOWN test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(data[], "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -904,7 +904,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -916,6 +916,6 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
     }
 }

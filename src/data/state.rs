@@ -74,21 +74,21 @@ impl State {
     }
 
     #[cfg(feature = "democracy")]
-    pub fn get_online_voting_pop(&self, chan: &str) -> uint {
+    pub fn get_online_voting_pop(&self, chan: &str) -> usize {
         if let Ok(mut chan) = Channel::load(chan) {
             chan.voice.retain(|u| self.identified.lock().unwrap().contains(u));
             chan.voice.len()
         } else {
-            0u
+            0
         }
     }
 
     #[cfg(feature = "democracy")]
-    pub fn get_voting_pop(&self, chan: &str) -> uint {
+    pub fn get_voting_pop(&self, chan: &str) -> usize {
         if let Ok(chan) = Channel::load(chan) {
             chan.voice.len()
         } else {
-            0u
+            0
         }
     }
 

@@ -1,5 +1,6 @@
 use super::password_hash;
 use std::borrow::ToOwned;
+use std::error::Error;
 use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::io::fs::{PathExtensions, mkdir_recursive};
 use rustc_serialize::json::{decode, encode};
@@ -33,29 +34,29 @@ impl Channel {
     }
 
     pub fn exists(name: &str) -> bool {
-        Path::new(format!("data/chanserv/{}.json", name)[]).exists()
+        Path::new(&format!("data/chanserv/{}.json", name)[]).exists()
     }
 
     pub fn load(name: &str) -> IoResult<Channel> {
         let mut path = "data/chanserv/".to_owned();
         path.push_str(name);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(path[])));
+        let mut file = try!(File::open(&Path::new(&path[])));
         let data = try!(file.read_to_string());
-        decode(data[]).map_err(|e| IoError {
+        decode(&data[]).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Decoder error",
-            detail: Some(e.to_string()),
+            detail: e.detail(),
         })
     }
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "data/chanserv/".to_owned();
-        try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
-        path.push_str(self.name[]);
+        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
+        path.push_str(&self.name[]);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(path[]));
-        f.write_str(encode(self)[])
+        let mut f = File::create(&Path::new(&path[]));
+        f.write_str(&encode(self)[])
     }
 }
 

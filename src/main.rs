@@ -1,4 +1,5 @@
-#![feature(slicing_syntax)]
+#![allow(unstable)]
+#![feature(box_syntax, slicing_syntax)]
 extern crate irc;
 extern crate openssl;
 extern crate "rustc-serialize" as rustc_serialize;
@@ -18,12 +19,12 @@ fn main() {
         let message = message.unwrap();
         print!("{}", message.into_string());
         let mut args = Vec::new();
-        let msg_args: Vec<_> = message.args.iter().map(|s| s[]).collect();
-        args.push_all(msg_args[]);
+        let msg_args: Vec<_> = message.args.iter().map(|s| &s[]).collect();
+        args.push_all(&msg_args[]);
         if let Some(ref suffix) = message.suffix {
-            args.push(suffix[])
+            args.push(&suffix[])
         }
         let source = message.get_source_nickname().unwrap_or("");
-        func::process(&Wrapper::new(&server), source, message.command[], args[], &state).unwrap();
+        func::process(&Wrapper::new(&server), source, &message.command[], &args[], &state).unwrap();
     }
 }

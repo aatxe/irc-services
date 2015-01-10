@@ -1,5 +1,6 @@
 use super::password_hash;
 use std::borrow::ToOwned;
+use std::error::Error;
 use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::io::fs::{PathExtensions, mkdir_recursive};
 use rustc_serialize::json::{decode, encode};
@@ -30,29 +31,29 @@ impl User {
     }
 
     pub fn exists(nickname: &str) -> bool {
-        Path::new(format!("data/nickserv/{}.json", nickname)[]).exists()
+        Path::new(&format!("data/nickserv/{}.json", nickname)[]).exists()
     }
 
     pub fn load(nickname: &str) -> IoResult<User> {
         let mut path = "data/nickserv/".to_owned();
         path.push_str(nickname);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(path[])));
+        let mut file = try!(File::open(&Path::new(&path[])));
         let data = try!(file.read_to_string());
-        decode(data[]).map_err(|e| IoError {
+        decode(&data[]).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Decoder error",
-            detail: Some(e.to_string()),
+            detail: e.detail(),
         })
     }
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "data/nickserv/".to_owned();
-        try!(mkdir_recursive(&Path::new(path[]), FilePermission::all()));
-        path.push_str(self.nickname[]);
+        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
+        path.push_str(&self.nickname[]);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(path[]));
-        f.write_str(encode(self)[])
+        let mut f = File::create(&Path::new(&path[]));
+        f.write_str(&encode(self)[])
     }
 }
 
