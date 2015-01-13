@@ -5,8 +5,8 @@ extern crate openssl;
 extern crate "rustc-serialize" as rustc_serialize;
 
 #[cfg(not(test))] use data::state::State;
-#[cfg(not(test))] use irc::server::{IrcServer, Server};
-#[cfg(not(test))] use irc::server::utils::Wrapper;
+#[cfg(not(test))] use irc::client::server::{IrcServer, Server};
+#[cfg(not(test))] use irc::client::server::utils::Wrapper;
 
 mod data;
 mod func;

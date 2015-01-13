@@ -4,8 +4,8 @@ use std::io::IoResult;
 use data::BotResult;
 use data::state::State;
 use data::user::User;
-use irc::server::utils::Wrapper;
-use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
 
 pub struct Register<'a, T: IrcReader, U: IrcWriter> {
     server: &'a Wrapper<'a, T, U>,

@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::io::IoResult;
 use data::channel::Channel;
-use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::Server;
-use irc::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::Server;
+use irc::client::server::utils::Wrapper;
 
 #[derive(PartialEq, Show)]
 pub struct Democracy {

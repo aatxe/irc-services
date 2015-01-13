@@ -12,9 +12,9 @@ use data::channel::Channel;
 #[cfg(feature = "derp")] use data::derp::DerpCounter;
 #[cfg(feature = "resistance")] use data::resistance::Resistance;
 use data::state::State;
-use irc::server::Server;
-use irc::server::utils::Wrapper;
-use irc::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::Server;
+use irc::client::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
 
 mod chanserv;
 mod nickserv;
@@ -381,10 +381,10 @@ mod test {
     #[cfg(feature = "derp")] use std::io::fs::unlink;
     use data::channel::Channel;
     use data::state::State;
-    use irc::conn::Connection;
-    use irc::data::Config;
-    use irc::server::{IrcServer, Server};
-    use irc::server::utils::Wrapper;
+    use irc::client::conn::Connection;
+    use irc::client::data::Config;
+    use irc::client::server::{IrcServer, Server};
+    use irc::client::server::utils::Wrapper;
 
     pub fn test_helper<F>(input: &str, state_hook: F) -> (String, State) 
         where F: FnOnce(&State) -> () {

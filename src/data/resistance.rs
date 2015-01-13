@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use std::io::IoResult;
 use std::num::Float;
 use std::rand::{Rng, ThreadRng, thread_rng};
-use irc::data::kinds::{IrcReader, IrcWriter};
-use irc::server::Server;
-use irc::server::utils::Wrapper;
+use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::server::Server;
+use irc::client::server::utils::Wrapper;
 
 pub struct Resistance {
     chan: String,
