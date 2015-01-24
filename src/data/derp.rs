@@ -18,8 +18,8 @@ impl DerpCounter {
             let data = try!(file.read_to_string());
             decode(&data[]).map_err(|e| IoError {
                 kind: InvalidInput,
-                desc: "Decoder error",
-                detail: e.detail(),
+                desc: "Failed to decode derp data.",
+                detail: Some(e.description().to_owned()),
             })
         } else {
             Ok(DerpCounter { derps: 0 })
@@ -31,7 +31,11 @@ impl DerpCounter {
         try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
         path.push_str("derp.json");
         let mut f = File::create(&Path::new(&path[]));
-        f.write_str(&encode(self)[])
+        f.write_str(&try!(encode(self).map_err(|e| IoError {
+            kind: InvalidInput,
+            desc: "Failed to encode derp data.",
+            detail: Some(e.description().to_owned()),
+        }))[])
     }
 
     pub fn increment(&mut self) {
