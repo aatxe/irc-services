@@ -1,8 +1,8 @@
 #![cfg(feature = "derp")]
 use std::borrow::ToOwned;
 use std::error::Error;
-use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
-use std::io::fs::mkdir_recursive;
+use std::old_io::{File, FilePermission, InvalidInput, IoError, IoResult};
+use std::old_io::fs::mkdir_recursive;
 use rustc_serialize::json::{decode, encode};
 
 #[derive(RustcEncodable, RustcDecodable, Show, PartialEq)]

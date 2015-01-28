@@ -1,7 +1,7 @@
 #![cfg(feature = "resistance")]
 use std::borrow::ToOwned;
 use std::collections::HashMap;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use std::num::Float;
 use std::rand::{Rng, ThreadRng, thread_rng};
 use irc::client::data::kinds::{IrcReader, IrcWriter};

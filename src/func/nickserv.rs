@@ -1,6 +1,6 @@
 use super::Functionality;
 use std::borrow::ToOwned;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use data::BotResult;
 use data::state::State;
 use data::user::User;
@@ -228,7 +228,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangePassword<'a, T, U> 
 
 #[cfg(test)]
 mod test {
-    use std::io::fs::unlink;
+    use std::old_io::fs::unlink;
     use data::user::User;
     use func::test::test_helper;
 

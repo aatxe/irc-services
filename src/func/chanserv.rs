@@ -1,6 +1,6 @@
 use super::Functionality;
 use std::borrow::ToOwned;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use data::BotResult;
 use data::channel::Channel;
 use data::state::State;
@@ -455,7 +455,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangeOwner<'a, T, U> {
 #[cfg(test)]
 mod test {
     use std::borrow::ToOwned;
-    use std::io::fs::unlink;
+    use std::old_io::fs::unlink;
     use data::channel::Channel;
     use func::test::test_helper;
 

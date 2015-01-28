@@ -1,8 +1,8 @@
 use super::password_hash;
 use std::borrow::ToOwned;
 use std::error::Error;
-use std::io::{File, FilePermission, InvalidInput, IoError, IoResult};
-use std::io::fs::{PathExtensions, mkdir_recursive};
+use std::old_io::{File, FilePermission, InvalidInput, IoError, IoResult};
+use std::old_io::fs::{PathExtensions, mkdir_recursive};
 use rustc_serialize::json::{decode, encode};
 
 #[derive(RustcEncodable, RustcDecodable, Show, PartialEq)]
@@ -66,7 +66,7 @@ mod test {
     use super::super::password_hash;
     use super::User;
     use std::borrow::ToOwned;
-    use std::io::fs::unlink;
+    use std::old_io::fs::unlink;
 
     #[test]
     fn new() {

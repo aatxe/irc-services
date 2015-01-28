@@ -2,8 +2,8 @@ extern crate irc;
 
 
 use std::borrow::ToOwned;
-use std::io::IoResult;
-use std::io::fs::walk_dir;
+use std::old_io::IoResult;
+use std::old_io::fs::walk_dir;
 use data::channel::Channel;
 #[cfg(feature = "democracy")] use data::democracy::Democracy;
 #[cfg(feature = "democracy")] use data::democracy::VoteResult::{VotePassed, VoteFailed};
@@ -377,8 +377,8 @@ mod test {
     use std::borrow::ToOwned;
     use std::collections::HashMap;
     use std::default::Default;
-    use std::io::{MemReader, MemWriter};
-    #[cfg(feature = "derp")] use std::io::fs::unlink;
+    use std::old_io::{MemReader, MemWriter};
+    #[cfg(feature = "derp")] use std::old_io::fs::unlink;
     use data::channel::Channel;
     use data::state::State;
     use irc::client::conn::Connection;

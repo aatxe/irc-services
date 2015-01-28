@@ -2,7 +2,7 @@
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::io::IoResult;
+use std::old_io::IoResult;
 use data::channel::Channel;
 use irc::client::data::kinds::{IrcReader, IrcWriter};
 use irc::client::server::Server;
