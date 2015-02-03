@@ -1,5 +1,5 @@
 use std::old_io::IoResult;
-use openssl::crypto::hash::{HashType, Hasher};
+use openssl::crypto::hash::{Type, Hasher};
 use rustc_serialize::hex::ToHex;
 
 pub mod channel;
@@ -12,9 +12,9 @@ pub mod user;
 pub type BotResult<T> = Result<T, String>;
 
 pub fn password_hash(password: &str) -> IoResult<String> {
-    let mut hasher = Hasher::new(HashType::SHA512);
+    let mut hasher = Hasher::new(Type::SHA512);
     try!(hasher.write_str(password));
-    Ok(hasher.finalize().to_hex())
+    Ok(hasher.finish().to_hex())
 }
 
 #[cfg(test)]

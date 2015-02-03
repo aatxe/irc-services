@@ -8,7 +8,7 @@ use irc::client::data::kinds::{IrcReader, IrcWriter};
 use irc::client::server::Server;
 use irc::client::server::utils::Wrapper;
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 pub struct Democracy {
     proposals: HashMap<u8, Proposal>,
     votes: HashMap<String, Vec<Vote>>,
@@ -129,14 +129,14 @@ impl Democracy {
     }
 }
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 pub enum VotingResult {
     VoteIssued,
     InvalidVote,
     NoSuchProposal,
 }
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 pub enum VoteResult {
     VotePassed(Proposal),
     VoteFailed,
@@ -144,7 +144,7 @@ pub enum VoteResult {
     NoSuchVote,
 }
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 enum Vote {
     Yea(u8),
     Nay(u8)
@@ -167,7 +167,7 @@ impl Vote {
     }
 }
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 enum Proposal {
     ChangeOwner(String),
     Oper(String),

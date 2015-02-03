@@ -5,7 +5,7 @@ use std::old_io::{File, FilePermission, InvalidInput, IoError, IoResult};
 use std::old_io::fs::mkdir_recursive;
 use rustc_serialize::json::{decode, encode};
 
-#[derive(RustcEncodable, RustcDecodable, Show, PartialEq)]
+#[derive(RustcEncodable, RustcDecodable, Debug, PartialEq)]
 pub struct DerpCounter {
     derps: usize,
 }

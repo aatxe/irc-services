@@ -1,5 +1,4 @@
-#![allow(unstable)]
-#![feature(box_syntax, slicing_syntax)]
+#![feature(box_syntax, collections, core, io, path, slicing_syntax, unicode)]
 extern crate irc;
 extern crate openssl;
 extern crate "rustc-serialize" as rustc_serialize;
