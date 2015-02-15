@@ -418,7 +418,8 @@ mod test {
             super::process(&Wrapper::new(&server), source, &message.command[], &args[], &state)
                 .unwrap();
         }
-        (String::from_utf8(server.conn().writer().get_ref().to_vec()).unwrap(), state)
+        let vec = server.conn().writer().get_ref().to_vec();
+        (String::from_utf8(vec).unwrap(), state)
     }
 
     #[test]
