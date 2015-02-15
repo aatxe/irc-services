@@ -1,6 +1,7 @@
 #![feature(box_syntax, collections, core, io, path, slicing_syntax, unicode)]
 extern crate irc;
 extern crate openssl;
+#[cfg(feature = "resistance")] extern crate rand;
 extern crate "rustc-serialize" as rustc_serialize;
 
 #[cfg(not(test))] use data::state::State;

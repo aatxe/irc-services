@@ -3,15 +3,14 @@ use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::old_io::IoResult;
 use std::num::Float;
-use std::rand::{Rng, ThreadRng, thread_rng};
 use irc::client::data::kinds::{IrcReader, IrcWriter};
 use irc::client::server::Server;
 use irc::client::server::utils::Wrapper;
+use rand::{Rng, thread_rng};
 
 pub struct Resistance {
     chan: String,
     started: bool,
-    rng: ThreadRng,
     players: Vec<String>,
     rebels: Vec<String>,
     spies: Vec<String>,
@@ -34,7 +33,7 @@ enum Vote {
 impl Resistance {
     pub fn new_game(user: &str, chan: &str) -> Resistance {
         Resistance {
-            chan: chan.to_owned(), started: false, rng: thread_rng(),
+            chan: chan.to_owned(), started: false,
             players: vec![user.to_owned()], rebels: Vec::new(), spies: Vec::new(),
             missions_won: 0u8, missions_run: 0u8, rejected_proposals: 0u8,
             leader: user.to_owned(), proposed_members: Vec::new(),
@@ -57,7 +56,7 @@ impl Resistance {
             server.send_privmsg(&self.chan[], "The game has already begun!")
         } else if self.total_players() > 4 {
             self.started = true;
-            self.rng.shuffle(self.players.as_mut_slice());
+            thread_rng().shuffle(self.players.as_mut_slice());
             for user in self.players.clone().iter() {
                 if self.spies.len() < (self.total_players() as f32 * 0.4).round() as usize {
                     try!(self.add_spy(server, &user[]));
@@ -267,7 +266,7 @@ impl Resistance {
     }
 
     fn get_new_leader(&mut self) {
-        self.rng.shuffle(self.players.as_mut_slice());
+        thread_rng().shuffle(self.players.as_mut_slice());
         if self.is_leader(&self.players[0][]) {
             self.leader = self.players[1].clone();
         } else {

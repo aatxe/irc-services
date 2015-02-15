@@ -8,17 +8,19 @@ authors = ["Aaron Weiss <aaronweiss74@gmail.com>"]
 
 democracy = []
 derp = []
-resistance = []
+resistance = ["rand"]
 
 [dependencies.irc]
 
 irc = "*"
 features = ["ssl"]
 
-[dependencies.openssl]
+[dependencies.rand]
+
+rand = "*"
+optional = true
+
+[dependencies]
 
 openssl = "*"
-
-[dependencies.rustc-serialize]
-
 rustc-serialize = "*"
