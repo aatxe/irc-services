@@ -1,4 +1,4 @@
-#![feature(box_syntax, collections, core, io, path, slicing_syntax, unicode)]
+#![feature(box_syntax, collections, core, io, path, unicode)]
 extern crate irc;
 extern crate openssl;
 #[cfg(feature = "resistance")] extern crate rand;
