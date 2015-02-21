@@ -461,7 +461,7 @@ mod test {
 
     #[test]
     fn register_succeeded() {
-        let _ = unlink(&Path::new("data/chanserv/#test4.json"));
+        let _ = unlink(&Path::new("data[..]/chanserv/#test4.json"));
         let (data, _) = test_helper(
             ":test2!test@test PRIVMSG test :CS REGISTER #test4 test\r\n", |state| {
             state.identify("test2");
@@ -472,7 +472,7 @@ mod test {
                    SAMODE #test4 +a test\r\n\
                    NOTICE test2 :Channel #test4 has been registered. \
                    Don't forget the password!\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -480,7 +480,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS REGISTER #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -491,7 +491,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS REGISTER #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :Channel #test is already registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #test is already registered!\r\n");
     }
 
     #[test]
@@ -506,7 +506,7 @@ mod test {
         assert_eq!(Channel::load("#test5").unwrap().admins, vec!("test2".to_owned()));
         let exp = "SAMODE #test5 +a test2\r\n\
                    NOTICE test :test2 is now an admin.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -514,7 +514,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS ADMIN test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -523,7 +523,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS ADMIN test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -533,7 +533,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -545,7 +545,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -560,7 +560,7 @@ mod test {
         assert_eq!(Channel::load("#test6").unwrap().opers, vec!("test2".to_owned()));
         let exp = "SAMODE #test6 +o test2\r\n\
                    NOTICE test :test2 is now an oper.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -568,7 +568,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS OPER test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -577,7 +577,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS OPER test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -587,7 +587,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -599,7 +599,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -614,7 +614,7 @@ mod test {
         assert_eq!(Channel::load("#test7").unwrap().voice, vec!("test2".to_owned()));
         let exp = "SAMODE #test7 +v test2\r\n\
                    NOTICE test :test2 is now voiced.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -622,7 +622,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS VOICE test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -631,7 +631,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS VOICE test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -641,7 +641,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -653,7 +653,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -667,7 +667,7 @@ mod test {
         });
         let exp = "SAMODE #test15 +i\r\n\
                    NOTICE test :Channel mode is now +i.\r\n";
-        assert_eq!(&data, exp)
+        assert_eq!(&data[..], exp)
     }
 
     #[test]
@@ -675,7 +675,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS MODE +i #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -683,7 +683,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS MODE +i #unregistered test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -694,7 +694,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS MODE +i #test16 wrong\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -710,7 +710,7 @@ mod test {
         assert!(Channel::load("#test17").unwrap().admins.is_empty());
         let exp = "SAMODE #test17 -a test2\r\n\
                    NOTICE test :test2 is no longer an admin.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -718,7 +718,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -727,7 +727,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -737,7 +737,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -750,7 +750,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n")
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n")
     }
 
     #[test]
@@ -766,7 +766,7 @@ mod test {
         assert!(Channel::load("#test19").unwrap().opers.is_empty());
         let exp = "SAMODE #test19 -o test2\r\n\
                    NOTICE test :test2 is no longer an oper.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -774,7 +774,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -783,7 +783,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -793,7 +793,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -806,7 +806,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -822,7 +822,7 @@ mod test {
         assert!(Channel::load("#test21").unwrap().voice.is_empty());
         let exp = "SAMODE #test21 -v test2\r\n\
                    NOTICE test :test2 is no longer voiced.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -830,7 +830,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -839,7 +839,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -849,7 +849,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -862,7 +862,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n")
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n")
     }
 
     #[test]
@@ -874,10 +874,10 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&Channel::load("#test24").unwrap().owner, "test2");
+        assert_eq!(&Channel::load("#test24").unwrap().owner[..], "test2");
         let exp = "SAMODE #test24 +q test2\r\n\
                    NOTICE test :test2 is now the channel owner.\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -885,7 +885,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS CHOWN test2 #test test\r\n", |_| {}
         );
-        assert_eq!(&data, "NOTICE test :You must be identify as test to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :You must be identify as test to do that.\r\n");
     }
 
     #[test]
@@ -894,7 +894,7 @@ mod test {
             ":test!test@test PRIVMSG test :CS CHOWN test2 #test test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "NOTICE test :test2 must be identified to do that.\r\n");
+        assert_eq!(&data[..], "NOTICE test :test2 must be identified to do that.\r\n");
     }
 
     #[test]
@@ -904,7 +904,7 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Channel #unregistered is not registered!\r\n");
+        assert_eq!(&data[..], "NOTICE test :Channel #unregistered is not registered!\r\n");
     }
 
     #[test]
@@ -916,6 +916,6 @@ mod test {
             state.identify("test");
             state.identify("test2");
         });
-        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data[..], "NOTICE test :Password incorrect.\r\n");
     }
 }

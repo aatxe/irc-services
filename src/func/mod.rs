@@ -425,19 +425,19 @@ mod test {
     #[test]
     fn commands_must_be_prefxed() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :IDENTIFY\r\n", |_| {});
-        assert_eq!(&data, "NOTICE test :Commands must be prefixed by CS or NS.\r\n")
+        assert_eq!(&data[..], "NOTICE test :Commands must be prefixed by CS or NS.\r\n")
     }
 
     #[test]
     fn non_command_message_in_channel() {
         let (data, _) = test_helper(":test!test@test PRIVMSG #test :Hi there!\r\n", |_| {});
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[test]
     fn non_command_message_in_query() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS line\r\n", |_| {});
-        assert_eq!(&data, "NOTICE test :line is not a valid command.\r\n");
+        assert_eq!(&data[..], "NOTICE test :line is not a valid command.\r\n");
     }
 
     #[test]
@@ -448,7 +448,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test JOIN :#test11\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "SAMODE #test11 +qa test\r\n");
+        assert_eq!(&data[..], "SAMODE #test11 +qa test\r\n");
     }
 
     #[test]
@@ -459,7 +459,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test JOIN :#test8\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "SAMODE #test8 +a test\r\n");
+        assert_eq!(&data[..], "SAMODE #test8 +a test\r\n");
     }
 
     #[test]
@@ -470,7 +470,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test JOIN :#test9\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "SAMODE #test9 +o test\r\n");
+        assert_eq!(&data[..], "SAMODE #test9 +o test\r\n");
     }
 
     #[test]
@@ -481,7 +481,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test JOIN :#test10\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "SAMODE #test10 +v test\r\n");
+        assert_eq!(&data[..], "SAMODE #test10 +v test\r\n");
     }
 
     #[test]
@@ -490,7 +490,7 @@ mod test {
             state.identify("test");
         });
         assert!(state.no_users_identified());
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[test]
@@ -498,9 +498,9 @@ mod test {
         let ch = Channel::new("#test23", "test", "owner").unwrap();
         assert!(ch.save().is_ok());
         let (data, _) = test_helper(":test!test@test TOPIC #test23 :This is a topic.\r\n", |_| {});
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
         let ch = Channel::load("#test23").unwrap();
-        assert_eq!(&ch.topic, "This is a topic.");
+        assert_eq!(&ch.topic[..], "This is a topic.");
     }
 
     #[cfg(not(feature = "democracy"))]
@@ -509,7 +509,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test MODE #test +v test\r\n", |state| {
             state.identify("test");
         });
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
     
     #[cfg(feature = "democracy")]
@@ -522,14 +522,14 @@ mod test {
         });
         let ch = Channel::load("#test26").unwrap();
         assert_eq!(ch.voice, vec!["test".to_owned()]);
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
     
     #[cfg(not(feature = "democracy"))]
     #[test]
     fn voicing_unidentified_user() {
         let (data, _) = test_helper(":test!test@test MODE #test +v test\r\n", |_| {});
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[cfg(feature = "democracy")]
@@ -540,20 +540,20 @@ mod test {
         let (data, _) = test_helper(":test!test@test MODE #test27 +v test\r\n", |_| {});
         let ch = Channel::load("#test27").unwrap();
         assert!(ch.voice.is_empty());
-        assert_eq!(&data, "SAMODE #test27 -v test\r\n");
+        assert_eq!(&data[..], "SAMODE #test27 -v test\r\n");
     }
     
     #[test]
     fn voicing_user_on_unregistered_channel() {
         let (data, _) = test_helper(":test!test@test MODE #unregistered +v test\r\n", |_| {});
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[cfg(not(feature = "democracy"))]
     #[test]
     fn devoicing_user() {
         let (data, _) = test_helper(":test!test@test MODE #test28 -v test\r\n", |_| {});
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[cfg(feature = "democracy")]
@@ -566,25 +566,25 @@ mod test {
         let (data, _) = test_helper(":test!test@test MODE #test28 -v test\r\n", |_| {});
         let ch = Channel::load("#test28").unwrap();
         assert!(ch.voice.is_empty());
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[test]
     fn devoicing_user_on_unregistered_channel() {
         let (data, _) = test_helper(":test!test@test MODE #unregistered -v test\r\n", |_| {});
-        assert_eq!(&data, "");
+        assert_eq!(&data[..], "");
     }
 
     #[test]
     fn upper_case() {
-        assert_eq!(&super::upper_case("identify"), "IDENTIFY")
+        assert_eq!(&super::upper_case("identify")[..], "IDENTIFY")
     }
 
     #[test]
     fn send_just_ns() {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :NS\r\n", |_| {});
         let exp = "NOTICE test :Commands: REGISTER, IDENTIFY, GHOST, RECLAIM, CHPASS\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
     #[test]
@@ -592,7 +592,7 @@ mod test {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :CS\r\n", |_| {});
         let exp = "NOTICE test :Commands: REGISTER, ADMIN, OPER, VOICE, MODE, DEADMIN, DEOPER, \
                    DEVOICE, CHOWN\r\n";
-        assert_eq!(&data, exp);
+        assert_eq!(&data[..], exp);
     }
 
 
@@ -601,7 +601,7 @@ mod test {
     fn derp_test() {
         let _ = unlink(&Path::new("data/derp.json"));
         let (data, _) = test_helper(":test!test@test PRIVMSG test :!derp\r\n", |_| {});
-        assert_eq!(&data, "PRIVMSG test :There have been 0 derps.\r\n");
+        assert_eq!(&data[..], "PRIVMSG test :There have been 0 derps.\r\n");
         let (data, _) = test_helper(":test!test@test PRIVMSG #test :!derp++\r\n", |_| {});
         assert_eq!(&data, "PRIVMSG #test :There has been 1 derp.\r\n");
     }
