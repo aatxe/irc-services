@@ -34,16 +34,16 @@ impl Channel {
     }
 
     pub fn exists(name: &str) -> bool {
-        Path::new(&format!("data/chanserv/{}.json", name)[]).exists()
+        Path::new(&format!("data/chanserv/{}.json", name)).exists()
     }
 
     pub fn load(name: &str) -> IoResult<Channel> {
         let mut path = "data/chanserv/".to_owned();
         path.push_str(name);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(&path[])));
+        let mut file = try!(File::open(&Path::new(&path)));
         let data = try!(file.read_to_string());
-        decode(&data[]).map_err(|e| IoError {
+        decode(&data).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Failed to decode channel data.",
             detail: Some(e.description().to_owned()),
@@ -52,15 +52,15 @@ impl Channel {
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "data/chanserv/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
-        path.push_str(&self.name[]);
+        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
+        path.push_str(&self.name);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(&path[]));
+        let mut f = File::create(&Path::new(&path));
         f.write_str(&try!(encode(self).map_err(|e| IoError {
             kind: InvalidInput, 
             desc: "Failed to encode channel data.",
             detail: Some(e.description().to_owned()),
-        }))[])
+        }))[..])
     }
 }
 

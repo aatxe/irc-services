@@ -13,10 +13,10 @@ pub struct DerpCounter {
 impl DerpCounter {
     pub fn load() -> IoResult<DerpCounter> {
         let path = "data/derp.json".to_owned();
-        let file = File::open(&Path::new(&path[]));
+        let file = File::open(&Path::new(&path));
         if let Ok(mut file) = file {
             let data = try!(file.read_to_string());
-            decode(&data[]).map_err(|e| IoError {
+            decode(&data).map_err(|e| IoError {
                 kind: InvalidInput,
                 desc: "Failed to decode derp data.",
                 detail: Some(e.description().to_owned()),
@@ -28,14 +28,14 @@ impl DerpCounter {
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "data/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
+        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
         path.push_str("derp.json");
-        let mut f = File::create(&Path::new(&path[]));
+        let mut f = File::create(&Path::new(&path));
         f.write_str(&try!(encode(self).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Failed to encode derp data.",
             detail: Some(e.description().to_owned()),
-        }))[])
+        }))[..])
     }
 
     pub fn increment(&mut self) {

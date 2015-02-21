@@ -47,46 +47,46 @@ impl Resistance {
     }
 
     pub fn is_leader(&self, nick: &str) -> bool {
-        &self.leader[] == nick
+        &self.leader[..] == nick
     }
 
     pub fn start<'a, T: IrcReader, U: IrcWriter>(&mut self, server: &'a Wrapper<'a, T, U>) 
         -> IoResult<()> {
         if self.started {
-            server.send_privmsg(&self.chan[], "The game has already begun!")
+            server.send_privmsg(&self.chan, "The game has already begun!")
         } else if self.total_players() > 4 {
             self.started = true;
             thread_rng().shuffle(self.players.as_mut_slice());
             for user in self.players.clone().iter() {
                 if self.spies.len() < (self.total_players() as f32 * 0.4).round() as usize {
-                    try!(self.add_spy(server, &user[]));
+                    try!(self.add_spy(server, &user));
                 } else {
-                    try!(self.add_rebel(server, &user[]));
+                    try!(self.add_rebel(server, &user));
                 }
             }
             for user in self.spies.iter() {
-                try!(server.send_privmsg(&user[], &format!("Spies: {:?}", self.spies)[]));
+                try!(server.send_privmsg(&user, &format!("Spies: {:?}", self.spies)));
             }
-            try!(server.send_privmsg(&self.chan[], "The game has begun!"));
-            server.send_privmsg(&self.chan[], &format!("The first mission requires {} participants\
-                                .",self.get_number_for_next_mission())[])
+            try!(server.send_privmsg(&self.chan, "The game has begun!"));
+            server.send_privmsg(&self.chan, &format!("The first mission requires {} participants\
+                                .",self.get_number_for_next_mission()))
         } else {
-            server.send_privmsg(&self.chan[], "You need at least five players to play.")
+            server.send_privmsg(&self.chan, "You need at least five players to play.")
         }
     }
 
     pub fn add_player<'a, T: IrcReader, U: IrcWriter>(&mut self, server: &'a Wrapper<'a, T, U>, 
                                                       nick: &str) -> IoResult<()> {
         if self.started {
-            try!(server.send_privmsg(&self.chan[], "Sorry, the game is already in progress!"));
+            try!(server.send_privmsg(&self.chan, "Sorry, the game is already in progress!"));
         } else if self.players.contains(&nick.to_owned()) {
-            try!(server.send_privmsg(&self.chan[], "You've already joined this game!"));
+            try!(server.send_privmsg(&self.chan, "You've already joined this game!"));
         } else if self.total_players() < 10 {
             self.players.push(nick.to_owned());
             try!(server.send_privmsg(nick, "You've joined the game. You'll get your position when \
                                             it starts."));
         } else {
-            try!(server.send_privmsg(&self.chan[], "Sorry, the game is full!"));
+            try!(server.send_privmsg(&self.chan, "Sorry, the game is full!"));
         }
         Ok(())
     }
@@ -94,7 +94,7 @@ impl Resistance {
     pub fn propose_mission<'a, T: IrcReader, U: IrcWriter>(&mut self, server: &'a Wrapper<'a, T, U>
                                                            , user: &str, users: &str) 
         -> IoResult<()> {
-        if !self.proposed_members.is_empty() || user != &self.leader[] || !self.started {
+        if !self.proposed_members.is_empty() || user != &self.leader[..] || !self.started {
             return Ok(())
         }
         let mut users: Vec<_> = users.split_str(" ").collect();
@@ -112,7 +112,7 @@ impl Resistance {
                 self.players.contains(&user.to_owned())
             }).1.len() != 0 {
             try!(
-                server.send_privmsg(&self.chan[], "Proposals must only include registered players.")
+                server.send_privmsg(&self.chan, "Proposals must only include registered players.")
             );
         } else if valid {
             for user in users.iter() {
@@ -121,8 +121,8 @@ impl Resistance {
             for user in self.rebels.iter().chain(self.spies.iter()) {
                 self.votes_for_mission.insert(user.clone(), Vote::NotYetVoted);
             }
-            try!(server.send_privmsg(&self.chan[], &format!("Proposed mission: {:?}",
-                                     self.proposed_members)[]));
+            try!(server.send_privmsg(&self.chan, &format!("Proposed mission: {:?}",
+                                     self.proposed_members)));
         }
         Ok(())
     }
@@ -139,12 +139,12 @@ impl Resistance {
             return Ok(())
         } else if vote.starts_with("y") || vote.starts_with("Y") {
             self.votes_for_mission.insert(user.to_owned(), Vote::Success);
-            try!(server.send_privmsg(&self.chan[], "A vote has been cast."));
+            try!(server.send_privmsg(&self.chan, "A vote has been cast."));
         } else if vote.starts_with("n") || vote.starts_with("N") {
             self.votes_for_mission.insert(user.to_owned(), Vote::Failure);
-            try!(server.send_privmsg(&self.chan[], "A vote has been cast."));
+            try!(server.send_privmsg(&self.chan, "A vote has been cast."));
         } else {
-            try!(server.send_privmsg(&self.chan[], "You must vote yea or nay."));
+            try!(server.send_privmsg(&self.chan, "You must vote yea or nay."));
             return Ok(());
         }
         let result = self.get_proposal_result();
@@ -155,9 +155,9 @@ impl Resistance {
                 self.get_new_leader();
                 self.rejected_proposals += 1;
                 self.proposed_members = Vec::new();
-                try!(server.send_privmsg(&self.chan[], &format!("The proposal was rejected ({} / 5\
+                try!(server.send_privmsg(&self.chan, &format!("The proposal was rejected ({} / 5\
                     ). The new leader is {}.", self.rejected_proposals, self.leader
-                )[]));
+                )));
             }
         }
         Ok(())
@@ -192,24 +192,24 @@ impl Resistance {
             self.missions_run += 1;
             if result == Vote::Success {
                 self.missions_won += 1;
-                try!(server.send_privmsg(&self.chan[], &format!("The mission was a success (S: {} \
+                try!(server.send_privmsg(&self.chan, &format!("The mission was a success (S: {} \
                     / {}). The new leader is {}. The next mission requires {} participants.",
                     self.missions_won, self.missions_run, self.leader,
                     self.get_number_for_next_mission()
-                )[]));
+                )));
             } else {
-                try!(server.send_privmsg(&self.chan[], &format!("The mission was a failure with {\
+                try!(server.send_privmsg(&self.chan, &format!("The mission was a failure with {\
                     } saboteurs (S: {} / {}). The new leader is {}. The next mission requires {} \
                     participants.", fails, self.missions_won, self.missions_run, self.leader,
                     self.get_number_for_next_mission()
-                )[]));
+                )));
             }
             self.mission_votes = HashMap::new();
             if self.is_complete() {
                 if self.missions_won == 3 {
-                    try!(server.send_privmsg(&self.chan[], "Game over: Rebels win!"));
+                    try!(server.send_privmsg(&self.chan, "Game over: Rebels win!"));
                 } else {
-                    try!(server.send_privmsg(&self.chan[], "Game over: Spies win!"));
+                    try!(server.send_privmsg(&self.chan, "Game over: Spies win!"));
                 }
             }
         }
@@ -218,19 +218,19 @@ impl Resistance {
 
     pub fn list_players<'a, T: IrcReader, U: IrcWriter>(&self, server: &'a Wrapper<'a, T, U>) 
         -> IoResult<()> {
-        server.send_privmsg(&self.chan[], &format!("Players: {:?}", self.players)[])
+        server.send_privmsg(&self.chan, &format!("Players: {:?}", self.players))
     }
 
     fn add_rebel<'a, T: IrcReader, U: IrcWriter>(&mut self, server: &'a Wrapper<'a, T, U>, 
                                                  nick: &str) -> IoResult<()> {
         self.rebels.push(nick.to_owned());
-        server.send_privmsg(nick, &format!("You're a rebel in {}.", self.chan)[])
+        server.send_privmsg(nick, &format!("You're a rebel in {}.", self.chan))
     }
 
     fn add_spy<'a, T: IrcReader, U: IrcWriter>(&mut self, server: &'a Wrapper<'a, T, U>, 
                                                nick: &str) -> IoResult<()> {
         self.spies.push(nick.to_owned());
-        server.send_privmsg(nick, &format!("You're a spy in {}.", self.chan)[])
+        server.send_privmsg(nick, &format!("You're a spy in {}.", self.chan))
     }
 
     fn total_players(&self) -> usize {
@@ -267,7 +267,7 @@ impl Resistance {
 
     fn get_new_leader(&mut self) {
         thread_rng().shuffle(self.players.as_mut_slice());
-        if self.is_leader(&self.players[0][]) {
+        if self.is_leader(&self.players[0]) {
             self.leader = self.players[1].clone();
         } else {
             self.leader = self.players[0].clone();
@@ -280,32 +280,32 @@ impl Resistance {
     -> IoResult<bool> {
         match self.missions_run {
             0 => if len != m1 {
-                try!(server.send_privmsg(&self.chan[],
-                                         &format!("Mission 1 should have {} members.", m1)[]));
+                try!(server.send_privmsg(&self.chan,
+                                         &format!("Mission 1 should have {} members.", m1)));
                 return Ok(false)
             },
             1 => if len != m2 {
-                try!(server.send_privmsg(&self.chan[],
-                                         &format!("Mission 2 should have {} members.", m2)[]));
+                try!(server.send_privmsg(&self.chan,
+                                         &format!("Mission 2 should have {} members.", m2)));
                 return Ok(false)
             },
             2 => if len != m3 {
-                try!(server.send_privmsg(&self.chan[],
-                                         &format!("Mission 3 should have {} members.", m3)[]));
+                try!(server.send_privmsg(&self.chan,
+                                         &format!("Mission 3 should have {} members.", m3)));
                 return Ok(false)
             },
             3 => if len != m4 {
-                try!(server.send_privmsg(&self.chan[],
-                                         &format!("Mission 4 should have {} members.", m4)[]));
+                try!(server.send_privmsg(&self.chan,
+                                         &format!("Mission 4 should have {} members.", m4)));
                 return Ok(false)
             },
             4 => if len != m5 {
-                try!(server.send_privmsg(&self.chan[],
-                                         &format!("Mission 5 should have {} members.", m5)[]));
+                try!(server.send_privmsg(&self.chan,
+                                         &format!("Mission 5 should have {} members.", m5)));
                 return Ok(false)
             },
             _ => {
-                try!(server.send_privmsg(&self.chan[], "Something went wrong."));
+                try!(server.send_privmsg(&self.chan, "Something went wrong."));
                 return Ok(false)
             }
         }
@@ -343,6 +343,6 @@ impl Resistance {
         }
         self.proposed_members = Vec::new();
         self.rejected_proposals = 0;
-        server.send_privmsg(&self.chan[], "The mission is now live!")
+        server.send_privmsg(&self.chan, "The mission is now live!")
     }
 }

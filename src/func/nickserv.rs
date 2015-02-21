@@ -38,19 +38,19 @@ impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
         let user = try!(
-            User::new(&self.nickname[], &self.password[], self.email.as_ref().map(|s| &s[]))
+            User::new(&self.nickname, &self.password, self.email.as_ref().map(|s| &s[..]))
         );
-        let msg = if User::exists(&self.nickname[]) {
+        let msg = if User::exists(&self.nickname) {
             format!("Nickname {} is already registered!", user.nickname)
         } else if user.save().is_ok() {;
-            try!(self.server.send_samode(&self.nickname[], "+r", ""));
-            self.state.identify(&self.nickname[]);
+            try!(self.server.send_samode(&self.nickname, "+r", ""));
+            self.state.identify(&self.nickname);
             format!("Nickname {} has been registered. Don't forget your password!\r\n{}",
                     user.nickname, "You're now identified.")
         } else {
             format!("Failed to register {} due to an I/O issue.", user.nickname)
         };
-        self.server.send_notice(&self.nickname[], &msg[])
+        self.server.send_notice(&self.nickname, &msg)
     }
 }
 
@@ -78,12 +78,12 @@ impl<'a, T: IrcReader, U: IrcWriter> Identify<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Identify<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !User::exists(&self.nickname[]) {
+        let msg = if !User::exists(&self.nickname) {
             "Your nick isn't registered."
-        } else if let Ok(user) = User::load(&self.nickname[]) {
-            if try!(user.is_password(&self.password[])) {
-                try!(self.server.send_samode(&self.nickname[], "+r", ""));
-                self.state.identify(&self.nickname[]);
+        } else if let Ok(user) = User::load(&self.nickname) {
+            if try!(user.is_password(&self.password)) {
+                try!(self.server.send_samode(&self.nickname, "+r", ""));
+                self.state.identify(&self.nickname);
                 "Password accepted - you are now recognized."
             } else {
                 "Password incorrect."
@@ -91,7 +91,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Identify<'a, T, U> {
         } else {
             "Failed to identify due to an I/O issue."
         };
-        self.server.send_notice(&self.nickname[], msg)
+        self.server.send_notice(&self.nickname, msg)
     }
 }
 
@@ -119,13 +119,13 @@ impl<'a, T: IrcReader, U: IrcWriter> Ghost<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Ghost<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !User::exists(&self.nickname[]) {
+        let msg = if !User::exists(&self.nickname) {
             "That nick isn't registered, and therefore cannot be ghosted."
-        } else if let Ok(user) = User::load(&self.nickname[]) {
-            if try!(user.is_password(&self.password[])) {
-                try!(self.server.send_kill(&self.nickname[],
-                     &format!("Ghosted by {}", &self.current_nick[])[]));
-                try!(self.server.send_notice(&self.nickname[], "User has been ghosted."));
+        } else if let Ok(user) = User::load(&self.nickname) {
+            if try!(user.is_password(&self.password)) {
+                try!(self.server.send_kill(&self.nickname,
+                     &format!("Ghosted by {}", &self.current_nick)));
+                try!(self.server.send_notice(&self.nickname, "User has been ghosted."));
                 return Ok(());
             } else {
                 "Password incorrect."
@@ -133,7 +133,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Ghost<'a, T, U> {
         } else {
             "Failed to ghost nick due to an I/O issue."
         };
-        self.server.send_notice(&self.current_nick[], msg)
+        self.server.send_notice(&self.current_nick, msg)
     }
 }
 
@@ -163,16 +163,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Reclaim<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for Reclaim<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !User::exists(&self.nickname[]) {
+        let msg = if !User::exists(&self.nickname) {
             "That nick isn't registered, and therefore cannot be reclaimed."
-        } else if let Ok(user) = User::load(&self.nickname[]) {
-            if try!(user.is_password(&self.password[])) {
-                try!(self.server.send_kill(&self.nickname[],
-                     &format!("Reclaimed by {}", self.current_nick)[]));
-                try!(self.server.send_sanick(&self.current_nick[], &self.nickname[]));
-                try!(self.server.send_samode(&self.nickname[], "+r", ""));
-                self.state.identify(&self.nickname[]);
-                try!(self.server.send_notice(&self.nickname[],
+        } else if let Ok(user) = User::load(&self.nickname) {
+            if try!(user.is_password(&self.password)) {
+                try!(self.server.send_kill(&self.nickname,
+                     &format!("Reclaimed by {}", self.current_nick)));
+                try!(self.server.send_sanick(&self.current_nick, &self.nickname));
+                try!(self.server.send_samode(&self.nickname, "+r", ""));
+                self.state.identify(&self.nickname);
+                try!(self.server.send_notice(&self.nickname,
                                            "Password accepted - you are now recognized."));
                 return Ok(());
             } else {
@@ -181,7 +181,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Reclaim<'a, T, U> {
         } else {
             "Failed to reclaim nick due to an I/O issue."
         };
-        self.server.send_notice(&self.current_nick[], msg)
+        self.server.send_notice(&self.current_nick, msg)
     }
 }
 
@@ -209,11 +209,11 @@ impl<'a, T: IrcReader, U: IrcWriter> ChangePassword<'a, T, U> {
 
 impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangePassword<'a, T, U> {
     fn do_func(&self) -> IoResult<()> {
-        let msg = if !User::exists(&self.user[]) {
+        let msg = if !User::exists(&self.user) {
             "This nick isn't registered, and therefore doesn't have a password to change."
-        } else if let Ok(mut user) = User::load(&self.user[]) {
-            if try!(user.is_password(&self.password[])) {
-                try!(user.update_password(&self.new_password[]));
+        } else if let Ok(mut user) = User::load(&self.user) {
+            if try!(user.is_password(&self.password)) {
+                try!(user.update_password(&self.new_password));
                 try!(user.save());
                 "Your password has been changed. Don't forget it!"
             } else {
@@ -222,7 +222,7 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangePassword<'a, T, U> 
         } else {
             "Failed to change password due to an I/O issue."
         };
-        self.server.send_notice(&self.user[], msg)
+        self.server.send_notice(&self.user, msg)
     }
 }
 
@@ -243,7 +243,7 @@ mod test {
                    NOTICE test4 :Nickname test4 has been registered. \
                    Don't forget your password!\r\n\
                    NOTICE test4 :You're now identified.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -254,7 +254,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS REGISTER test\r\n", |_| {}
         );
         assert!(!state.is_identified("test"));
-        assert_eq!(&data[], "NOTICE test :Nickname test is already registered!\r\n");
+        assert_eq!(&data, "NOTICE test :Nickname test is already registered!\r\n");
     }
 
     #[test]
@@ -267,7 +267,7 @@ mod test {
         assert!(state.is_identified("test5"));
         let exp = "SAMODE test5 +r\r\n\
                    NOTICE test5 :Password accepted - you are now recognized.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -278,7 +278,7 @@ mod test {
             ":test9!test@test PRIVMSG test :NS IDENTIFY tset\r\n", |_| {}
         );
         assert!(!state.is_identified("test9"));
-        assert_eq!(&data[], "NOTICE test9 :Password incorrect.\r\n");
+        assert_eq!(&data, "NOTICE test9 :Password incorrect.\r\n");
     }
 
     #[test]
@@ -287,7 +287,7 @@ mod test {
             ":unregistered!test@test PRIVMSG test :NS IDENTIFY test\r\n", |_| {}
         );
         assert!(!state.is_identified("unregistered"));
-        assert_eq!(&data[], "NOTICE unregistered :Your nick isn't registered.\r\n");
+        assert_eq!(&data, "NOTICE unregistered :Your nick isn't registered.\r\n");
     }
 
     #[test]
@@ -298,7 +298,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS GHOST test6 test\r\n", |_| {}
         );
         let exp = "KILL test6 :Ghosted by test\r\nNOTICE test6 :User has been ghosted.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
 
@@ -309,7 +309,7 @@ mod test {
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST test8 tset\r\n", |_| {}
         );
-        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -318,7 +318,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS GHOST unregistered test\r\n", |_| {}
         );
         let exp = "NOTICE test :That nick isn't registered, and therefore cannot be ghosted.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -333,7 +333,7 @@ mod test {
                    SANICK test test11\r\n\
                    SAMODE test11 +r\r\n\
                    NOTICE test11 :Password accepted - you are now recognized.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -344,7 +344,7 @@ mod test {
             ":test!test@test PRIVMSG test :NS RECLAIM test10 tset\r\n", |_| {}
         );
         assert!(!state.is_identified("test10"));
-        assert_eq!(&data[], "NOTICE test :Password incorrect.\r\n");
+        assert_eq!(&data, "NOTICE test :Password incorrect.\r\n");
     }
 
     #[test]
@@ -354,7 +354,7 @@ mod test {
         );
         assert!(!state.is_identified("unregistered"));
         let exp = "NOTICE test :That nick isn't registered, and therefore cannot be reclaimed.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -367,7 +367,7 @@ mod test {
         let u = User::load("test13").unwrap();
         assert!(u.is_password("blahblah").unwrap());
         let exp = "NOTICE test13 :Your password has been changed. Don't forget it!\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod test {
             ":test12!test@test PRIVMSG test :NS CHPASS tset blahblah\r\n", |_| {}
         );
         let exp = "NOTICE test12 :Password incorrect.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 
     #[test]
@@ -388,6 +388,6 @@ mod test {
         );
         let exp = "NOTICE unregistered :This nick isn't registered, and therefore doesn't have a \
                    password to change.\r\n";
-        assert_eq!(&data[], exp);
+        assert_eq!(&data, exp);
     }
 }

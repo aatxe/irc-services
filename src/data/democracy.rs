@@ -183,12 +183,12 @@ enum Proposal {
 impl Proposal {
     fn display(&self) -> String {
         format!("{}", match self {
-            &Proposal::ChangeOwner(ref owner) => format!("change the owner to {}", &owner[]),
-            &Proposal::Oper(ref user) => format!("oper {}", &user[]),
-            &Proposal::Deop(ref user) => format!("deop {}", &user[]),
-            &Proposal::Kick(ref user) => format!("kick {}", &user[]),
-            &Proposal::Topic(ref message) => format!("change the topic to {}", &message[]),
-            &Proposal::Mode(ref mode) => format!("change the channel mode to {}", &mode[]),
+            &Proposal::ChangeOwner(ref owner) => format!("change the owner to {}", &owner),
+            &Proposal::Oper(ref user) => format!("oper {}", &user),
+            &Proposal::Deop(ref user) => format!("deop {}", &user),
+            &Proposal::Kick(ref user) => format!("kick {}", &user),
+            &Proposal::Topic(ref message) => format!("change the topic to {}", &message),
+            &Proposal::Mode(ref mode) => format!("change the channel mode to {}", &mode),
         })
     }
         
@@ -222,43 +222,43 @@ impl Proposal {
                     let old = channel.owner.clone();
                     channel.owner = owner.clone();
                     try!(channel.save());
-                    try!(server.send_samode(chan, "-q", &old[]));
-                    try!(server.send_samode(chan, "+q", &owner[]));
+                    try!(server.send_samode(chan, "-q", &old));
+                    try!(server.send_samode(chan, "+q", &owner));
                 },
                 &Proposal::Oper(ref user) => {
-                    if &user[] == server.config().nickname() {
+                    if &user[..] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
                     channel.opers.push(user.clone());
                     try!(channel.save());
-                    try!(server.send_samode(chan, "+o", &user[]));
+                    try!(server.send_samode(chan, "+o", &user));
                 },
                 &Proposal::Deop(ref user) => {
-                    if &user[] == server.config().nickname() {
+                    if &user[..] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
-                    channel.opers.retain(|u| u[] != user[]);
+                    channel.opers.retain(|u| u != user);
                     try!(channel.save());
-                    try!(server.send_samode(chan, "-o", &user[]));
+                    try!(server.send_samode(chan, "-o", &user));
                 },
                 &Proposal::Kick(ref user) => {
-                    if &user[] == server.config().nickname() {
+                    if &user[..] == server.config().nickname() {
                         return server.send_privmsg(chan, "Votes about me cannot be enacted.");
                     }
-                    try!(server.send_kick(chan, &user[], "It was decided so."));
+                    try!(server.send_kick(chan, &user, "It was decided so."));
                 },
                 &Proposal::Topic(ref topic) => {
-                    try!(server.send_topic(chan, &topic[]));
+                    try!(server.send_topic(chan, &topic));
                 },
                 &Proposal::Mode(ref mode) => {
                     channel.mode = mode.clone();
-                    try!(server.send_samode(chan, &mode[], ""));
+                    try!(server.send_samode(chan, &mode, ""));
                 },
             }
-            server.send_privmsg(chan, &format!("Enacted proposal to {}.", self.display())[])
+            server.send_privmsg(chan, &format!("Enacted proposal to {}.", self.display()))
         } else {
             server.send_privmsg(chan, 
-                                &format!("Failed to enact proposal to {}.", self.display())[])
+                                &format!("Failed to enact proposal to {}.", self.display()))
         }
     }
 }

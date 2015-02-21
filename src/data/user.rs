@@ -31,16 +31,16 @@ impl User {
     }
 
     pub fn exists(nickname: &str) -> bool {
-        Path::new(&format!("data/nickserv/{}.json", nickname)[]).exists()
+        Path::new(&format!("data/nickserv/{}.json", nickname)).exists()
     }
 
     pub fn load(nickname: &str) -> IoResult<User> {
         let mut path = "data/nickserv/".to_owned();
         path.push_str(nickname);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(&path[])));
+        let mut file = try!(File::open(&Path::new(&path)));
         let data = try!(file.read_to_string());
-        decode(&data[]).map_err(|e| IoError {
+        decode(&data).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Failed to decode user data.",
             detail: Some(e.description().to_owned()),
@@ -49,15 +49,15 @@ impl User {
 
     pub fn save(&self) -> IoResult<()> {
         let mut path = "data/nickserv/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path[]), FilePermission::all()));
-        path.push_str(&self.nickname[]);
+        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
+        path.push_str(&self.nickname);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(&path[]));
+        let mut f = File::create(&Path::new(&path));
         f.write_str(&try!(encode(self).map_err(|e| IoError {
             kind: InvalidInput,
             desc: "Failed to encode user data.",
             detail: Some(e.description().to_owned()),
-        }))[])
+        }))[..])
     }
 }
 
