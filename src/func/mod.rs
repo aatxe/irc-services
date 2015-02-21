@@ -603,6 +603,6 @@ mod test {
         let (data, _) = test_helper(":test!test@test PRIVMSG test :!derp\r\n", |_| {});
         assert_eq!(&data[..], "PRIVMSG test :There have been 0 derps.\r\n");
         let (data, _) = test_helper(":test!test@test PRIVMSG #test :!derp++\r\n", |_| {});
-        assert_eq!(&data, "PRIVMSG #test :There has been 1 derp.\r\n");
+        assert_eq!(&data[..], "PRIVMSG #test :There has been 1 derp.\r\n");
     }
 }
