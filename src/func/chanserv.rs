@@ -461,7 +461,7 @@ mod test {
 
     #[test]
     fn register_succeeded() {
-        let _ = unlink(&Path::new("data[..]/chanserv/#test4.json"));
+        let _ = unlink(&Path::new("data/chanserv/#test4.json"));
         let (data, _) = test_helper(
             ":test2!test@test PRIVMSG test :CS REGISTER #test4 test\r\n", |state| {
             state.identify("test2");
