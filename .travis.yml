@@ -4,7 +4,6 @@ script:
   - cargo build --verbose --features "resistance derp democracy"
   - cargo test --verbose
   - cargo test --verbose --features "resistance derp democracy"
-  - cargo doc --verbose
 notifications:
   irc:
     channels:
