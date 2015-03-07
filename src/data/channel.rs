@@ -1,8 +1,10 @@
 use super::password_hash;
 use std::borrow::ToOwned;
-use std::error::Error;
-use std::old_io::{File, FilePermission, InvalidInput, IoError, IoResult};
-use std::old_io::fs::{PathExtensions, mkdir_recursive};
+use std::error::Error as StdError;
+use std::fs::{File, create_dir_all};
+use std::io::{Error, ErrorKind, Result};
+use std::io::prelude::*;
+use std::path::Path;
 use rustc_serialize::json::{decode, encode};
 
 #[derive(RustcEncodable, RustcDecodable, Debug, PartialEq)]
@@ -18,7 +20,7 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub fn new(name: &str, password: &str, owner: &str) -> IoResult<Channel> {
+    pub fn new(name: &str, password: &str, owner: &str) -> Result<Channel> {
         Ok(Channel {
             name: name.to_owned(),
             password: try!(password_hash(password)),
@@ -29,7 +31,7 @@ impl Channel {
         })
     }
 
-    pub fn is_password(&self, password: &str) -> IoResult<bool> {
+    pub fn is_password(&self, password: &str) -> Result<bool> {
         Ok(self.password == try!(password_hash(password)))
     }
 
@@ -37,30 +39,30 @@ impl Channel {
         Path::new(&format!("data/chanserv/{}.json", name)).exists()
     }
 
-    pub fn load(name: &str) -> IoResult<Channel> {
+    pub fn load(name: &str) -> Result<Channel> {
         let mut path = "data/chanserv/".to_owned();
         path.push_str(name);
         path.push_str(".json");
-        let mut file = try!(File::open(&Path::new(&path)));
-        let data = try!(file.read_to_string());
-        decode(&data).map_err(|e| IoError {
-            kind: InvalidInput,
-            desc: "Failed to decode channel data.",
-            detail: Some(e.description().to_owned()),
-        })
+        let mut file = try!(File::open(Path::new(&path)));
+        let mut data = String::new();
+        try!(file.read_to_string(&mut data));
+        decode(&data).map_err(|e|
+            Error::new(ErrorKind::InvalidInput, "Failed to decode channel data.",
+                       Some(e.description().to_owned()))
+        )
     }
 
-    pub fn save(&self) -> IoResult<()> {
+    pub fn save(&self) -> Result<()> {
         let mut path = "data/chanserv/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
+        try!(create_dir_all(&Path::new(&path)));
         path.push_str(&self.name);
         path.push_str(".json");
-        let mut f = File::create(&Path::new(&path));
-        f.write_str(&try!(encode(self).map_err(|e| IoError {
-            kind: InvalidInput, 
-            desc: "Failed to encode channel data.",
-            detail: Some(e.description().to_owned()),
-        }))[..])
+        let mut f = try!(File::create(Path::new(&path)));
+        try!(f.write_all(try!(encode(self).map_err(|e| 
+            Error::new(ErrorKind::InvalidInput, "Failed to decode channel data.",
+            Some(e.description().to_owned()))
+        )).as_bytes()));
+        f.flush()
     }
 }
 
@@ -69,7 +71,8 @@ mod test {
     use super::super::password_hash;
     use super::Channel;
     use std::borrow::ToOwned;
-    use std::old_io::fs::unlink;
+    use std::fs::remove_file;
+    use std::path::Path;
 
     #[test]
     fn new() {
@@ -86,7 +89,7 @@ mod test {
     #[test]
     fn exists() {
         let ch = Channel::new("#test2", "test", "test").unwrap();
-        let _ = unlink(&Path::new("data/chanserv/#test2.json"));
+        let _ = remove_file(Path::new("data/chanserv/#test2.json"));
         assert!(!Channel::exists("#test2"));
         assert!(ch.save().is_ok());
         assert!(Channel::exists("#test2"));

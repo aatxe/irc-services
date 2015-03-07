@@ -2,11 +2,9 @@
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use std::old_io::IoResult;
+use std::io::Result;
 use data::channel::Channel;
-use irc::client::data::kinds::{IrcReader, IrcWriter};
-use irc::client::server::Server;
-use irc::client::server::utils::Wrapper;
+use irc::client::prelude::*;
 
 #[derive(PartialEq, Debug)]
 pub struct Democracy {
@@ -214,8 +212,8 @@ impl Proposal {
         }
     }
     
-    pub fn enact<'a, T, U>(&self, server: &'a Wrapper<'a, T, U>, chan: &str) -> IoResult<()>
-        where T: IrcReader, U: IrcWriter {
+    pub fn enact<'a, T, U>(&self, server: &'a ServerExt<'a, T, U>, chan: &str) -> Result<()>
+        where T: IrcRead, U: IrcWrite {
         if let Ok(mut channel) = Channel::load(chan) {
             match self {
                 &Proposal::ChangeOwner(ref owner) => {

@@ -2,8 +2,9 @@ extern crate irc;
 
 
 use std::borrow::ToOwned;
-use std::old_io::IoResult;
-use std::old_io::fs::walk_dir;
+use std::io::Result;
+use std::fs::walk_dir;
+use std::path::Path;
 use data::channel::Channel;
 #[cfg(feature = "democracy")] use data::democracy::Democracy;
 #[cfg(feature = "democracy")] use data::democracy::VoteResult::{VotePassed, VoteFailed};
@@ -12,16 +13,14 @@ use data::channel::Channel;
 #[cfg(feature = "derp")] use data::derp::DerpCounter;
 #[cfg(feature = "resistance")] use data::resistance::Resistance;
 use data::state::State;
-use irc::client::server::Server;
-use irc::client::server::utils::Wrapper;
-use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::prelude::*;
 
 mod chanserv;
 mod nickserv;
 
-pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, source: &str, 
+pub fn process<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, source: &str, 
                                                command: &str, args: &[&str], state: &'a State) 
-    -> IoResult<()> { 
+    -> Result<()> { 
     if let ("PRIVMSG", [chan, msg]) = (command, args) {
         if msg.starts_with("!") {
             if try!(do_resistance(server, source, msg, chan, state)) {
@@ -32,7 +31,7 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
             }
         }
         if chan.starts_with("#") { return do_democracy(server, source, msg, chan, state); }
-        let tokens: Vec<_> = msg.split_str(" ").collect();
+        let tokens: Vec<_> = msg.split(" ").collect();
         let res = if tokens.len() > 1 && &upper_case(tokens[0])[..] == "NS" {
             let cmd: String = upper_case(tokens[1]);
             match &cmd[..] {
@@ -109,14 +108,14 @@ pub fn process<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, so
 }
 
 pub trait Functionality {
-    fn do_func(&self) -> IoResult<()>;
+    fn do_func(&self) -> Result<()>;
 }
 
-fn start_up<T: IrcReader, U: IrcWriter>(server: &Wrapper<T, U>, state: &State) -> IoResult<()> {
+fn start_up<T: IrcRead, U: IrcWrite>(server: &ServerExt<T, U>, state: &State) -> Result<()> {
     try!(server.send_oper(server.config().nickname(), server.config().get_option("oper-pass")));
     let mut chans: Vec<String> = Vec::new();
-    for path in try!(walk_dir(&Path::new("data/chanserv/"))) {
-        let path_str = path.as_str().unwrap();
+    for path in try!(walk_dir(Path::new("data/chanserv/"))) {
+        let path_str = path.unwrap().path().into_os_string().into_string().unwrap();
         let chan = path_str.find('.').map_or(String::new(), |i| path_str[14..i].to_owned());
         if &chan[..] != "" {
             chans.push(chan);
@@ -150,9 +149,9 @@ fn start_up<T: IrcReader, U: IrcWriter>(server: &Wrapper<T, U>, state: &State) -
 }
 
 #[cfg(feature = "resistance")]
-pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, user: &str, 
+pub fn do_resistance<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, user: &str, 
                                                      message: &str, chan: &str, state: &State) 
-    -> IoResult<bool> {
+    -> Result<bool> {
     let mut games = state.get_games();
     let mut remove_game = false;
     if let Some(game) = games.get_mut(&chan.to_owned()) {
@@ -194,7 +193,7 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
         try!(server.send_privmsg(chan, "There's no Resistance game on this channel."));
         return Ok(true)
     } else if !chan.starts_with("#") && message.starts_with("!vote ") {
-        let tokens: Vec<_> = message[6..].split_str(" ").collect();
+        let tokens: Vec<_> = message[6..].split(" ").collect();
         if tokens.len() != 2 {
             try!(server.send_privmsg(user, "You must vote like so: `!vote #chan <yea/nay>`."));
             return Ok(true)
@@ -215,14 +214,14 @@ pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, 
 }
 
 #[cfg(not(feature = "resistance"))]
-pub fn do_resistance<'a, T: IrcReader, U: IrcWriter>(_: &Wrapper<'a, T, U>, _: &str, _: &str, 
-                                                     _: &str, _: &State) -> IoResult<bool> {
+pub fn do_resistance<'a, T: IrcRead, U: IrcWrite>(_: &ServerExt<'a, T, U>, _: &str, _: &str, 
+                                                     _: &str, _: &State) -> Result<bool> {
     Ok(false)
 }
 
 #[cfg(feature = "derp")]
-pub fn do_derp<'a, T: IrcReader, U: IrcWriter>(server: &Wrapper<'a, T, U>, resp: &str, msg: &str) 
-    -> IoResult<bool> {
+pub fn do_derp<'a, T: IrcRead, U: IrcWrite>(server: &ServerExt<'a, T, U>, resp: &str, msg: &str) 
+    -> Result<bool> {
     let dc = DerpCounter::load();
     if let Ok(mut counter) = dc {
         if msg.starts_with("!derp++") { counter.increment(); }
@@ -239,8 +238,8 @@ pub fn do_derp<'a, T: IrcReader, U: IrcWriter>(server: &Wrapper<'a, T, U>, resp:
 }
 
 #[cfg(not(feature = "derp"))]
-pub fn do_derp<'a, T: IrcReader, U: IrcWriter>(_: &Wrapper<'a, T, U>, _: &str, _: &str) 
-    -> IoResult<bool> {
+pub fn do_derp<'a, T: IrcRead, U: IrcWrite>(_: &ServerExt<'a, T, U>, _: &str, _: &str) 
+    -> Result<bool> {
     Ok(false)
 }
 
@@ -253,9 +252,9 @@ pub fn new_voting_booth(chan: &str, state: &State) {
 pub fn new_voting_booth(_: &str, _: &State) {}
 
 #[cfg(feature = "democracy")]
-pub fn democracy_process_hook<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, 
+pub fn democracy_process_hook<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, 
                                                               msg: &str, user: &str, chan: &str, 
-                                                              state: &State) -> IoResult<()> {
+                                                              state: &State) -> Result<()> {
     if Channel::exists(chan) {
         if msg == "+v" && state.is_identified(user) {
             if let Ok(mut channel) = Channel::load(chan) {
@@ -277,16 +276,16 @@ pub fn democracy_process_hook<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrappe
 }
 
 #[cfg(not(feature = "democracy"))]
-pub fn democracy_process_hook<'a, T: IrcReader, U: IrcWriter>(_: &'a Wrapper<'a, T, U>, _: &str, 
+pub fn democracy_process_hook<'a, T: IrcRead, U: IrcWrite>(_: &'a ServerExt<'a, T, U>, _: &str, 
                                                               _: &str, _: &str, _: &State) 
-    -> IoResult<()> {
+    -> Result<()> {
     Ok(())
 }
 
 #[cfg(feature = "democracy")]
-pub fn do_democracy<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U>, user: &str, 
+pub fn do_democracy<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, user: &str, 
                                                     message: &str, chan: &str, state: &State) 
-    -> IoResult<()> {
+    -> Result<()> {
     if message.starts_with(".propose") || message.starts_with(".vote") {
         if !state.is_identified(user) {
             return server.send_privmsg(chan, "You must be identified to do that.");
@@ -304,7 +303,7 @@ pub fn do_democracy<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U
             return Ok(())
         }
         let tokens = {
-            let mut tmp: Vec<&str> = message.split_str(" ").collect();
+            let mut tmp: Vec<&str> = message.split(" ").collect();
             tmp.retain(|t| t.len() != 0);
             tmp
         };
@@ -363,8 +362,8 @@ pub fn do_democracy<'a, T: IrcReader, U: IrcWriter>(server: &'a Wrapper<'a, T, U
 }
 
 #[cfg(not(feature = "democracy"))]
-pub fn do_democracy<'a, T: IrcReader, U: IrcWriter>(_: &'a Wrapper<'a, T, U>, _: &str, _: &str, 
-                                                    _: &str, _: &State) -> IoResult<()> {
+pub fn do_democracy<'a, T: IrcRead, U: IrcWrite>(_: &'a ServerExt<'a, T, U>, _: &str, _: &str, 
+                                                 _: &str, _: &State) -> Result<()> {
     Ok(())
 }
 
@@ -377,15 +376,14 @@ mod test {
     use std::borrow::ToOwned;
     use std::collections::HashMap;
     use std::default::Default;
-    use std::old_io::{MemReader, MemWriter};
-    #[cfg(feature = "derp")] use std::old_io::fs::unlink;
+    #[cfg(feature = "derp")] use std::fs::remove_file;
+    use std::io::Cursor;
+    #[cfg(feature = "derp")] use std::path::Path;
     use data::channel::Channel;
     use data::state::State;
     use irc::client::conn::Connection;
-    use irc::client::data::Config;
-    use irc::client::server::{IrcServer, Server};
-    use irc::client::server::utils::Wrapper;
-
+    use irc::client::prelude::*;
+    
     pub fn test_helper<F>(input: &str, state_hook: F) -> (String, State) 
         where F: FnOnce(&State) -> () {
         let server = IrcServer::from_connection(Config {
@@ -400,7 +398,7 @@ mod test {
                 .. Default::default()
             },
             Connection::new(
-                MemReader::new(input.as_bytes().to_vec()), MemWriter::new()
+                Cursor::new(input.as_bytes().to_vec()), Vec::new()
             )
         );
         let state = State::new();
@@ -415,10 +413,9 @@ mod test {
                 args.push(&suffix)
             }
             let source = message.get_source_nickname().unwrap_or("");
-            super::process(&Wrapper::new(&server), source, &message.command, &args, &state)
-                .unwrap();
+            super::process(&server, source, &message.command, &args, &state).unwrap();
         }
-        let vec = server.conn().writer().get_ref().to_vec();
+        let vec = server.conn().writer().clone();
         (String::from_utf8(vec).unwrap(), state)
     }
 
@@ -599,7 +596,7 @@ mod test {
     #[cfg(feature = "derp")]
     #[test]
     fn derp_test() {
-        let _ = unlink(&Path::new("data/derp.json"));
+        let _ = remove_file(Path::new("data/derp.json"));
         let (data, _) = test_helper(":test!test@test PRIVMSG test :!derp\r\n", |_| {});
         assert_eq!(&data[..], "PRIVMSG test :There have been 0 derps.\r\n");
         let (data, _) = test_helper(":test!test@test PRIVMSG #test :!derp++\r\n", |_| {});

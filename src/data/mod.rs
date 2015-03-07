@@ -1,4 +1,5 @@
-use std::old_io::IoResult;
+use std::io::Result as IoResult;
+use std::io::Write;
 use openssl::crypto::hash::{Type, Hasher};
 use rustc_serialize::hex::ToHex;
 
@@ -13,7 +14,7 @@ pub type BotResult<T> = Result<T, String>;
 
 pub fn password_hash(password: &str) -> IoResult<String> {
     let mut hasher = Hasher::new(Type::SHA512);
-    try!(hasher.write_str(password));
+    try!(hasher.write_all(password.as_bytes()));
     Ok(hasher.finish().to_hex())
 }
 

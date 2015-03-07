@@ -1,22 +1,21 @@
 use super::Functionality;
 use std::borrow::ToOwned;
-use std::old_io::IoResult;
+use std::io::Result;
 use data::BotResult;
 use data::state::State;
 use data::user::User;
-use irc::client::server::utils::Wrapper;
-use irc::client::data::kinds::{IrcReader, IrcWriter};
+use irc::client::prelude::*;
 
-pub struct Register<'a, T: IrcReader, U: IrcWriter> {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Register<'a, T: IrcRead, U: IrcWrite> {
+    server: &'a ServerExt<'a, T, U>,
     state: &'a State,
     nickname: String,
     password: String,
     email: Option<String>,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
+impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
+    pub fn new(server: &'a ServerExt<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 && args.len() != 4 {
             return Err("Syntax: NS REGISTER password [email]".to_owned())
@@ -35,8 +34,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Register<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
-    fn do_func(&self) -> IoResult<()> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Register<'a, T, U> {
+    fn do_func(&self) -> Result<()> {
         let user = try!(
             User::new(&self.nickname, &self.password, self.email.as_ref().map(|s| &s[..]))
         );
@@ -54,15 +53,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Register<'a, T, U> {
     }
 }
 
-pub struct Identify<'a, T: IrcReader, U: IrcWriter> {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Identify<'a, T: IrcRead, U: IrcWrite> {
+    server: &'a ServerExt<'a, T, U>,
     state: &'a State,
     nickname: String,
     password: String,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Identify<'a, T, U> {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
+impl<'a, T: IrcRead, U: IrcWrite> Identify<'a, T, U> {
+    pub fn new(server: &'a ServerExt<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 3 {
             return Err("Syntax: NS IDENTIFY password".to_owned())
@@ -76,8 +75,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Identify<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Identify<'a, T, U> {
-    fn do_func(&self) -> IoResult<()> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Identify<'a, T, U> {
+    fn do_func(&self) -> Result<()> {
         let msg = if !User::exists(&self.nickname) {
             "Your nick isn't registered."
         } else if let Ok(user) = User::load(&self.nickname) {
@@ -95,15 +94,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Identify<'a, T, U> {
     }
 }
 
-pub struct Ghost<'a, T: IrcReader, U: IrcWriter> {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Ghost<'a, T: IrcRead, U: IrcWrite> {
+    server: &'a ServerExt<'a, T, U>,
     current_nick: String,
     nickname: String,
     password: String,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Ghost<'a, T, U> {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>)
+impl<'a, T: IrcRead, U: IrcWrite> Ghost<'a, T, U> {
+    pub fn new(server: &'a ServerExt<'a, T, U>, user: &str, args: Vec<&str>)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS GHOST nickname password".to_owned())
@@ -117,8 +116,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Ghost<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Ghost<'a, T, U> {
-    fn do_func(&self) -> IoResult<()> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Ghost<'a, T, U> {
+    fn do_func(&self) -> Result<()> {
         let msg = if !User::exists(&self.nickname) {
             "That nick isn't registered, and therefore cannot be ghosted."
         } else if let Ok(user) = User::load(&self.nickname) {
@@ -137,16 +136,16 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Ghost<'a, T, U> {
     }
 }
 
-pub struct Reclaim<'a, T: IrcReader, U: IrcWriter> {
-    server: &'a Wrapper<'a, T, U>,
+pub struct Reclaim<'a, T: IrcRead, U: IrcWrite> {
+    server: &'a ServerExt<'a, T, U>,
     state: &'a State,
     current_nick: String,
     nickname: String,
     password: String,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Reclaim<'a, T, U> {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
+impl<'a, T: IrcRead, U: IrcWrite> Reclaim<'a, T, U> {
+    pub fn new(server: &'a ServerExt<'a, T, U>, user: &str, args: Vec<&str>, state: &'a State)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS RECLAIM nickname password".to_owned())
@@ -161,8 +160,8 @@ impl<'a, T: IrcReader, U: IrcWriter> Reclaim<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for Reclaim<'a, T, U> {
-    fn do_func(&self) -> IoResult<()> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for Reclaim<'a, T, U> {
+    fn do_func(&self) -> Result<()> {
         let msg = if !User::exists(&self.nickname) {
             "That nick isn't registered, and therefore cannot be reclaimed."
         } else if let Ok(user) = User::load(&self.nickname) {
@@ -185,15 +184,15 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for Reclaim<'a, T, U> {
     }
 }
 
-pub struct ChangePassword<'a, T: IrcReader, U: IrcWriter> {
-    server: &'a Wrapper<'a, T, U>,
+pub struct ChangePassword<'a, T: IrcRead, U: IrcWrite> {
+    server: &'a ServerExt<'a, T, U>,
     user: String,
     password: String,
     new_password: String,
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> ChangePassword<'a, T, U> {
-    pub fn new(server: &'a Wrapper<'a, T, U>, user: &str, args: Vec<&str>)
+impl<'a, T: IrcRead, U: IrcWrite> ChangePassword<'a, T, U> {
+    pub fn new(server: &'a ServerExt<'a, T, U>, user: &str, args: Vec<&str>)
         -> BotResult<Box<Functionality + 'a>> {
         if args.len() != 4 {
             return Err("Syntax: NS CHPASS old_password new_password".to_owned())
@@ -207,8 +206,8 @@ impl<'a, T: IrcReader, U: IrcWriter> ChangePassword<'a, T, U> {
     }
 }
 
-impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangePassword<'a, T, U> {
-    fn do_func(&self) -> IoResult<()> {
+impl<'a, T: IrcRead, U: IrcWrite> Functionality for ChangePassword<'a, T, U> {
+    fn do_func(&self) -> Result<()> {
         let msg = if !User::exists(&self.user) {
             "This nick isn't registered, and therefore doesn't have a password to change."
         } else if let Ok(mut user) = User::load(&self.user) {
@@ -228,13 +227,14 @@ impl<'a, T: IrcReader, U: IrcWriter> Functionality for ChangePassword<'a, T, U> 
 
 #[cfg(test)]
 mod test {
-    use std::old_io::fs::unlink;
+    use std::fs::remove_file;
+    use std::path::Path;
     use data::user::User;
     use func::test::test_helper;
 
     #[test]
     fn register_succeeded() {
-        let _ = unlink(&Path::new("data/nickserv/test4.json"));
+        let _ = remove_file(Path::new("data/nickserv/test4.json"));
         let (data, state) = test_helper(
             ":test4!test@test PRIVMSG test :NS REGISTER test\r\n", |_| {}
         );

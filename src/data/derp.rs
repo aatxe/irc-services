@@ -1,8 +1,10 @@
 #![cfg(feature = "derp")]
 use std::borrow::ToOwned;
-use std::error::Error;
-use std::old_io::{File, FilePermission, InvalidInput, IoError, IoResult};
-use std::old_io::fs::mkdir_recursive;
+use std::error::Error as StdError;
+use std::fs::{File, create_dir_all};
+use std::io::{Error, ErrorKind, Result};
+use std::io::prelude::*;
+use std::path::Path;
 use rustc_serialize::json::{decode, encode};
 
 #[derive(RustcEncodable, RustcDecodable, Debug, PartialEq)]
@@ -11,31 +13,31 @@ pub struct DerpCounter {
 }
 
 impl DerpCounter {
-    pub fn load() -> IoResult<DerpCounter> {
+    pub fn load() -> Result<DerpCounter> {
         let path = "data/derp.json".to_owned();
         let file = File::open(&Path::new(&path));
         if let Ok(mut file) = file {
-            let data = try!(file.read_to_string());
-            decode(&data).map_err(|e| IoError {
-                kind: InvalidInput,
-                desc: "Failed to decode derp data.",
-                detail: Some(e.description().to_owned()),
-            })
+            let mut data = String::new();
+            try!(file.read_to_string(&mut data));
+            decode(&data).map_err(|e|
+                Error::new(ErrorKind::InvalidInput, "Failed to decode derp data.",
+                       Some(e.description().to_owned()))
+            )
         } else {
             Ok(DerpCounter { derps: 0 })
         }
     }
 
-    pub fn save(&self) -> IoResult<()> {
+    pub fn save(&self) -> Result<()> {
         let mut path = "data/".to_owned();
-        try!(mkdir_recursive(&Path::new(&path), FilePermission::all()));
+        try!(create_dir_all(Path::new(&path)));
         path.push_str("derp.json");
-        let mut f = File::create(&Path::new(&path));
-        f.write_str(&try!(encode(self).map_err(|e| IoError {
-            kind: InvalidInput,
-            desc: "Failed to encode derp data.",
-            detail: Some(e.description().to_owned()),
-        }))[..])
+        let mut f = try!(File::create(Path::new(&path)));
+        try!(f.write_all(try!(encode(self).map_err(|e|
+            Error::new(ErrorKind::InvalidInput, "Failed to encode derp data.",
+                       Some(e.description().to_owned()))
+        )).as_bytes()));
+        f.flush()
     }
 
     pub fn increment(&mut self) {

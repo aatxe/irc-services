@@ -1,13 +1,12 @@
-#![feature(box_syntax, collections, core, old_io, old_path, unicode)]
-#![cfg_attr(feature = "resistance", feature(std_misc))]
+#![feature(box_syntax, collections, core, fs_walk, io, path, path_ext, unicode)]
+#![cfg_attr(feature = "democracy", feature(std_misc))]
 extern crate irc;
 extern crate openssl;
 #[cfg(feature = "resistance")] extern crate rand;
 extern crate "rustc-serialize" as rustc_serialize;
 
 #[cfg(not(test))] use data::state::State;
-#[cfg(not(test))] use irc::client::server::{IrcServer, Server};
-#[cfg(not(test))] use irc::client::server::utils::Wrapper;
+#[cfg(not(test))] use irc::client::prelude::*;
 
 mod data;
 mod func;
@@ -26,6 +25,6 @@ fn main() {
             args.push(&suffix)
         }
         let source = message.get_source_nickname().unwrap_or("");
-        func::process(&Wrapper::new(&server), source, &message.command, &args, &state).unwrap();
+        func::process(&server, source, &message.command, &args, &state).unwrap();
     }
 }
