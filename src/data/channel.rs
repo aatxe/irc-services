@@ -40,9 +40,7 @@ impl Channel {
     }
 
     pub fn load(name: &str) -> Result<Channel> {
-        let mut path = "data/chanserv/".to_owned();
-        path.push_str(name);
-        path.push_str(".json");
+        let path = format!("data/chanserv/{}.json", name);
         let mut file = try!(File::open(Path::new(&path)));
         let mut data = String::new();
         try!(file.read_to_string(&mut data));
@@ -54,7 +52,7 @@ impl Channel {
 
     pub fn save(&self) -> Result<()> {
         let mut path = "data/chanserv/".to_owned();
-        try!(create_dir_all(&Path::new(&path)));
+        let _ = create_dir_all(&Path::new(&path));
         path.push_str(&self.name);
         path.push_str(".json");
         let mut f = try!(File::create(Path::new(&path)));
