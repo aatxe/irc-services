@@ -90,20 +90,20 @@ mod test {
         let u = User::new("test2", "test", None).unwrap();
         let _ = remove_file(Path::new("data/nickserv/test2.json"));
         assert!(!User::exists("test2"));
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         assert!(User::exists("test2"));
     }
 
     #[test]
     fn save() {
         let u = User::new("test", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
     }
 
     #[test]
     fn load() {
         let u = User::new("test3", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let v = User::load("test3");
         assert!(v.is_ok());
         assert_eq!(v.unwrap(), u);

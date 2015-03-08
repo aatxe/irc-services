@@ -485,7 +485,7 @@ mod test {
     #[test]
     fn register_failed_channel_exists() {
         let ch = Channel::new("#test", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS REGISTER #test test\r\n", |state| {
             state.identify("test");
@@ -496,7 +496,7 @@ mod test {
     #[test]
     fn admin_succeeded() {
         let ch = Channel::new("#test5", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS ADMIN test2 #test5 test\r\n", |state| {
             state.identify("test");
@@ -538,7 +538,7 @@ mod test {
     #[test]
     fn admin_failed_password_incorrect() {
         let ch = Channel::new("#test12", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS ADMIN test2 #test12 wrong\r\n", |state| {
             state.identify("test");
@@ -550,7 +550,7 @@ mod test {
     #[test]
     fn oper_succeeded() {
         let ch = Channel::new("#test6", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS OPER test2 #test6 test\r\n", |state| {
             state.identify("test");
@@ -592,7 +592,7 @@ mod test {
     #[test]
     fn oper_failed_password_incorrect() {
         let ch = Channel::new("#test13", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS OPER test2 #test13 wrong\r\n", |state| {
             state.identify("test");
@@ -604,7 +604,7 @@ mod test {
     #[test]
     fn voice_succeeded() {
         let ch = Channel::new("#test7", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS VOICE test2 #test7 test\r\n", |state| {
             state.identify("test");
@@ -646,7 +646,7 @@ mod test {
     #[test]
     fn voice_failed_password_incorrect() {
         let ch = Channel::new("#test14", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS VOICE test2 #test14 wrong\r\n", |state| {
             state.identify("test");
@@ -658,7 +658,7 @@ mod test {
     #[test]
     fn mode_succeeded() {
         let ch = Channel::new("#test15", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS MODE +i #test15 test\r\n", |state| {
             state.identify("test");
@@ -688,7 +688,7 @@ mod test {
     #[test]
     fn mode_failed_password_incorrect() {
         let ch = Channel::new("#test16", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS MODE +i #test16 wrong\r\n", |state| {
             state.identify("test");
@@ -700,7 +700,7 @@ mod test {
     fn deadmin_succeeded() {
         let mut ch = Channel::new("#test17", "test", "test").unwrap();
         ch.admins.push("test2".to_owned());
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test17 test\r\n", |state| {
             state.identify("test");
@@ -743,7 +743,7 @@ mod test {
     fn deadmin_failed_incorrect_password() {
         let mut ch = Channel::new("#test18", "test", "test").unwrap();
         ch.admins.push("test2".to_owned());
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEADMIN test2 #test18 wrong\r\n", |state| {
             state.identify("test");
@@ -756,7 +756,7 @@ mod test {
     fn deoper_succeeded() {
         let mut ch = Channel::new("#test19", "test", "test").unwrap();
         ch.opers.push("test2".to_owned());
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test19 test\r\n", |state| {
             state.identify("test");
@@ -799,7 +799,7 @@ mod test {
     fn deoper_failed_incorrect_password() {
         let mut ch = Channel::new("#test20", "test", "test").unwrap();
         ch.opers.push("test2".to_owned());
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEOPER test2 #test20 wrong\r\n", |state| {
             state.identify("test");
@@ -812,7 +812,7 @@ mod test {
     fn devoice_succeeded() {
         let mut ch = Channel::new("#test21", "test", "test").unwrap();
         ch.voice.push("test2".to_owned());
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test21 test\r\n", |state| {
             state.identify("test");
@@ -855,7 +855,7 @@ mod test {
     fn devoice_failed_incorrect_password() {
         let mut ch = Channel::new("#test22", "test", "test").unwrap();
         ch.voice.push("test2".to_owned());
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS DEVOICE test2 #test22 wrong\r\n", |state| {
             state.identify("test");
@@ -867,7 +867,7 @@ mod test {
     #[test]
     fn chown_succeeded() {
         let ch = Channel::new("#test24", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS CHOWN test2 #test24 test\r\n", |state| {
             state.identify("test");
@@ -909,7 +909,7 @@ mod test {
     #[test]
     fn chown_failed_password_incorrect() {
         let ch = Channel::new("#test25", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :CS CHOWN test2 #test25 wrong\r\n", |state| {
             state.identify("test");

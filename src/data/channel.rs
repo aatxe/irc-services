@@ -91,20 +91,20 @@ mod test {
         let ch = Channel::new("#test2", "test", "test").unwrap();
         let _ = remove_file(Path::new("data/chanserv/#test2.json"));
         assert!(!Channel::exists("#test2"));
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         assert!(Channel::exists("#test2"));
     }
 
     #[test]
     fn save() {
         let ch = Channel::new("#test", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
     }
 
     #[test]
     fn load() {
         let ch = Channel::new("#test3", "test", "test").unwrap();
-        assert!(ch.save().is_ok());
+        ch.save().unwrap();
         let ld = Channel::load("#test3");
         assert!(ld.is_ok());
         assert_eq!(ld.unwrap(), ch);

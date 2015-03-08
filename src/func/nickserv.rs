@@ -249,7 +249,7 @@ mod test {
     #[test]
     fn register_failed_user_exists() {
         let u = User::new("test", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, state) = test_helper(
             ":test!test@test PRIVMSG test :NS REGISTER test\r\n", |_| {}
         );
@@ -260,7 +260,7 @@ mod test {
     #[test]
     fn identify_succeeded() {
         let u = User::new("test5", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, state) = test_helper(
             ":test5!test@test PRIVMSG test :NS IDENTIFY test\r\n", |_| {}
         );
@@ -273,7 +273,7 @@ mod test {
     #[test]
     fn identify_failed_password_incorrect() {
         let u = User::new("test9", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, state) = test_helper(
             ":test9!test@test PRIVMSG test :NS IDENTIFY tset\r\n", |_| {}
         );
@@ -293,7 +293,7 @@ mod test {
     #[test]
     fn ghost_succeeded() {
         let u = User::new("test6", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST test6 test\r\n", |_| {}
         );
@@ -305,7 +305,7 @@ mod test {
     #[test]
     fn ghost_failed_password_incorrect() {
         let u = User::new("test8", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, _) = test_helper(
             ":test!test@test PRIVMSG test :NS GHOST test8 tset\r\n", |_| {}
         );
@@ -324,7 +324,7 @@ mod test {
     #[test]
     fn reclaim_succeeded() {
         let u = User::new("test11", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, state) = test_helper(
             ":test!test@test PRIVMSG test :NS RECLAIM test11 test\r\n", |_| {}
         );
@@ -339,7 +339,7 @@ mod test {
     #[test]
     fn reclaim_failed_password_incorrect() {
         let u = User::new("test10", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, state) = test_helper(
             ":test!test@test PRIVMSG test :NS RECLAIM test10 tset\r\n", |_| {}
         );
@@ -360,7 +360,7 @@ mod test {
     #[test]
     fn chpass_succeeded() {
         let u = User::new("test13", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, _) = test_helper(
             ":test13!test@test PRIVMSG test :NS CHPASS test blahblah\r\n", |_| {}
         );
@@ -373,7 +373,7 @@ mod test {
     #[test]
     fn chpass_failed_password_incorrect() {
         let u = User::new("test12", "test", None).unwrap();
-        assert!(u.save().is_ok());
+        u.save().unwrap();
         let (data, _) = test_helper(
             ":test12!test@test PRIVMSG test :NS CHPASS tset blahblah\r\n", |_| {}
         );
