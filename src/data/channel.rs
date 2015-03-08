@@ -52,7 +52,7 @@ impl Channel {
 
     pub fn save(&self) -> Result<()> {
         let mut path = "data/chanserv/".to_owned();
-        let _ = create_dir_all(&Path::new(&path));
+        let _ = create_dir_all(Path::new(&path));
         path.push_str(&self.name);
         path.push_str(".json");
         let mut f = try!(File::create(Path::new(&path)));
