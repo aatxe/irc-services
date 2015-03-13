@@ -1,6 +1,6 @@
 extern crate irc;
 
-
+use std::ascii::AsciiExt;
 use std::borrow::ToOwned;
 use std::io::Result;
 use std::fs::walk_dir;
@@ -368,7 +368,7 @@ pub fn do_democracy<'a, T: IrcRead, U: IrcWrite>(_: &'a ServerExt<'a, T, U>, _: 
 }
 
 fn upper_case(string: &str) -> String {
-    string.chars().map(|c| c.to_uppercase()).collect()
+    string.chars().map(|c| c.to_ascii_uppercase()).collect()
 }
 
 #[cfg(test)]
