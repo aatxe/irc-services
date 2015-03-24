@@ -1,4 +1,4 @@
-#![feature(box_syntax, collections, core, fs_walk, io, path, path_ext)]
+#![feature(box_syntax, collections, core, fs_walk, io, path_ext)]
 #![cfg_attr(feature = "democracy", feature(std_misc))]
 extern crate irc;
 extern crate openssl;
