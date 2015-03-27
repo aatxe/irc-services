@@ -2,7 +2,7 @@
 name = "irc-services"
 version = "0.0.1"
 dependencies = [
- "irc 0.8.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "irc 0.8.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -77,7 +77,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "irc"
-version = "0.8.9"
+version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "encoding 0.2.27 (registry+https://github.com/rust-lang/crates.io-index)",
