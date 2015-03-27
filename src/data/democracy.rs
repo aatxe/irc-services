@@ -63,7 +63,7 @@ impl Democracy {
 
     pub fn get_result_of_vote(&mut self, proposal_id: u8, voting_pop: usize) -> VoteResult {
         if let Some((yea, nay)) = self.get_vote_counts(proposal_id) {
-            let full = self.proposals[proposal_id].is_full_vote();
+            let full = self.proposals[&proposal_id].is_full_vote();
             if full && (yea * 100) / voting_pop >= 60 || !full && (yea * 100) / voting_pop >= 30 {
                 self.delete_all_votes(proposal_id);
                 VoteResult::VotePassed(self.proposals.remove(&proposal_id).unwrap())
