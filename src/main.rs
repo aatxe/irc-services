@@ -1,5 +1,5 @@
 #![feature(box_syntax, collections, fs_walk, io, path_ext)]
-#![cfg_attr(feature = "democracy", feature(std_misc))]
+#![cfg_attr(feature = "resistance", feature(core))]
 extern crate irc;
 extern crate openssl;
 #[cfg(feature = "resistance")] extern crate rand;
