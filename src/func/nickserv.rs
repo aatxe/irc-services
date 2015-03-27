@@ -30,7 +30,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
             } else {
                 None
             }
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -71,7 +71,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Identify<'a, T, U> {
             state: state,
             nickname: user.to_owned(),
             password: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -112,7 +112,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Ghost<'a, T, U> {
             current_nick: user.to_owned(),
             nickname: args[2].to_owned(),
             password: args[3].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -156,7 +156,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Reclaim<'a, T, U> {
             current_nick: user.to_owned(),
             nickname: args[2].to_owned(),
             password: args[3].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -202,7 +202,7 @@ impl<'a, T: IrcRead, U: IrcWrite> ChangePassword<'a, T, U> {
             user: user.to_owned(),
             password: args[2].to_owned(),
             new_password: args[3].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 

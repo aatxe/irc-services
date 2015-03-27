@@ -1,9 +1,9 @@
-#![feature(box_syntax, collections, core, fs_walk, io, path_ext)]
+#![feature(box_syntax, collections, fs_walk, io, path_ext)]
 #![cfg_attr(feature = "democracy", feature(std_misc))]
 extern crate irc;
 extern crate openssl;
 #[cfg(feature = "resistance")] extern crate rand;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 
 #[cfg(not(test))] use data::state::State;
 #[cfg(not(test))] use irc::client::prelude::*;

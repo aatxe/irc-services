@@ -28,7 +28,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
             owner: user.to_owned(),
             channel: args[2].to_owned(),
             password: args[3].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -74,7 +74,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Admin<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -124,7 +124,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Oper<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -174,7 +174,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Voice<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -224,7 +224,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Mode<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             mode: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -272,7 +272,7 @@ impl<'a, T: IrcRead, U: IrcWrite> DeAdmin<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -322,7 +322,7 @@ impl<'a, T: IrcRead, U: IrcWrite> DeOper<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -372,7 +372,7 @@ impl<'a, T: IrcRead, U: IrcWrite> DeVoice<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
@@ -422,7 +422,7 @@ impl<'a, T: IrcRead, U: IrcWrite> ChangeOwner<'a, T, U> {
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        } as Box<Functionality>)
+        })
     }
 }
 
