@@ -54,7 +54,7 @@ impl Resistance {
             server.send_privmsg(&self.chan, "The game has already begun!")
         } else if self.total_players() > 4 {
             self.started = true;
-            thread_rng().shuffle(self.players.as_mut_slice());
+            thread_rng().shuffle(&mut self.players[..]);
             for user in self.players.clone().iter() {
                 if self.spies.len() < (self.total_players() as f32 * 0.4).round() as usize {
                     try!(self.add_spy(server, &user));
@@ -264,7 +264,7 @@ impl Resistance {
     }
 
     fn get_new_leader(&mut self) {
-        thread_rng().shuffle(self.players.as_mut_slice());
+        thread_rng().shuffle(&mut self.players[..]);
         if self.is_leader(&self.players[0]) {
             self.leader = self.players[1].clone();
         } else {
