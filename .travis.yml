@@ -5,6 +5,7 @@ script:
   - cargo test --verbose -j1
   - cargo test --verbose --features "resistance derp democracy" -j1
 notifications:
+  email: false
   irc:
     channels:
       - "irc.fyrechat.net#vana-commits"
