@@ -2,7 +2,6 @@
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::io::Result;
-use std::num::Float;
 use irc::client::prelude::*;
 use rand::{Rng, thread_rng};
 

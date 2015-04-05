@@ -1,6 +1,5 @@
 use super::password_hash;
 use std::borrow::ToOwned;
-use std::error::Error as StdError;
 use std::fs::{File, create_dir_all};
 use std::io::{Error, ErrorKind, Result};
 use std::io::prelude::*;
@@ -41,10 +40,9 @@ impl User {
         let mut file = try!(File::open(Path::new(&path)));
         let mut data = String::new();
         try!(file.read_to_string(&mut data));
-        decode(&data).map_err(|e| 
-            Error::new(ErrorKind::InvalidInput, "Failed to decode user data.",
-                       Some(e.description().to_owned()))
-        )
+        decode(&data).map_err(|_| Error::new(
+            ErrorKind::InvalidInput, "Failed to decode user data."
+        ))
     }
 
     pub fn save(&self) -> Result<()> {
@@ -53,10 +51,9 @@ impl User {
         path.push_str(&self.nickname);
         path.push_str(".json");
         let mut f = try!(File::create(Path::new(&path)));
-        try!(f.write_all(try!(encode(self).map_err(|e| 
-            Error::new(ErrorKind::InvalidInput, "Failed to decode channel data.",
-                       Some(e.description().to_owned()))
-        )).as_bytes()));
+        try!(f.write_all(try!(encode(self).map_err(|_| Error::new(
+            ErrorKind::InvalidInput, "Failed to decode channel data.",
+        ))).as_bytes()));
         f.flush()
     }
 }
