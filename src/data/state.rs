@@ -53,7 +53,7 @@ impl State {
 
     pub fn remove(&self, nick: &str) {
         let mut identified = self.identified.lock().unwrap();
-        if let Some(i) = identified.position_elem(&nick.to_owned()) {
+        if let Some(i) = identified.iter().position(|n| &n[..] == nick) {
             identified.swap_remove(i);
         }
     }
