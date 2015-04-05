@@ -21,7 +21,9 @@ mod nickserv;
 pub fn process<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, source: &str, 
                                                command: &str, args: &[&str], state: &'a State) 
     -> Result<()> { 
-    if let ("PRIVMSG", [chan, msg]) = (command, args) {
+    if let ("PRIVMSG", 2) = (command, args.len()) { // FIXME: use slice patterns when stable
+        let chan = args[0];
+        let msg = args[1];
         if msg.starts_with("!") {
             if try!(do_resistance(server, source, msg, chan, state)) {
                 return Ok(());
@@ -69,19 +71,19 @@ pub fn process<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, sou
         } else {
             try!(res.unwrap().do_func())
         }
-    } else if let ("NOTICE", [_, suffix]) = (command, args) {
-        if suffix.starts_with("***") {
+    } else if let ("NOTICE", 2) = (command, args.len()) { // FIXME: use slice patterns when stable
+        if args[1].starts_with("***") {
             try!(server.identify());
         }
     } else if let ("001", _) = (command, args) {
         try!(start_up(server, state));
-    } else if let ("TOPIC", [chan, message]) = (command, args) {
-        if let Ok(mut channel) = Channel::load(chan) {
-            channel.topic = message.to_owned();
+    } else if let ("TOPIC", 2) = (command, args.len()) { // FIXME: use slice patterns when stable
+        if let Ok(mut channel) = Channel::load(args[0]) {
+            channel.topic = args[1].to_owned();
             try!(channel.save());
         }
-    } else if let ("JOIN", [chan]) = (command, args){
-        if let Ok(channel) = Channel::load(chan) {
+    } else if let ("JOIN", 1) = (command, args.len()) { // FIXME: use slice patterns when stable
+        if let Ok(channel) = Channel::load(args[0]) {
             let mode = if &channel.owner[..] == source {
                 "+qa"
             } else if channel.admins.contains(&source.to_owned()) {
@@ -94,15 +96,15 @@ pub fn process<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>, sou
                 ""
             };
             if state.is_identified(source) && mode.len() > 0 {
-                try!(server.send_samode(chan, &mode, &source));
+                try!(server.send_samode(args[0], &mode, &source));
             }
         }
     } else if let ("QUIT", _) = (command, args) {
         state.remove(source);
-    } else if let ("MODE", [chan, "+v", user]) = (command, args) {
-        try!(democracy_process_hook(server, "+v", user, chan, state));
-    } else if let ("MODE", [chan, "-v", user]) = (command, args) {
-        try!(democracy_process_hook(server, "-v", user, chan, state));
+    } else if let ("MODE", 3) = (command, args.len()) { // FIXME: use slice patterns when stable
+        if args[1] == "+v" || args[1] == "-v" {
+            try!(democracy_process_hook(server, args[1], args[2], args[0], state));
+        } 
     }
     Ok(())
 }
@@ -307,55 +309,54 @@ pub fn do_democracy<'a, T: IrcRead, U: IrcWrite>(server: &'a ServerExt<'a, T, U>
             tmp.retain(|t| t.len() != 0);
             tmp
         };
-        match &tokens[..] {
-            [".propose", proposal, parameter] => {
-                let id = democracy.propose(proposal, parameter);
+        // FIXME: use slice patterns when stable
+        if tokens.len() == 1 && tokens[0] == ".active" {
+            let proposals = democracy.get_active_proposals();
+            let mut msg = String::new();
+            for proposal in proposals.iter() {
+                msg.push_str(&proposal);
+                msg.push_str("\r\n");
+            }
+            if msg.len() > 0 {
+                try!(server.send_privmsg(chan, &msg));
+            } else {
+                try!(server.send_privmsg(chan, "None"));
+            }
+        } else if tokens.len() == 3 && tokens[0] == ".propose" {
+            let proposal = tokens[1];
+            let parameter = tokens[2];
+            let id = democracy.propose(proposal, parameter);
                 if let Some(id) = id {
                     try!(server.send_privmsg(chan, &format!("Proposal {} is live.", id)));
                 } else {
                     try!(server.send_privmsg(chan, 
                          &format!("{} is not a valid option for a proposal.", proposal)));
                 }
-            },
-            [".vote", proposal_id, vote] => {
-                let proposal_id = proposal_id.parse().unwrap_or(0u8);
-                if democracy.has_voted(proposal_id, user) {
-                    return server.send_privmsg(chan, "You've already voted in that proposal.");
-                }
-                let res = democracy.vote(proposal_id, vote, user);
-                let msg = match res {
-                    VoteIssued => format!("Vote issued."),
-                    InvalidVote => format!("{} is not a valid vote.", vote),
-                    NoSuchProposal => format!("{} is not a valid proposal.", proposal_id),
-                };
-                try!(server.send_privmsg(chan, &msg));
-                let voting_pop = if democracy.is_full_vote(proposal_id) {
-                    state.get_voting_pop(chan)
-                } else {
-                    state.get_online_voting_pop(chan)
-                };
-                try!(match democracy.get_result_of_vote(proposal_id, voting_pop) {
-                    VotePassed(proposal) => proposal.enact(server, chan),
-                    VoteFailed => server.send_privmsg(chan, 
-                                  &format!("Failed to pass proposal {}.", proposal_id)),
+        } else if tokens.len() == 3 && tokens[0] == ".vote" {
+            let vote = tokens[2];
+            let proposal_id = tokens[1].parse().unwrap_or(0u8);
+            if democracy.has_voted(proposal_id, user) {
+                return server.send_privmsg(chan, "You've already voted in that proposal.");
+            }
+            let res = democracy.vote(proposal_id, vote, user);
+            let msg = match res {
+                VoteIssued => format!("Vote issued."),
+                InvalidVote => format!("{} is not a valid vote.", vote),
+                NoSuchProposal => format!("{} is not a valid proposal.", proposal_id),
+            };
+            try!(server.send_privmsg(chan, &msg));
+            let voting_pop = if democracy.is_full_vote(proposal_id) {
+                state.get_voting_pop(chan)
+            } else {
+                state.get_online_voting_pop(chan)
+            };
+            try!(match democracy.get_result_of_vote(proposal_id, voting_pop) {
+                VotePassed(proposal) => proposal.enact(server, chan),
+                VoteFailed => server.send_privmsg(chan, 
+                              &format!("Failed to pass proposal {}.", proposal_id)),
 
-                    _ => Ok(())
-                })
-            },
-            [".active"] => {
-                let proposals = democracy.get_active_proposals();
-                let mut msg = String::new();
-                for proposal in proposals.iter() {
-                    msg.push_str(&proposal);
-                    msg.push_str("\r\n");
-                }
-                if msg.len() > 0 {
-                    try!(server.send_privmsg(chan, &msg));
-                } else {
-                    try!(server.send_privmsg(chan, "None"));
-                }
-            },
-            _ => ()
+                _ => Ok(())
+            })
         }
     }
     Ok(())

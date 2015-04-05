@@ -1,4 +1,4 @@
-#![feature(fs_walk, path_ext, slice_patterns)]
+#![feature(fs_walk, path_ext)]
 extern crate irc;
 extern crate openssl;
 #[cfg(feature = "resistance")] extern crate rand;
