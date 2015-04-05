@@ -20,7 +20,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
         if args.len() != 3 && args.len() != 4 {
             return Err("Syntax: NS REGISTER password [email]".to_owned())
         }
-        Ok(box Register {
+        Ok(Box::new(Register {
             server: server,
             state: state,
             nickname: user.to_owned(),
@@ -30,7 +30,7 @@ impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
             } else {
                 None
             }
-        })
+        }))
     }
 }
 
@@ -66,12 +66,12 @@ impl<'a, T: IrcRead, U: IrcWrite> Identify<'a, T, U> {
         if args.len() != 3 {
             return Err("Syntax: NS IDENTIFY password".to_owned())
         }
-        Ok(box Identify {
+        Ok(Box::new(Identify {
             server: server,
             state: state,
             nickname: user.to_owned(),
             password: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -107,12 +107,12 @@ impl<'a, T: IrcRead, U: IrcWrite> Ghost<'a, T, U> {
         if args.len() != 4 {
             return Err("Syntax: NS GHOST nickname password".to_owned())
         }
-        Ok(box Ghost {
+        Ok(Box::new(Ghost {
             server: server,
             current_nick: user.to_owned(),
             nickname: args[2].to_owned(),
             password: args[3].to_owned(),
-        })
+        }))
     }
 }
 
@@ -150,13 +150,13 @@ impl<'a, T: IrcRead, U: IrcWrite> Reclaim<'a, T, U> {
         if args.len() != 4 {
             return Err("Syntax: NS RECLAIM nickname password".to_owned())
         }
-        Ok(box Reclaim {
+        Ok(Box::new(Reclaim {
             server: server,
             state: state,
             current_nick: user.to_owned(),
             nickname: args[2].to_owned(),
             password: args[3].to_owned(),
-        })
+        }))
     }
 }
 
@@ -197,12 +197,12 @@ impl<'a, T: IrcRead, U: IrcWrite> ChangePassword<'a, T, U> {
         if args.len() != 4 {
             return Err("Syntax: NS CHPASS old_password new_password".to_owned())
         }
-        Ok(box ChangePassword {
+        Ok(Box::new(ChangePassword {
             server: server,
             user: user.to_owned(),
             password: args[2].to_owned(),
             new_password: args[3].to_owned(),
-        })
+        }))
     }
 }
 

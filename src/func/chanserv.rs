@@ -22,13 +22,13 @@ impl<'a, T: IrcRead, U: IrcWrite> Register<'a, T, U> {
         } else if !args[2].starts_with("#") && !args[2][1..].contains("#") {
             return Err("Channels must be prefixed with a #.".to_owned())
         }
-        Ok(box Register {
+        Ok(Box::new(Register {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[2].to_owned(),
             password: args[3].to_owned(),
-        })
+        }))
     }
 }
 
@@ -67,14 +67,14 @@ impl<'a, T: IrcRead, U: IrcWrite> Admin<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS ADMIN user channel password".to_owned())
         }
-        Ok(box Admin {
+        Ok(Box::new(Admin {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -117,14 +117,14 @@ impl<'a, T: IrcRead, U: IrcWrite> Oper<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS OPER user channel password".to_owned())
         }
-        Ok(box Oper {
+        Ok(Box::new(Oper {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -167,14 +167,14 @@ impl<'a, T: IrcRead, U: IrcWrite> Voice<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS VOICE user channel password".to_owned())
         }
-        Ok(box Voice {
+        Ok(Box::new(Voice {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -217,14 +217,14 @@ impl<'a, T: IrcRead, U: IrcWrite> Mode<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS MODE mode channel password".to_owned())
         }
-        Ok(box Mode {
+        Ok(Box::new(Mode {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             mode: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -265,14 +265,14 @@ impl<'a, T: IrcRead, U: IrcWrite> DeAdmin<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS DEADMIN user channel password".to_owned())
         }
-        Ok(box DeAdmin {
+        Ok(Box::new(DeAdmin {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -315,14 +315,14 @@ impl<'a, T: IrcRead, U: IrcWrite> DeOper<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS DEOPER user channel password".to_owned())
         }
-        Ok(box DeOper {
+        Ok(Box::new(DeOper {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -365,14 +365,14 @@ impl<'a, T: IrcRead, U: IrcWrite> DeVoice<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS DEVOICE user channel password".to_owned())
         }
-        Ok(box DeVoice {
+        Ok(Box::new(DeVoice {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
@@ -415,14 +415,14 @@ impl<'a, T: IrcRead, U: IrcWrite> ChangeOwner<'a, T, U> {
         if args.len() != 5 {
             return Err("Syntax: CS CHOWN user channel password".to_owned())
         }
-        Ok(box ChangeOwner {
+        Ok(Box::new(ChangeOwner {
             server: server,
             state: state,
             owner: user.to_owned(),
             channel: args[3].to_owned(),
             password: args[4].to_owned(),
             target: args[2].to_owned(),
-        })
+        }))
     }
 }
 
